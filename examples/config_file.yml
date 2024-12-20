@@ -1,0 +1,7 @@
+- footswitch:
+    midi:
+      press: control_change 64 127
+      release: control_change 64 0
+    gestures:
+      pressed: host.toggle_track_mute_by_name, Track 1
+#      pressed_twice: pressed_twice_callback, 0.5
