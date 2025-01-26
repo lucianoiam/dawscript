@@ -32,7 +32,7 @@ def log(message: str):
 
 def set_context(context: Any):
    global _control_surface
-   _control_surface = context['control_surface']
+   _control_surface = context
 
 def run_loop():
    pass
@@ -123,7 +123,7 @@ class DawscriptControlSurface(ControlSurface):
       self.events = list()
       self.request_rebuild_midi_map()
       dawscript = importlib.import_module('.dawscript', 'dawscript')
-      dawscript.main({'control_surface':self})
+      dawscript.main(self)
       controller = load_controller()
       self.host_callback = controller.host_callback
       controller.on_project_load()
