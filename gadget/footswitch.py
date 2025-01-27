@@ -69,7 +69,7 @@ class Footswitch:
 
    def add_midi_message(self, msg: Message):
       for (map_msg, press, omni) in self._midi_map:
-         if map_msg.channel != msg.channel and not omni:
+         if map_msg.channel != map_msg.channel and not omni:
             continue
          if ((msg.is_cc() and map_msg.is_cc()
                and msg.control == map_msg.control
