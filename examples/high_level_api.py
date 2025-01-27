@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from gadget import Footswitch, make_cc
+from gadget import Footswitch
 from host import ALL_MIDI_INPUTS, Config, Host, Track, TrackNotFoundError
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
 footswitch = Footswitch()
-footswitch.map_midi_press(make_cc(control=64, value=127), omni=True)
-footswitch.map_midi_release(make_cc(control=64, value=0), omni=True)
+footswitch.map_midi_press(type='control_change',control=64, value=127, omni=True)
+footswitch.map_midi_release(type='control_change', control=64, value=0, omni=True)
 
 def on_project_load():
    try:

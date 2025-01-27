@@ -71,8 +71,8 @@ def host_callback(midi: list[bytes]):
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
 footswitch = Footswitch()
-footswitch.map_midi_press(make_cc(control=64, value=127), omni=True)
-footswitch.map_midi_release(make_cc(control=64, value=0), omni=True)
+footswitch.map_midi_press(type='control_change',control=64, value=127, omni=True)
+footswitch.map_midi_release(type='control_change', control=64, value=0, omni=True)
 
 def on_project_load():
    try:

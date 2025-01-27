@@ -61,10 +61,14 @@ class Footswitch:
    """
    MIDI input
    """
-   def map_midi_press(self, msg: Message, omni = False):
+   def map_midi_press(self, msg: Message = None, omni = False, **kwargs):
+      if msg is None:
+         msg = Message(**kwargs)
       self._midi_map.append((msg, True, omni))
 
-   def map_midi_release(self, msg: Message, omni = False):
+   def map_midi_release(self, msg: Message = None, omni = False, **kwargs):
+      if msg is None:
+         msg = Message(**kwargs)
       self._midi_map.append((msg, False, omni))
 
    def add_midi_message(self, msg: Message):
