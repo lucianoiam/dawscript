@@ -60,12 +60,12 @@ def make_gadgets(yml_file: str, ctrl_globals: dict) -> list[Gadget]:
 
    return gadgets
 
+def make_config(gadgets: list[Gadget]):
+   return Config(midi_inputs=set([g.midi_port for g in gadgets if g.midi_port]))
+
 def make_from_yaml(yml_file: str, ctrl_globals: dict) -> (Config,list):
    gadgets = make_gadgets(yml_file, ctrl_globals)
-   return (
-      Config(midi_inputs=set([g.midi_port for g in gadgets if g.midi_port])),
-      [g.instance for g in gadgets]
-   )
+   return (make_config(gadgets), [g.instance for g in gadgets])
 
 def _build_callback(pseudocode: str, ctrl_globals: dict):
    (expr, *args) = map(str.strip, pseudocode.split(','))
