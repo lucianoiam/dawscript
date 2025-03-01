@@ -8,7 +8,7 @@ import signal
 import sys
 import time
 import threading
-from typing import Any
+from typing import Any, Callable
 
 from .shared import load_controller
 from .types import ParameterHandle, PluginHandle, TrackHandle
@@ -67,6 +67,9 @@ def is_track_mute(track: TrackHandle) -> bool:
 
 def set_track_mute(track: TrackHandle, mute: bool):
    log(f'stub: set_track_mute( {track} )')
+
+def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
+   log(f'stub: set_track_mute_callback( {track}, {callback} )')
 
 def get_track_volume(track: TrackHandle) -> float:
    log(f'stub: get_track_volume( {track} )')

@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 import importlib
 import math
 import sys
-from typing import Any
+from typing import Any, Callable
 
 from .shared import load_controller
 from .types import (ParameterHandle, ParameterNotFoundError, PluginHandle,
@@ -49,6 +49,9 @@ def is_track_mute(track: TrackHandle) -> bool:
 
 def set_track_mute(track: TrackHandle, mute: bool):
    track.mute = mute
+
+def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
+   track.add_mute_listener(lambda: callback(track.mute))
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(track.mixer_device.volume.value)

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+from typing import Callable
+
 import host
 from host.types import ParameterHandle, PluginHandle, TrackHandle
 
@@ -61,6 +63,14 @@ class Track:
    @mute.setter
    def mute(self, value: bool):
       host.set_track_mute(self._handle, value)
+
+   @property
+   def mute_callback(self) -> Callable[[bool],None]:
+      raise NotImplementedError
+
+   @mute_callback.setter
+   def mute_callback(self, callback: Callable[[bool],None]):
+      host.set_track_mute_callback(self._handle, callback)
 
    def toggle_mute(self):
       host.toggle_track_mute(self._handle)

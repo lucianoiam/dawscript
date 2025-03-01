@@ -44,6 +44,7 @@ def run_loop()
 def get_track(name: str) -> TrackHandle
 def is_track_mute(track: TrackHandle) -> bool
 def set_track_mute(track: TrackHandle, mute: bool)
+def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
 def get_track_volume(track: TrackHandle) -> float
 def set_track_volume(track: TrackHandle, volume_db: float)
 def get_track_pan(track: TrackHandle) -> float

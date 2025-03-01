@@ -16,7 +16,7 @@ except ModuleNotFoundError:
 
 import math
 from ctypes import *
-from typing import Any
+from typing import Any, Callable, Dict, List, Tuple
 
 from .shared import load_controller
 from .types import (ParameterHandle, ParameterNotFoundError, PluginHandle,
@@ -26,6 +26,13 @@ RPR_defer = None
 _controller = None
 _proj_path = None
 _event_seq = 0
+_callbacks: Dict[str,Dict[Any,Tuple[Callable,Any]]] = {
+   'track_mute': {},
+   'track_volume': {},
+   'track_pan': {},
+   'plugin_enabled': {},
+   'parameter_value': {}
+}
 
 def name() -> str:
    return 'reaper'
@@ -47,6 +54,7 @@ def run_loop():
          _proj_path = proj_path
          _controller.on_project_load()
       _controller.host_callback(_read_midi_events())
+      _run_callbacks()
    except Exception as e:
       log(repr(e))
    RPR_defer('from host import reaper; reaper.run_loop()')
@@ -69,10 +77,13 @@ def get_track(name: str) -> TrackHandle:
    return track
 
 def is_track_mute(track: TrackHandle) -> bool:
-   return RPR_GetTrackUIMute(track, False)[2]
+   return RPR_GetTrackUIMute(track, False)[2] == 1
 
 def set_track_mute(track: TrackHandle, mute: bool):
    RPR_SetTrackUIMute(track, mute, 0)
+
+def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
+   _callbacks['track_mute'][track] = (callback, is_track_mute(track))
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
@@ -156,6 +167,13 @@ def _read_midi_events():
          events.append(bytes(event[2]))
 
    return events
+
+def _run_callbacks():
+   for (track, (callback, prev)) in _callbacks['track_mute'].items():
+      now = is_track_mute(track)
+      if now != prev:
+         _callbacks['track_mute'][track] = (callback, now)
+         callback(now)
 
 """
 /opt/REAPER/Plugins/reaper_python.py @ 2826
