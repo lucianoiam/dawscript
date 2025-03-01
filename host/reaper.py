@@ -48,13 +48,19 @@ def set_context(context: Any):
 def run_loop():
    global _proj_path
    try:
-      # Ignore default startup project when running as a global script
-      proj_path = RPR_GetProjectPath('', 256)[0]
-      if _proj_path != proj_path and not proj_path.endswith('REAPER Media'):
-         _proj_path = proj_path
-         _controller.on_project_load()
-      _controller.host_callback(_read_midi_events())
-      _run_callbacks()
+      try:
+         # Ignore default startup project when running as a global script
+         proj_path = RPR_GetProjectPath('', 256)[0]
+         if _proj_path != proj_path and not proj_path.endswith('REAPER Media'):
+            _proj_path = proj_path
+            _controller.on_project_load()
+      except AttributeError:
+         pass
+      try:
+         _controller.host_callback(_read_midi_events())
+      except AttributeError:
+         pass
+      _run_track_callbacks()
    except Exception as e:
       log(repr(e))
    RPR_defer('from host import reaper; reaper.run_loop()')
@@ -156,19 +162,22 @@ def _read_midi_events():
 
       accept: bool
 
-      if _controller.config.midi_inputs:
-         event_midi_in = RPR_GetMIDIInputName(event[5], None, 32)[2].lower()
-         midi_ins = [name.lower() for name in _controller.config.midi_inputs]
-         accept = any(map(lambda midi_in: midi_in in event_midi_in, midi_ins))
-      else:
-         accept = True
+      try:
+         if _controller.config.midi_inputs:
+            event_midi_in = RPR_GetMIDIInputName(event[5], None, 32)[2].lower()
+            midi_ins = [name.lower() for name in _controller.config.midi_inputs]
+            accept = any(map(lambda midi_in: midi_in in event_midi_in, midi_ins))
+         else:
+            accept = True
+      except AttributeError:
+         pass
 
       if accept:
          events.append(bytes(event[2]))
 
    return events
 
-def _run_callbacks():
+def _run_track_callbacks():
    for (track, (callback, prev)) in _callbacks['track_mute'].items():
       now = is_track_mute(track)
       if now != prev:

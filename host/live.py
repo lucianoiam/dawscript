@@ -128,8 +128,14 @@ class DawscriptControlSurface(ControlSurface):
       dawscript = importlib.import_module('.dawscript', 'dawscript')
       dawscript.main(self)
       controller = load_controller()
-      self.host_callback = controller.host_callback
-      controller.on_project_load()
+      try:
+         self.host_callback = controller.host_callback
+      except AttributeError:
+         self.host_callback = None
+      try:
+         controller.on_project_load()
+      except AttributeError:
+         pass
 
    def disconnect(self):
       super(DawscriptControlSurface, self).disconnect()
@@ -148,6 +154,8 @@ class DawscriptControlSurface(ControlSurface):
          log(repr(e))
 
    def update_display(self):
+      if self.host_callback is None:
+         return
       try:
          self.host_callback(self.events)
          self.events.clear()
