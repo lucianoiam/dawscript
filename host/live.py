@@ -50,8 +50,8 @@ def is_track_mute(track: TrackHandle) -> bool:
 def set_track_mute(track: TrackHandle, mute: bool):
    track.mute = mute
 
-def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
-   track.add_mute_listener(lambda: callback(track.mute))
+def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   track.add_mute_listener(lambda: listener(is_track_mute(track)))
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(track.mixer_device.volume.value)
@@ -59,11 +59,17 @@ def get_track_volume(track: TrackHandle) -> float:
 def set_track_volume(track: TrackHandle, volume_db: float):
    track.mixer_device.volume.value = _db_to_vol_value(volume_db)
 
+def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   track.mixer_device.volume.add_value_listener(lambda: listener(get_track_volume(track)))
+
 def get_track_pan(track: TrackHandle) -> float:
    return track.mixer_device.panning.value
 
 def set_track_pan(track: TrackHandle, pan: float):
    track.mixer_device.panning.value = pan
+
+def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   track.mixer_device.panning.add_value_listener(lambda: listener(get_track_pan(track)))
 
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
    name_lower = name.lower()
@@ -73,10 +79,13 @@ def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
    raise PluginNotFoundError(name)
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
-   return get_parameter_value(get_parameter(plugin, 'Device On')) != 0
+   return get_parameter_value(_get_parameter_device_on(plugin)) != 0
 
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
-   set_parameter_value(get_parameter(plugin, 'Device On'), 1.0 if enabled else 0)
+   set_parameter_value(_get_parameter_device_on(plugin), 1.0 if enabled else 0)
+
+def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   _get_parameter_device_on(plugin).add_value_listener(lambda: listener(is_plugin_enabled(plugin)))
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    name_lower = name.lower()
@@ -94,8 +103,14 @@ def get_parameter_value(param: ParameterHandle) -> float:
 def set_parameter_value(param: ParameterHandle, value: float):
    param.value = value
 
+def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   param.add_value_listener(lambda: listener(get_parameter_value(param)))
+ 
 def _get_document():
    return Live.Application.get_application().get_document()
+
+def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
+   return get_parameter(plugin, 'Device On')
 
 def _vol_value_to_db(v: float) -> float:
    if v == 0:

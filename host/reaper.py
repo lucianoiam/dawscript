@@ -26,7 +26,7 @@ RPR_defer = None
 _controller = None
 _proj_path = None
 _event_seq = 0
-_callbacks: Dict[str,Dict[Any,Tuple[Callable,Any]]] = {
+_listeners: Dict[str,Dict[Any,Tuple[Callable,Any]]] = {
    'track_mute': {},
    'track_volume': {},
    'track_pan': {},
@@ -60,7 +60,7 @@ def run_loop():
          _controller.host_callback(_read_midi_events())
       except AttributeError:
          pass
-      _run_track_callbacks()
+      _call_listeners()
    except Exception as e:
       log(repr(e))
    RPR_defer('from host import reaper; reaper.run_loop()')
@@ -88,8 +88,8 @@ def is_track_mute(track: TrackHandle) -> bool:
 def set_track_mute(track: TrackHandle, mute: bool):
    RPR_SetTrackUIMute(track, mute, 0)
 
-def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
-   _callbacks['track_mute'][track] = (callback, is_track_mute(track))
+def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   _listeners['track_mute'][track] = (listener, is_track_mute(track))
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
@@ -97,8 +97,14 @@ def get_track_volume(track: TrackHandle) -> float:
 def set_track_volume(track: TrackHandle, volume_db: float):
    RPR_SetTrackUIVolume(track, _db_to_vol_value(volume_db), False, False, 0)
 
+def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _listeners['track_volume'][track] = (listener, get_track_volume(track))
+
 def get_track_pan(track: TrackHandle) -> float:
    return RPR_GetTrackUIVolPan(track, 0.0, 0.0)[3]
+
+def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _listeners['track_pan'][track] = (listener, get_track_pan(track))
 
 def set_track_pan(track: TrackHandle, pan: float):
    RPR_SetTrackUIPan(track, pan, False, False, 0)
@@ -110,10 +116,13 @@ def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
    return (track, plugin)
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
-   return RPR_TrackFX_GetEnabled(*plugin)
+   return RPR_TrackFX_GetEnabled(*plugin) == 1
 
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
    RPR_TrackFX_SetEnabled(*plugin, enabled)
+
+def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   _listeners['plugin_enabled'][plugin] = (listener, is_plugin_enabled(plugin))
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    name_lower = name.lower()
@@ -131,6 +140,9 @@ def get_parameter_value(param: ParameterHandle) -> float:
 
 def set_parameter_value(param: ParameterHandle, value: float):
    RPR_TrackFX_SetParam(*param, value)
+
+def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   _listeners['parameter_value'][param] = (listener, get_parameter_value(param))
 
 TWENTY_OVER_LN10 = 8.6858896380650365530225783783321
 LN10_OVER_TWENTY = 0.11512925464970228420089957273422
@@ -177,12 +189,32 @@ def _read_midi_events():
 
    return events
 
-def _run_track_callbacks():
-   for (track, (callback, prev)) in _callbacks['track_mute'].items():
+def _call_listeners():
+   for (track, (listener, prev)) in _listeners['track_mute'].items():
       now = is_track_mute(track)
       if now != prev:
-         _callbacks['track_mute'][track] = (callback, now)
-         callback(now)
+         _listeners['track_mute'][track] = (listener, now)
+         listener(now)
+   for (track, (listener, prev)) in _listeners['track_volume'].items():
+      now = get_track_volume(track)
+      if now != prev:
+         _listeners['track_volume'][track] = (listener, now)
+         listener(now)
+   for (track, (listener, prev)) in _listeners['track_pan'].items():
+      now = get_track_pan(track)
+      if now != prev:
+         _listeners['track_pan'][track] = (listener, now)
+         listener(now)
+   for (plugin, (listener, prev)) in _listeners['plugin_enabled'].items():
+      now = is_plugin_enabled(plugin)
+      if now != prev:
+         _listeners['plugin_enabled'][plugin] = (listener, now)
+         listener(now)
+   for (param, (listener, prev)) in _listeners['parameter_value'].items():
+      now = get_parameter_value(param)
+      if now != prev:
+         _listeners['parameter_value'][param] = (listener, now)
+         listener(now)
 
 """
 /opt/REAPER/Plugins/reaper_python.py @ 2826

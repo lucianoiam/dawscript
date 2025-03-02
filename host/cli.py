@@ -68,8 +68,8 @@ def is_track_mute(track: TrackHandle) -> bool:
 def set_track_mute(track: TrackHandle, mute: bool):
    log(f'stub: set_track_mute( {track} )')
 
-def set_track_mute_callback(track: TrackHandle, callback: Callable[[bool],None]):
-   log(f'stub: set_track_mute_callback( {track}, {callback} )')
+def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   log(f'stub: set_track_mute_listener( {track}, {listener} )')
 
 def get_track_volume(track: TrackHandle) -> float:
    log(f'stub: get_track_volume( {track} )')
@@ -78,9 +78,15 @@ def get_track_volume(track: TrackHandle) -> float:
 def set_track_volume(track: TrackHandle, volume_db: float):
    log(f'stub: set_track_volume( {track}, {volume_db} )')
 
+def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   log(f'stub: set_track_volume_listener( {track}, {listener} )')
+
 def get_track_pan(track: TrackHandle) -> float:
    log(f'stub: get_track_pan( {track} )')
    return 0.0
+
+def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   log(f'stub: set_track_pan_listener( {track}, {listener} )')
 
 def set_track_pan(track: TrackHandle, pan: float):
    log(f'stub: set_track_pan( {track}, {pan} )')
@@ -96,6 +102,9 @@ def is_plugin_enabled(plugin: PluginHandle) -> bool:
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
    log(f'stub: set_plugin_enabled( {plugin}, {enabled} )')
 
+def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   log(f'stub: set_plugin_enabled_listener( {plugin}, {listener} )')
+
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    log(f'stub: get_parameter( {plugin}, {name} )')
    return name
@@ -110,6 +119,9 @@ def get_parameter_value(param: ParameterHandle) -> float:
 
 def set_parameter_value(param: ParameterHandle, value: float):
    log(f'stub: set_parameter_value( {param}, {value} )')
+
+def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   log(f'stub: set_parameter_value_listener( {param}, {listener} )')
 
 def _jack_proc(frames: int):
    for offset, data in _jack_midi_in.incoming_midi_events():
