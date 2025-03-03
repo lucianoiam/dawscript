@@ -3,7 +3,7 @@
 
 """
 This __init__.py file is only needed by Ableton Live
-Update sys.path so imports in controller.py work without modification
+Update sys.path so imports in controller.py work without modifications
 """
 
 import os

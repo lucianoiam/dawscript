@@ -21,7 +21,12 @@ Current Features
 - MIDI input
 - Track volume, panning, and mute control
 - Plugin bypass and parameter control
+- Listeners
 - Footswitch logic with gestures like press, double press, and long press
+
+Features Under Development
+--------------------------
+- Network bridge to JavaScript running on a browser
 
 Requirements
 ------------
@@ -31,9 +36,9 @@ Requirements
 
 Quick Start
 -----------
-Copy or symlink one of the .py files in the `examples` directory to the
-project's root directory (where dawscript.py resides). How to install the script
-depends on the DAW, detailed instructions coming soon.
+Copy or symlink one of the controller.py files in the `examples` directory to
+the project's root directory (where dawscript.py resides). How to install the
+script depends on the DAW, detailed instructions coming soon.
 
 Examples
 --------
@@ -41,7 +46,7 @@ All the examples are functionally equivalent but differ in implementation. The
 mute state of a track named *Track 1* is toggled when a footswitch that sends
 MIDI control messages for *Sustain Pedal* (CC64) is pressed:
 
-[No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file.yml)
+[No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file/config.yml)
 ```yaml
 # config_file.yml
 
@@ -53,20 +58,20 @@ MIDI control messages for *Sustain Pedal* (CC64) is pressed:
       pressed: host.toggle_track_mute_by_name, Track 1
 ```
 ```python
-# config_file.py
+# controller.py
 
-(config, gadgets) = gadget.make_from_yaml(
-   host.dawscript_relpath('examples/config_file.yml'),
+(config, gadgets) = make_config_and_gadgets(
+   dawscript_relpath('examples/config_file/config.yml'),
    globals()
 )
 
 def host_callback(midi: list[bytes]):
-   gadget.process_midi(midi, gadgets)
+   process_midi(midi, gadgets)
 ```
 
-[Object-oriented tracks API](https://github.com/lucianoiam/dawscript/blob/master/examples/high_level_api.py)
+[Object-oriented tracks API](https://github.com/lucianoiam/dawscript/blob/master/examples/high_level_api/controller.py)
 ```python
-# high_level_api.py
+# controller.py
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
@@ -85,9 +90,9 @@ def host_callback(midi: list[bytes]):
    footswitch.process(midi)
 ```
 
-[Plain calls to DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/low_level_api.py)
+[Plain calls to DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/low_level_api/controller.py)
 ```python
-# low_level_api.py
+# controller.py
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 footswitch = Footswitch()

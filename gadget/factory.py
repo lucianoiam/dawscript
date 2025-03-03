@@ -8,6 +8,7 @@ from .types import Gadget
 from host import Config, host
 from thirdparty import yaml
 from thirdparty.mido import Message
+from .types import Gadget
 
 def make_message(serialized_msg: str, ch_from_1: int = 1) -> Message:
    (status, *sdata) = serialized_msg.split(' ')
@@ -63,7 +64,7 @@ def make_gadgets(yml_file: str, ctrl_globals: dict) -> list[Gadget]:
 def make_config(gadgets: list[Gadget]):
    return Config(midi_inputs=set([g.midi_port for g in gadgets if g.midi_port]))
 
-def make_from_yaml(yml_file: str, ctrl_globals: dict) -> (Config,list):
+def make_config_and_gadgets(yml_file: str, ctrl_globals: dict) -> (Config,list):
    gadgets = make_gadgets(yml_file, ctrl_globals)
    return (make_config(gadgets), [g.instance for g in gadgets])
 

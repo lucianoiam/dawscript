@@ -4,7 +4,7 @@
 from .factory import *
 from .footswitch import *
 from .midoutil import *
-from .types import Gadget
+from .types import *
 
 def process_midi(midi: list[bytes], gadgets: list[Gadget]):
    for gadget in gadgets:

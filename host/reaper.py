@@ -26,6 +26,8 @@ RPR_defer = None
 _controller = None
 _proj_path = None
 _event_seq = 0
+
+# [ listener_type : [ observable_handle : (callback, observable_last_value) ] ]
 _listeners: Dict[str,Dict[Any,Tuple[Callable,Any]]] = {
    'track_mute': {},
    'track_volume': {},
