@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from gadget import Footswitch, make_midi_messages
+from gadget import Footswitch
+from util import make_midi_messages
 from host import ALL_MIDI_INPUTS, Config, get_track, toggle_track_mute
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)

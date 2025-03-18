@@ -60,13 +60,14 @@ MIDI control messages for *Sustain Pedal* (CC64) is pressed:
 ```python
 # controller.py
 
-(config, gadgets) = make_config_and_gadgets(
+(config, gadgets) = parse_config_file(
    dawscript_relpath('examples/config_file/config.yml'),
    globals()
 )
 
 def host_callback(midi: list[bytes]):
-   process_midi(midi, gadgets)
+   for gadget in gadgets:
+      gadget.process(midi)
 ```
 
 [Object-oriented tracks API](https://github.com/lucianoiam/dawscript/blob/master/examples/high_level_api/controller.py)

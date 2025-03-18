@@ -5,8 +5,8 @@ import time
 from enum import Enum
 from typing import Callable, Union
 
-from .midoutil import is_note_on_or_off
 from thirdparty.mido import Message
+from util import is_note_on_or_off
 
 class State(Enum):
    PRESSED = 0

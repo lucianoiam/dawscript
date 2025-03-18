@@ -22,5 +22,4 @@ def on_project_load():
       Host.log('Incompatible project loaded')
 
 def host_callback(midi: list[bytes]):
-   log('callback')
    footswitch.process(midi)
