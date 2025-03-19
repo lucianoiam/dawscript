@@ -41,6 +41,7 @@ def name() -> str
 def log(message: str)
 def set_context(context: Any)
 def run_loop()
+def get_tracks() -> List[TrackHandle]
 def get_track(name: str) -> TrackHandle
 def is_track_mute(track: TrackHandle) -> bool
 def set_track_mute(track: TrackHandle, mute: bool)

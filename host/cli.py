@@ -57,6 +57,10 @@ def run_loop():
    _jack_client.deactivate()
    _jack_client.close()
 
+def get_tracks() -> List[TrackHandle]:
+   log(f'stub: get_tracks()')
+   return []
+
 def get_track(name: str) -> TrackHandle:
    log(f'stub: get_track( {name} )')
    return name

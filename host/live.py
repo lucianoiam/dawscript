@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+from typing import List
+
 from .types import IncompatibleEnvironmentError
 
 try:
@@ -36,6 +38,9 @@ def set_context(context: Any):
 
 def run_loop():
    pass
+
+def get_tracks() -> List[TrackHandle]:
+   return list(_get_document().tracks)
 
 def get_track(name: str) -> TrackHandle:
    name_lower = name.lower()

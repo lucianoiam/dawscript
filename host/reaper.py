@@ -67,22 +67,27 @@ def run_loop():
       log(repr(e))
    RPR_defer('from host import reaper; reaper.run_loop()')
 
-def get_track(name: str) -> TrackHandle:
-   name_lower = name.lower()
-   track = None
+def get_tracks() -> List[TrackHandle]:
+   tracks = list()
    i = 0
 
-   while i != -1:
-      track_i = RPR_GetTrack(0, i)
+   while True:
+      track = RPR_GetTrack(0, i)
       i += 1
-      if track_i == '(MediaTrack*)0x0000000000000000':
-         raise TrackNotFoundError(name)
-      else:
-         if RPR_GetTrackName(track_i, '', 32)[2].lower() == name_lower:
-            track = track_i
-            i = -1
+      if track == '(MediaTrack*)0x0000000000000000':
+         break
+      tracks.append(track)
 
-   return track
+   return tracks
+
+def get_track(name: str) -> TrackHandle:
+   name_lower = name.lower()
+
+   for track in get_tracks():
+      if RPR_GetTrackName(track, '', 32)[2].lower() == name_lower:
+         return track
+
+   raise TrackNotFoundError(name)       
 
 def is_track_mute(track: TrackHandle) -> bool:
    return RPR_GetTrackUIMute(track, False)[2] == 1
