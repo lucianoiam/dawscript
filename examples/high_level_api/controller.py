@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+from typing import List
+
 from gadget import Footswitch
 from host import ALL_MIDI_INPUTS, Config, Host, Track, TrackNotFoundError, log
 
@@ -21,5 +23,5 @@ def on_project_load():
    except TrackNotFoundError:
       Host.log('Incompatible project loaded')
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
    footswitch.process(midi)

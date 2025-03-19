@@ -3,7 +3,7 @@
 
 import time
 from enum import Enum
-from typing import Callable, Union
+from typing import Callable, Dict, List, Union
 
 from thirdparty.mido import Message
 from util import is_note_on_or_off
@@ -20,8 +20,8 @@ class Footswitch:
 
    def __init__(self):
       self._state: State = None
-      self._midi_map: list[(Message, bool, bool)] = list()
-      self._callbacks: dict[State, Callable] = dict()
+      self._midi_map: List[(Message, bool, bool)] = list()
+      self._callbacks: Dict[State, Callable] = dict()
       self._release_flag = 0
       self._press_flag = False
       self._press_t = 0
@@ -143,7 +143,7 @@ class Footswitch:
    """
    Convenience methods
    """
-   def process(self, msgs: list[Union[bytes, Message]]):
+   def process(self, msgs: List[Union[bytes, Message]]):
       for msg in msgs:
          if not isinstance(msg, Message):
             msg = Message.from_bytes(msg)

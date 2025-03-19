@@ -65,7 +65,7 @@ MIDI control messages for *Sustain Pedal* (CC64) is pressed:
    globals()
 )
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
    for gadget in gadgets:
       gadget.process(midi)
 ```
@@ -87,7 +87,7 @@ def on_project_load():
    except TrackNotFoundError:
       Host.log('Incompatible project loaded')
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
    footswitch.process(midi)
 ```
 
@@ -98,7 +98,7 @@ def host_callback(midi: list[bytes]):
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 footswitch = Footswitch()
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
    for msg in make_midi_messages(midi):
       if msg.is_cc() and msg.control == 64:
          if msg.value == 127:

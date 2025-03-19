@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+from typing import List
+
 from gadget import Footswitch
 from util import make_midi_messages
 from host import ALL_MIDI_INPUTS, Config, get_track, toggle_track_mute
@@ -9,7 +11,7 @@ config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
 footswitch = Footswitch()
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
    for msg in make_midi_messages(midi):
       if msg.is_cc() and msg.control == 64:
          if msg.value == 127:

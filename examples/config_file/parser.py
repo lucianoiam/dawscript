@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections import namedtuple
-from typing import Callable
+from typing import Callable, List
 
 from gadget import Footswitch
 from host import Config, host
@@ -66,7 +66,7 @@ def _make_message(serialized_msg: str, ch_from_1: int = 1) -> Message:
    else:
       raise Exception(f'Message type not supported: {status}')
 
-def _make_config(gadgets: list[ParsedGadget]):
+def _make_config(gadgets: List[ParsedGadget]):
    return Config(midi_inputs=set([g.midi_port for g in gadgets if g.midi_port]))
 
 def _build_callback(pseudocode: str, ctrl_globals: dict):

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
+from typing import List
 
 from host import ALL_MIDI_INPUTS, Config, log
 from thirdparty import websockets
@@ -11,7 +12,7 @@ from thirdparty import websockets
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 loop = asyncio.get_event_loop()
 
-def host_callback(midi: list[bytes]):
+def host_callback(midi: List[bytes]):
     loop.run_until_complete(_noop())
 
 async def _noop():
