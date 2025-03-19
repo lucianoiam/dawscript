@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import Callable
+from typing import Any, Callable, List
 
 import host
 from host.types import ParameterHandle, PluginHandle, TrackHandle
@@ -71,6 +71,16 @@ class Plugin:
 class Track:
    def __init__(self, name: str):
       self._handle = host.get_track(name)
+
+   def __init__(self, handle: Any):
+      self._handle = handle
+
+   @staticmethod
+   def all() -> List[TrackHandle]:
+      tracks = list()
+      for handle in host.get_tracks():
+         tracks.append(Track(handle))
+      return tracks
 
    @property
    def mute(self) -> bool:
