@@ -128,16 +128,20 @@ def _jack_proc(frames: int):
       _midi_queue.put_nowait(bytes(data))
 
 def _connect_ports():
-   midi_inputs = _jack_client.get_ports(
-      name_pattern='|'.join(_controller.config.midi_inputs),
-      is_midi=True, is_output=True)
+   try:
+      midi_inputs = _jack_client.get_ports(
+         name_pattern='|'.join(_controller.config.midi_inputs),
+         is_midi=True, is_output=True)
+   except AttributeError:
+      print('config not available', file=sys.stderr)
+      return
    for some_midi_input in midi_inputs:
       try:
          if not _jack_midi_in.is_connected_to(some_midi_input):
             _jack_midi_in.connect(some_midi_input)
             log(f'{some_midi_input.name} <- {_jack_midi_in.name}')
       except jack.JackError as e:
-         log(str(e), file=sys.stderr)
+         print(str(e), file=sys.stderr)
 
 def _read_midi_events():
    events = list()
