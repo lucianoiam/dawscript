@@ -16,7 +16,7 @@ def parse_config_file(yml_file: str, ctrl_globals: dict) -> (Config,list):
    gadgets = _make_gadgets(yml_file, ctrl_globals)
    return (_make_config(gadgets), [g.instance for g in gadgets])
 
-def _make_gadgets(yml_file: str, ctrl_globals: dict) -> list[ParsedGadget]:
+def _make_gadgets(yml_file: str, ctrl_globals: dict) -> List[ParsedGadget]:
    gadgets = list()
 
    for config_dict in yaml.load(open(yml_file, 'r'), Loader=yaml.Loader):

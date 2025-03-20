@@ -14,7 +14,7 @@ def make_note_on(*args, **kwargs) -> Message:
 def make_note_off(*args, **kwargs) -> Message:
    return Message('note_off', *args, **kwargs)
 
-def make_midi_messages(midi: List[bytes]) -> list[Message]:
+def make_midi_messages(midi: List[bytes]) -> List[Message]:
    return [Message.from_bytes(msg_bytes) for msg_bytes in midi]
 
 def is_note_on_or_off(msg: Message) -> bool:
