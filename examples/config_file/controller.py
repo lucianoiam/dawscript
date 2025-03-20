@@ -6,7 +6,6 @@ import sys
 from typing import List
 
 from util import add_site_packages, dawscript_path
-
 ds_path = dawscript_path('examples', 'config_file')
 add_site_packages(ds_path)
 
