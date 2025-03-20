@@ -1,10 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'site-packages'))
-
 from .objects import *
 from .types import *
 
@@ -22,10 +18,6 @@ try:
    name()
 except NameError:
    from .cli import *
-
-def dawscript_relpath(*args) -> str:
-   file_path = os.path.dirname(os.path.realpath(__file__))
-   return os.path.abspath(os.path.join(file_path, '..', *args))
 
 def toggle_track_mute(track: TrackHandle):
    set_track_mute(track, not is_track_mute(track))

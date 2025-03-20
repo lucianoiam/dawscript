@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-"""
-This __init__.py file is only needed by Ableton Live
-Update sys.path so imports in controller.py work without modifications
-"""
+# This __init__.py file is only needed by Ableton Live
 
 import os
 import sys

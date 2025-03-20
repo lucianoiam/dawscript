@@ -6,10 +6,12 @@ import os
 import sys
 from typing import List
 
-from host import ALL_MIDI_INPUTS, Config, dawscript_relpath, log
+from host import ALL_MIDI_INPUTS, Config, log
+from util import add_site_packages, dawscript_path
 
-proj_path = dawscript_relpath('examples', 'browser_js')
-sys.path.insert(0, os.path.join(proj_path, 'site-packages'))
+ds_path = dawscript_path('examples', 'browser_js')
+add_site_packages(ds_path)
+
 import websockets
 from aiohttp import web
 
@@ -35,8 +37,7 @@ ws_server = loop.run_until_complete(_ws_serve())
 """ HTTP server """
 try:
     async def _http_handle(request):
-        filename = request.match_info.get('filename')
-        filepath = os.path.join(proj_path, filename)
+        filepath = os.path.join(ds_path, request.match_info.get('filename'))
 
         if os.path.isdir(filepath):
             filepath = os.path.join(filepath, 'index.html')

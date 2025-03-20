@@ -60,10 +60,7 @@ MIDI control messages for *Sustain Pedal* (CC64) is pressed:
 ```python
 # controller.py
 
-(config, gadgets) = parse_config_file(
-   dawscript_relpath('examples', 'config_file', 'config.yml'),
-   globals()
-)
+(config, gadgets) = parse_config_file('config.yml', globals())
 
 def host_callback(midi: List[bytes]):
    for gadget in gadgets:

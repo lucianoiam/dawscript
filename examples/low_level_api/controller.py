@@ -4,8 +4,8 @@
 from typing import List
 
 from gadget import Footswitch
-from util import make_midi_messages
 from host import ALL_MIDI_INPUTS, Config, get_track, toggle_track_mute
+from util.mido import make_midi_messages
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 

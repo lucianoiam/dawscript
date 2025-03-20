@@ -5,16 +5,17 @@ import os
 import sys
 from typing import List
 
-from host import dawscript_relpath
+from util import add_site_packages, dawscript_path
 
-proj_path = dawscript_relpath('examples', 'config_file')
-sys.path.insert(0, os.path.join(proj_path, 'site-packages'))
+ds_path = dawscript_path('examples', 'config_file')
+add_site_packages(ds_path)
+
 from examples.config_file.parser import parse_config_file
 
 #from example_functions import pressed_twice_callback
 
 (config, gadgets) = parse_config_file(
-   os.path.join(proj_path, 'config.yml'),
+   os.path.join(ds_path, 'config.yml'),
    globals()
 )
 

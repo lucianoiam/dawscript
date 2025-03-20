@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Callable, Dict, List, Union
 
 from mido import Message
-from util import is_note_on_or_off
+from util.mido import is_note_on_or_off
 
 class State(Enum):
    PRESSED = 0
