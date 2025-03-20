@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'site-packages'))
 
 from .objects import *
 from .types import *

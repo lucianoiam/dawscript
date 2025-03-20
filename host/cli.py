@@ -8,7 +8,7 @@ import signal
 import sys
 import time
 import threading
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 from .shared import load_controller
 from .types import ParameterHandle, PluginHandle, TrackHandle

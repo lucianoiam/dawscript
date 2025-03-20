@@ -15,15 +15,6 @@ ParameterHandle = Any
 class IncompatibleEnvironmentError(Exception):
    pass
 
-class ControllerLoadError(Exception):
-   def __init__(self, exception):
-      message = 'Could not load controller.py. '
-      if isinstance(exception, ModuleNotFoundError):
-         message += 'The file must be present in the same directory as dawscript.py.'
-      else:
-         message += repr(exception)
-      super().__init__(message)
-
 class TrackNotFoundError(Exception):
    def __init__(self, name: str):
       super().__init__(f'Track with name "{name}" does not exist')

@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from typing import Callable, Dict, List, Union
 
-from thirdparty.mido import Message
+from mido import Message
 from util import is_note_on_or_off
 
 class State(Enum):

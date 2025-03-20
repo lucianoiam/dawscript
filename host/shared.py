@@ -3,13 +3,5 @@
 
 import importlib
 
-from .types import ControllerLoadError
-
 def load_controller():
-   nfe = None
-   try:
-      return importlib.import_module('controller')
-   except ModuleNotFoundError as e:
-      nfe = e
-   if nfe:
-      raise ControllerLoadError(nfe)
+   return importlib.import_module('controller')

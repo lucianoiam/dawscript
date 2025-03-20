@@ -3,7 +3,7 @@
 
 from typing import List
 
-from thirdparty.mido import Message
+from mido import Message
 
 def make_cc(*args, **kwargs) -> Message:
    return Message('control_change', *args, **kwargs)
