@@ -7,7 +7,7 @@ from typing import List
 
 from host import dawscript_relpath
 
-proj_path = dawscript_relpath(os.path.join('examples', 'config_file'))
+proj_path = dawscript_relpath('examples', 'config_file')
 sys.path.insert(0, os.path.join(proj_path, 'site-packages'))
 from examples.config_file.parser import parse_config_file
 

@@ -8,7 +8,7 @@ from typing import List
 
 from host import ALL_MIDI_INPUTS, Config, dawscript_relpath, log
 
-proj_path = dawscript_relpath(os.path.join('examples', 'browser_js'))
+proj_path = dawscript_relpath('examples', 'browser_js')
 sys.path.insert(0, os.path.join(proj_path, 'site-packages'))
 import websockets
 from aiohttp import web
