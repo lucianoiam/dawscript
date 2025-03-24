@@ -1,6 +1,11 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
+const _callbacks = {};
+const _queue = [];
+const _socket = _create_websocket();
+let _seq = 0;
+
 async function get_tracks() {
    return await _call('get_tracks');
 }
@@ -81,6 +86,78 @@ async function set_parameter_value_listener(param, listener) {
    await _call('set_parameter_value_listener', param, listener);
 }
 
-async function _call(func, ...args) {
-   // TODO
+function _call(func, ...args) {
+   return new Promise((resolve, reject) => {
+      const seq = _seq++;
+      const message = JSON.stringify([seq, func, ...args]);
+
+      _callbacks[seq] = [resolve, reject];
+
+      if (_socket.readyState == WebSocket.OPEN) {
+         _send(seq, message);
+      } else {
+         _queue.push([seq, message]);
+      }
+   });
+}
+
+function _send(seq, message) {
+   try {
+      _socket.send(message);
+   } catch (error) {
+      const [_, reject] = _pop_callbacks(seq);
+      reject(error);
+   }
+}
+
+function _handle(seq, result) {
+   const [resolve, reject] = _pop_callbacks(seq);
+
+   if (typeof result === 'string' && result.startsWith('error:')) {
+      reject(new HostError(result.slice(6)));
+   } else {
+      resolve(result);
+   }
+}
+
+function _pop_callbacks(seq) {
+   const callbacks = _callbacks[seq];
+   delete _callbacks[seq];
+   return callbacks;
+}
+
+function _create_websocket() {
+   // TODO - get port number from URL query string
+   const socket = new WebSocket('ws://localhost:49152');
+
+   socket.onopen = () => {
+      console.log('Connected');
+
+      while (_queue.length > 0) {
+         const [seq, message] = _queue.shift();
+         _send(seq, message);
+      }
+   };
+
+   socket.onmessage = (event) => {
+      const [seq, result] = JSON.parse(event.data);
+      _handle(seq, result);
+   };
+
+   socket.onclose = () => {
+      console.log('Disconnected');
+   };
+
+   socket.onerror = (error) => {
+      console.error(error);
+   };
+
+   return socket;
+}
+
+class HostError extends Error {
+   constructor(message) {
+      super(`host: ${message}`);
+      this.name = this.constructor.name;
+   }
 }

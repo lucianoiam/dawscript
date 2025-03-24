@@ -11,4 +11,4 @@ from examples.browser_js import server
 server.start()
 
 def host_callback(midi: List[bytes]):
-    server.do_work()
+   server.do_work()
