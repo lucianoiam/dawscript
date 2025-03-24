@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
+const DEFAULT_PORT_WEBSOCKET = 49152;
+
 const _callbacks = {};
 const _queue = [];
 const _socket = _create_websocket();
+
 let _seq = 0;
 
 async function get_tracks() {
@@ -125,8 +128,6 @@ function _pop_callbacks(seq) {
    delete _callbacks[seq];
    return callbacks;
 }
-
-const DEFAULT_PORT_WEBSOCKET = 49152;
 
 function _create_websocket() {
    const port = new URLSearchParams(window.location.search).get('port')

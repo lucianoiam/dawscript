@@ -44,8 +44,14 @@ def log(message: str):
 
 def set_context(context: Any):
    global RPR_defer, _controller
+   RPR_atexit = context['RPR_atexit']
    RPR_defer = context['RPR_defer']
    _controller = load_controller()
+   RPR_atexit('from host import reaper; reaper.cleanup()')
+   try:
+      _controller.on_script_start()
+   except AttributeError:
+      pass
 
 def run_loop():
    global _proj_path
@@ -66,6 +72,12 @@ def run_loop():
    except Exception as e:
       log(repr(e))
    RPR_defer('from host import reaper; reaper.run_loop()')
+
+def cleanup():
+   try:
+      _controller.on_script_stop()
+   except AttributeError:
+      pass
 
 def get_tracks() -> List[TrackHandle]:
    tracks = list()

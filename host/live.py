@@ -147,17 +147,17 @@ class DawscriptControlSurface(ControlSurface):
       self.request_rebuild_midi_map()
       dawscript = importlib.import_module('.dawscript', 'dawscript')
       dawscript.main(self)
-      controller = load_controller()
+      self.controller = load_controller()
       try:
-         self.host_callback = controller.host_callback
-      except AttributeError:
-         self.host_callback = None
-      try:
-         controller.on_project_load()
+         self.controller.on_script_start()
       except AttributeError:
          pass
 
    def disconnect(self):
+      try:
+         self.controller.on_script_stop()
+      except AttributeError:
+         pass
       super(DawscriptControlSurface, self).disconnect()
 
    def build_midi_map(self, midi_map_handle):
@@ -174,10 +174,12 @@ class DawscriptControlSurface(ControlSurface):
          log(repr(e))
 
    def update_display(self):
-      if self.host_callback is None:
+      try:
+         host_callback = self.controller.host_callback
+      except AttributeError:
          return
       try:
-         self.host_callback(self.events)
+         host_callback(self.events)
          self.events.clear()
       except Exception as e:
          log(repr(e))

@@ -7,7 +7,7 @@ import os
 import sys
 
 import websockets
-from aiohttp import web
+from aiohttp import web, web_runner
 
 import host
 from util import dawscript_path
@@ -17,11 +17,19 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 PORT_WEBSOCKET = 49152
 PORT_HTTP = 8080
 
-loop = asyncio.get_event_loop()
+loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+ws_server: asyncio.AbstractServer = None
+http_server: web_runner.AppRunner = None
 
 def start():
-   loop.run_until_complete(_ws_serve())
-   loop.run_until_complete(_http_serve())
+   global ws_server
+   ws_server = loop.run_until_complete(_ws_serve())
+   global http_server
+   http_server = loop.run_until_complete(_http_serve())
+
+def stop():
+   loop.run_until_complete(http_server.cleanup())
+   ws_server.close()
 
 def do_work():
    loop.run_until_complete(_noop())
@@ -48,6 +56,8 @@ async def _http_serve():
 
    site = web.TCPSite(runner, '127.0.0.1', PORT_HTTP)
    await site.start()
+
+   return runner
 
 async def _http_handle(request):
    htdocs = dawscript_path('examples', 'browser_js', 'htdocs')
