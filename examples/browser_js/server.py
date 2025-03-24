@@ -14,8 +14,8 @@ from util import dawscript_path
 
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
-BASE_PORT_WEBSOCKET = 49152
-BASE_PORT_HTTP = 8080
+PORT_WEBSOCKET = 49152
+PORT_HTTP = 8080
 
 loop = asyncio.get_event_loop()
 
@@ -27,8 +27,7 @@ def do_work():
    loop.run_until_complete(_noop())
 
 async def _ws_serve():
-   # TODO - retry port+1 if port already taken
-   return await websockets.serve(_ws_handle, 'localhost', BASE_PORT_WEBSOCKET)
+   return await websockets.serve(_ws_handle, 'localhost', PORT_WEBSOCKET)
 
 async def _ws_handle(ws, path):
    async for message in ws:
@@ -47,8 +46,7 @@ async def _http_serve():
    runner = web.AppRunner(app)
    await runner.setup()
 
-   # TODO - retry port+1 if port already taken
-   site = web.TCPSite(runner, '127.0.0.1', BASE_PORT_HTTP)
+   site = web.TCPSite(runner, '127.0.0.1', PORT_HTTP)
    await site.start()
 
 async def _http_handle(request):

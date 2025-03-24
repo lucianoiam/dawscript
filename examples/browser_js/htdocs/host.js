@@ -126,12 +126,15 @@ function _pop_callbacks(seq) {
    return callbacks;
 }
 
+const DEFAULT_PORT_WEBSOCKET = 49152;
+
 function _create_websocket() {
-   // TODO - get port number from URL query string
-   const socket = new WebSocket('ws://localhost:49152');
+   const port = new URLSearchParams(window.location.search).get('port')
+                  || DEFAULT_PORT_WEBSOCKET;
+   const socket = new WebSocket(`ws://localhost:${port}`);
 
    socket.onopen = () => {
-      console.log('Connected');
+      console.log('host: connected');
 
       while (_queue.length > 0) {
          const [seq, message] = _queue.shift();
@@ -145,7 +148,7 @@ function _create_websocket() {
    };
 
    socket.onclose = () => {
-      console.log('Disconnected');
+      console.log('host: disconnected');
    };
 
    socket.onerror = (error) => {
