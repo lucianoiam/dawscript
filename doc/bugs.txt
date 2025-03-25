@@ -2,8 +2,7 @@
   live   : [    0,  1.0]
   reaper : [-20.0, 20.0]
 
-- zeroconf is not available on Live because its built-in Python interpreter
-  apparently has no support for the ctypes module, which is required by ifaddr.
-  Can be fixed by calling dnd-sd on macOS or avahi-publish on Linux. These tools
-  are also available for Windows.
-
+- The zeroconf module is not available on Live because its built-in Python
+  interpreter apparently lacks support for ctypes, which is required by ifaddr.
+  The fallback is to run dns-sd, which is available on major operating systems
+  but is only built-in on macOS.

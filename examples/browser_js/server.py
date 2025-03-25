@@ -6,6 +6,7 @@ import json
 import os
 import re
 import socket
+import subprocess
 import sys
 
 import websockets
@@ -25,6 +26,7 @@ ws_server: asyncio.AbstractServer = None
 http_server: web_runner.AppRunner = None
 zc_instance = None
 zc_serv_info = None
+zc_proc: subprocess.Popen = None
 
 try:
    from zeroconf import ServiceInfo, Zeroconf
@@ -43,21 +45,10 @@ def start():
 
    host.log(f'dawscript @ http://{bind_addr_str}:{PORT_HTTP}')
 
-   try:
-      serv_type = '_http._tcp.local.'
-      global zc_serv_info
-      zc_serv_info = ServiceInfo(serv_type, f'{ZEROCONF_NAME}.{serv_type}',
-         addresses=[bind_addr], port=PORT_HTTP)
-      zc_instance.register_service(zc_serv_info)
-   except Exception as e:
-      host.log(f'zeroconf: {e}')
+   _zeroconf_register(bind_addr, bind_addr_str)
 
 def stop():
-   try:
-      zc_instance.unregister_service(zc_serv_info)
-      zc_instance.close()
-   except Exception as e:
-      host.log(f'zeroconf: {e}')
+   _zeroconf_unregister()
    loop.run_until_complete(http_server.cleanup())
    ws_server.close()
 
@@ -121,3 +112,30 @@ def _get_bind_address():
    naddr = socket.inet_aton(s.getsockname()[0])
    s.close()
    return naddr
+
+def _zeroconf_register(bind_addr, bind_addr_str):
+   try:
+      if zc_instance is not None:
+         serv_type = '_http._tcp.local.'
+         global zc_serv_info
+         zc_serv_info = ServiceInfo(serv_type, f'{ZEROCONF_NAME}.{serv_type}',
+            addresses=[bind_addr], port=PORT_HTTP)
+         zc_instance.register_service(zc_serv_info)
+      else:
+         cmd = ['dns-sd', '-R', ZEROCONF_NAME, '_http._tcp', '.',
+            str(PORT_HTTP), bind_addr_str]
+         global zc_proc
+         zc_proc = subprocess.Popen(cmd)
+   except Exception as e:
+      host.log(f'zeroconf: {e}')
+
+def _zeroconf_unregister():
+   try:
+      if zc_instance is not None:
+         zc_instance.unregister_service(zc_serv_info)
+         zc_instance.close()
+      else:
+         zc_proc.terminate()
+         zc_proc.wait()
+   except Exception as e:
+      host.log(f'zeroconf: {e}')
