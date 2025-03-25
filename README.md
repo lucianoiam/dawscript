@@ -10,11 +10,10 @@ requires little to no coding skills.
 Goals
 -----
 - Control mixer and plugin parameters
+- Create networked user interfaces
 - Run the same unmodified code on different DAWs. Currently, REAPER and Ableton
 Live 11+ are supported.
-- Handle all the boilerplate
-- Be easy to use for casual users
-- Be self-explanatory to programmers
+- Hide all the boilerplate
 
 Current Features
 ----------------
@@ -23,9 +22,6 @@ Current Features
 - Plugin bypass and parameter control
 - Listeners
 - Footswitch logic with gestures like press, double press, and long press
-
-Features Under Development
---------------------------
 - Network bridge to JavaScript running on a browser
 
 Requirements
