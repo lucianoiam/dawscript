@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 const input = document.createElement('input');
-input.placeholder = 'Check host.js for all available functions';
+input.placeholder = 'Check host.js for all available functions. For example: get_tracks()';
 input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') run() });
 
 const output = document.createElement('pre');

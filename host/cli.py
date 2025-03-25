@@ -47,6 +47,11 @@ def run_loop():
 
    signal.signal(signal.SIGINT, lambda sig, frame: ev_quit.set())
 
+   try:
+      _controller.on_script_start()
+   except AttributeError:
+      pass
+
    while not ev_quit.is_set():
       if ev_port_reg.is_set():
          ev_port_reg.clear()

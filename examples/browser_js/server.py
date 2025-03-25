@@ -4,6 +4,7 @@
 import asyncio
 import json
 import os
+import re
 import sys
 
 import websockets
@@ -34,18 +35,25 @@ def stop():
 def do_work():
    loop.run_until_complete(_noop())
 
+async def _noop():
+   pass
+
 async def _ws_serve():
    return await websockets.serve(_ws_handle, 'localhost', PORT_WEBSOCKET)
 
 async def _ws_handle(ws, path):
    async for message in ws:
-      (seq, func, *args) = json.loads(message, cls=ReprJSONDecoder)
-      try:
-         result = getattr(host, func)(*args)
-      except Exception as e:
-         result = f'error:{e}'
-      message = json.dumps([seq, replace_inf(result)], cls=ReprJSONEncoder)
-      await ws.send(message)
+      (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
+      func = getattr(host, func_name)
+      if re.match(r'^set_[a-z_]+_listener$', func_name):
+         func(args[0], lambda result: _call_listener(ws, seq, result))
+         result = None
+      else:
+         try:
+            result = func(*args)
+         except Exception as e:
+            result = f'error:{e}'
+      await _send_message(ws, seq, result)
 
 async def _http_serve():
    app = web.Application()
@@ -71,5 +79,9 @@ async def _http_handle(request):
 
    return web.FileResponse(filepath)
 
-async def _noop():
-   pass
+async def _send_message(ws, seq, data):
+   message = json.dumps([seq, replace_inf(data)], cls=ReprJSONEncoder)
+   await ws.send(message)
+
+def _call_listener(ws, seq, data):
+   loop.run_until_complete(_send_message(ws, seq, data))
