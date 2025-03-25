@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import re
+import socket
 import sys
 
 import websockets
@@ -17,18 +18,44 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 PORT_WEBSOCKET = 49152
 PORT_HTTP = 8080
+ZEROCONF_NAME = 'dawscript'
 
 loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 ws_server: asyncio.AbstractServer = None
 http_server: web_runner.AppRunner = None
+zc_instance = None
+zc_serv_info = None
+
+try:
+   from zeroconf import ServiceInfo, Zeroconf
+   zc_instance = Zeroconf()
+except:
+   host.log('zeroconf not available')
 
 def start():
+   bind_addr = _get_bind_address()
+   bind_addr_str = socket.inet_ntoa(bind_addr)
+
    global ws_server
-   ws_server = loop.run_until_complete(_ws_serve())
+   ws_server = loop.run_until_complete(_ws_serve(bind_addr_str, PORT_WEBSOCKET))
    global http_server
-   http_server = loop.run_until_complete(_http_serve())
+   http_server = loop.run_until_complete(_http_serve(bind_addr_str, PORT_HTTP))
+
+   try:
+      serv_type = '_http._tcp.local.'
+      global zc_serv_info
+      zc_serv_info = ServiceInfo(serv_type, f'{ZEROCONF_NAME}.{serv_type}',
+         addresses=[bind_addr], port=PORT_HTTP)
+      zc_instance.register_service(zc_serv_info)
+   except Exception as e:
+      host.log(f'zeroconf: {e}')
 
 def stop():
+   try:
+      zc_instance.unregister_service(zc_serv_info)
+      zc_instance.close()
+   except Exception as e:
+      host.log(f'zeroconf: {e}')
    loop.run_until_complete(http_server.cleanup())
    ws_server.close()
 
@@ -38,8 +65,8 @@ def do_work():
 async def _noop():
    pass
 
-async def _ws_serve():
-   return await websockets.serve(_ws_handle, 'localhost', PORT_WEBSOCKET)
+async def _ws_serve(bind_addr, port):
+   return await websockets.serve(_ws_handle, bind_addr, port)
 
 async def _ws_handle(ws, path):
    async for message in ws:
@@ -55,14 +82,14 @@ async def _ws_handle(ws, path):
             result = f'error:{e}'
       await _send_message(ws, seq, result)
 
-async def _http_serve():
+async def _http_serve(bind_addr, port):
    app = web.Application()
    app.router.add_get('/{filename:.*}', _http_handle)
 
    runner = web.AppRunner(app)
    await runner.setup()
 
-   site = web.TCPSite(runner, '127.0.0.1', PORT_HTTP)
+   site = web.TCPSite(runner, bind_addr, port)
    await site.start()
 
    return runner
@@ -85,3 +112,10 @@ async def _send_message(ws, seq, data):
 
 def _call_listener(ws, seq, data):
    loop.run_until_complete(_send_message(ws, seq, data))
+
+def _get_bind_address():
+   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+   s.connect(('8.8.8.8', 80))
+   naddr = socket.inet_aton(s.getsockname()[0])
+   s.close()
+   return naddr
