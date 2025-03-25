@@ -41,6 +41,8 @@ def start():
    global http_server
    http_server = loop.run_until_complete(_http_serve(bind_addr_str, PORT_HTTP))
 
+   host.log(f'dawscript @ http://{bind_addr_str}:{PORT_HTTP}')
+
    try:
       serv_type = '_http._tcp.local.'
       global zc_serv_info

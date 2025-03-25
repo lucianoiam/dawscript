@@ -149,7 +149,7 @@ function _pop_promise_cb(seq) {
 function _create_websocket() {
    const port = new URLSearchParams(window.location.search).get('port')
                   || DEFAULT_PORT_WEBSOCKET;
-   const socket = new WebSocket(`ws://localhost:${port}`);
+   const socket = new WebSocket(`ws://${window.location.hostname}:${port}`);
 
    socket.onopen = () => {
       console.log('host: connected');
