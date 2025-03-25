@@ -67,7 +67,7 @@ def host_callback(midi: List[bytes]):
       gadget.process(midi)
 ```
 
-[Object-oriented tracks API](https://github.com/lucianoiam/dawscript/blob/master/examples/high_level_api/controller.py)
+[Object-oriented API](https://github.com/lucianoiam/dawscript/blob/master/examples/objects/controller.py)
 ```python
 # controller.py
 
@@ -88,7 +88,7 @@ def host_callback(midi: List[bytes]):
    footswitch.process(midi)
 ```
 
-[Plain calls to DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/low_level_api/controller.py)
+[Plain calls to DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
 ```python
 # controller.py
 

@@ -4,7 +4,9 @@
 from typing import List
 
 from gadget import Footswitch
-from host import ALL_MIDI_INPUTS, Config, Host, Track, TrackNotFoundError, log
+from host import ALL_MIDI_INPUTS, Config, TrackNotFoundError, log
+
+from examples.objects import Host, Track
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 

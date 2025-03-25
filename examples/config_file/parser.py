@@ -8,7 +8,7 @@ import yaml
 from mido import Message
 
 from gadget import Footswitch
-from host import Config, host
+from host import Config
 
 ParsedGadget = namedtuple('ParsedGadget', ['instance', 'name', 'midi_port'])
 
