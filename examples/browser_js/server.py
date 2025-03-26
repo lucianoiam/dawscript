@@ -6,8 +6,6 @@ import json
 import os
 import re
 import socket
-import subprocess
-import sys
 
 import websockets
 from aiohttp import web, web_runner
@@ -15,24 +13,16 @@ from aiohttp import web, web_runner
 import host
 from util import dawscript_path
 
+from . import dnssd
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 PORT_WEBSOCKET = 49152
 PORT_HTTP = 8080
-ZEROCONF_NAME = 'dawscript'
+SERVICE_NAME = 'dawscript'
 
 loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 ws_server: asyncio.AbstractServer = None
 http_server: web_runner.AppRunner = None
-zc_instance = None
-zc_serv_info = None
-zc_proc: subprocess.Popen = None
-
-try:
-   from zeroconf import ServiceInfo, Zeroconf
-   zc_instance = Zeroconf()
-except:
-   host.log('zeroconf not available')
 
 def start():
    bind_addr = _get_bind_address()
@@ -45,10 +35,13 @@ def start():
 
    host.log(f'dawscript @ http://{bind_addr_str}:{PORT_HTTP}')
 
-   _zeroconf_register(bind_addr, bind_addr_str)
+   try:
+      dnssd.register_service(SERVICE_NAME, '_http._tcp', PORT_HTTP, bind_addr)
+   except Exception as e:
+      host.log(f'dawscript: {e}')
 
 def stop():
-   _zeroconf_unregister()
+   dnssd.unregister_service()
    loop.run_until_complete(http_server.cleanup())
    ws_server.close()
 
@@ -112,30 +105,3 @@ def _get_bind_address():
    naddr = socket.inet_aton(s.getsockname()[0])
    s.close()
    return naddr
-
-def _zeroconf_register(bind_addr, bind_addr_str):
-   try:
-      if zc_instance is not None:
-         serv_type = '_http._tcp.local.'
-         global zc_serv_info
-         zc_serv_info = ServiceInfo(serv_type, f'{ZEROCONF_NAME}.{serv_type}',
-            addresses=[bind_addr], port=PORT_HTTP)
-         zc_instance.register_service(zc_serv_info)
-      else:
-         cmd = ['dns-sd', '-R', ZEROCONF_NAME, '_http._tcp', '.',
-            str(PORT_HTTP), bind_addr_str]
-         global zc_proc
-         zc_proc = subprocess.Popen(cmd)
-   except Exception as e:
-      host.log(f'zeroconf: {e}')
-
-def _zeroconf_unregister():
-   try:
-      if zc_instance is not None:
-         zc_instance.unregister_service(zc_serv_info)
-         zc_instance.close()
-      else:
-         zc_proc.terminate()
-         zc_proc.wait()
-   except Exception as e:
-      host.log(f'zeroconf: {e}')
