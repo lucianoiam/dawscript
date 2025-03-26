@@ -1,8 +1,3 @@
 - get_parameter_range() broken on Live, test with plugin AUGraphicEQ:
   live   : [    0,  1.0]
   reaper : [-20.0, 20.0]
-
-- The zeroconf module is not available on Live because its built-in Python
-  interpreter apparently lacks support for ctypes, which is required by ifaddr.
-  The fallback is to run dns-sd, which is available on major operating systems
-  but is only built-in on macOS.

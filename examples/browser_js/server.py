@@ -24,6 +24,8 @@ loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 ws_server: asyncio.AbstractServer = None
 http_server: web_runner.AppRunner = None
 
+# TODO - also bind to 127.0.0.1
+
 def start():
    bind_addr = _get_bind_address()
    bind_addr_str = socket.inet_ntoa(bind_addr)
@@ -53,6 +55,8 @@ async def _noop():
 
 async def _ws_serve(bind_addr, port):
    return await websockets.serve(_ws_handle, bind_addr, port)
+
+# TODO - support multiple client listeners
 
 async def _ws_handle(ws, path):
    async for message in ws:

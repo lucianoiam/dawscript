@@ -13,6 +13,10 @@ try:
    from zeroconf import ServiceInfo, Zeroconf
    zc_instance = Zeroconf()
 except:
+   """
+   # The zeroconf module is not available on Live because its built-in Python
+   # interpreter lacks support for ctypes, which is required by ifaddr.
+   """
    pass
 
 def register_service(name, service_type, port, address):
@@ -43,7 +47,7 @@ def unregister_service():
       subproc.wait()
 
 def _is_command_in_path(command):
-    path_dirs = os.environ.get('PATH', '').split(os.pathsep)
+    path_dirs = os.environ.get('PATH', '').split(os.pathsep)   
     extensions = ['.exe'] if os.name == 'nt' else ['']
 
     for directory in path_dirs:

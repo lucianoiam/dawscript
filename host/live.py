@@ -153,6 +153,8 @@ class DawscriptControlSurface(ControlSurface):
       except AttributeError:
          pass
 
+   # TODO - remove all listeners
+
    def disconnect(self):
       try:
          self.controller.on_script_stop()
