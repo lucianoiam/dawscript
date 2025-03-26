@@ -10,6 +10,8 @@ const _socket = _create_websocket();
 
 let _message_seq = 0;
 
+// TODO - make _call() smart and remove _call_with_listener
+
 async function get_tracks() {
    return await _call('get_tracks');
 }

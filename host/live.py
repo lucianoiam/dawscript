@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import List
-
 from .types import IncompatibleEnvironmentError
 
 try:
@@ -14,7 +12,7 @@ except ModuleNotFoundError:
 import importlib
 import math
 import sys
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Tuple
 
 from .shared import load_controller
 from .types import (ParameterHandle, ParameterNotFoundError, PluginHandle,
@@ -56,7 +54,12 @@ def set_track_mute(track: TrackHandle, mute: bool):
    track.mute = mute
 
 def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-   track.add_mute_listener(lambda: listener(is_track_mute(track)))
+   _control_surface.set_listener(
+      f'{track}_mute',
+      lambda: listener(is_track_mute(track)),
+      track.add_mute_listener,
+      track.remove_mute_listener
+   )
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(track.mixer_device.volume.value)
@@ -65,7 +68,12 @@ def set_track_volume(track: TrackHandle, volume_db: float):
    track.mixer_device.volume.value = _db_to_vol_value(volume_db)
 
 def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-   track.mixer_device.volume.add_value_listener(lambda: listener(get_track_volume(track)))
+   _control_surface.set_listener(
+      f'{track}_volume',
+      lambda: listener(get_track_volume(track)),
+      track.mixer_device.volume.add_value_listener,
+      track.mixer_device.volume.remove_value_listener
+   )
 
 def get_track_pan(track: TrackHandle) -> float:
    return track.mixer_device.panning.value
@@ -74,7 +82,12 @@ def set_track_pan(track: TrackHandle, pan: float):
    track.mixer_device.panning.value = pan
 
 def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-   track.mixer_device.panning.add_value_listener(lambda: listener(get_track_pan(track)))
+   _control_surface.set_listener(
+      f'{track}_pan',
+      lambda: listener(get_track_pan(track)),
+      track.mixer_device.panning.add_value_listener,
+      track.mixer_device.panning.remove_value_listener
+   )
 
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
    name_lower = name.lower()
@@ -90,7 +103,13 @@ def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
    set_parameter_value(_get_parameter_device_on(plugin), 1.0 if enabled else 0)
 
 def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-   _get_parameter_device_on(plugin).add_value_listener(lambda: listener(is_plugin_enabled(plugin)))
+   device_on = _get_parameter_device_on(plugin)
+   _control_surface.set_listener(
+      f'{plugin}_enabled',
+      lambda: listener(is_plugin_enabled(plugin)),
+      device_on.add_value_listener,
+      device_on.remove_value_listener
+   )
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    name_lower = name.lower()
@@ -109,7 +128,12 @@ def set_parameter_value(param: ParameterHandle, value: float):
    param.value = value
 
 def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-   param.add_value_listener(lambda: listener(get_parameter_value(param)))
+   _control_surface.set_listener(
+      f'{param}_value',
+      lambda: get_parameter_value(param),
+      param.add_value_listener,
+      param.remove_value_listener
+   )
  
 def _get_document():
    return Live.Application.get_application().get_document()
@@ -143,6 +167,7 @@ class DawscriptControlSurface(ControlSurface):
 
    def __init__(self, c_instance):
       super(DawscriptControlSurface, self).__init__(c_instance)
+      self.cleanup_callbacks: Dict[Any,Callable] = {}
       self.events = list()
       self.request_rebuild_midi_map()
       dawscript = importlib.import_module('.dawscript', 'dawscript')
@@ -153,9 +178,9 @@ class DawscriptControlSurface(ControlSurface):
       except AttributeError:
          pass
 
-   # TODO - remove all listeners
-
    def disconnect(self):
+      for callback in self.cleanup_callbacks.values():
+         callback()
       try:
          self.controller.on_script_stop()
       except AttributeError:
@@ -185,3 +210,11 @@ class DawscriptControlSurface(ControlSurface):
          self.events.clear()
       except Exception as e:
          log(repr(e))
+
+   def set_listener(self, target, listener, add_func, remove_func):
+      if target in self.cleanup_callbacks:
+         self.cleanup_callbacks[target]()
+         del self.cleanup_callbacks[target]
+      if listener is not None:
+         self.cleanup_callbacks[target] = lambda: remove_func(listener)
+         add_func(listener)
