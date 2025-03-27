@@ -14,43 +14,44 @@ from aiohttp import web, web_runner
 import host
 from util import dawscript_path
 
-from . import dnssd
+from . import dnssd, listeners
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 PORT_WEBSOCKET = 49152
 PORT_HTTP = 8080
 SERVICE_NAME = 'dawscript'
+HTDOCS = dawscript_path('examples', 'browser_js', 'htdocs')
 
-loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-cleanup: List[Callable] = []
+_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+_cleanup: List[Callable] = []
 
 def start():
    lan_addr = _get_bind_address()
    lan_addr_str = socket.inet_ntoa(lan_addr)
    addrs = ['127.0.0.1', lan_addr_str]
 
-   ws = loop.run_until_complete(_ws_serve(addrs, PORT_WEBSOCKET))
-   http = loop.run_until_complete(_http_serve(addrs, PORT_HTTP))
+   ws = _loop.run_until_complete(_ws_serve(addrs, PORT_WEBSOCKET))
+   http = _loop.run_until_complete(_http_serve(addrs, PORT_HTTP))
 
    try:
       dnssd.register_service(SERVICE_NAME, '_http._tcp', PORT_HTTP, lan_addr)
-      cleanup.append(dnssd.unregister_service)
+      _cleanup.append(dnssd.unregister_service)
    except Exception as e:
       host.log(f'dawscript: {e}')
 
-   cleanup.append(lambda: loop.create_task(http.cleanup()))
-   cleanup.append(ws[1].close)
-   cleanup.append(ws[0].close)
+   _cleanup.append(lambda: _loop.create_task(http.cleanup()))
+   _cleanup.append(ws[1].close)
+   _cleanup.append(ws[0].close)
 
    for addr in addrs:
       host.log(f'dawscript @ http://{addr}:{PORT_HTTP}')
 
 def stop():
-   for func in cleanup:
+   for func in _cleanup:
       func()
 
 def do_work():
-   loop.run_until_complete(_noop())
+   _loop.run_until_complete(_noop())
 
 async def _noop():
    pass
@@ -58,14 +59,13 @@ async def _noop():
 async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
    return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
 
-# TODO - support listeners from multiple clients, simultaneously
-
 async def _ws_handle(ws, path):
    async for message in ws:
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
       func = getattr(host, func_name)
       if re.match(r'^set_[a-z_]+_listener$', func_name):
-         func(args[0], lambda result: _call_listener(ws, seq, result))
+         listeners.set(ws.id, lambda v: _call_listener(ws, seq, v),
+            args[0], func)
          result = None
       else:
          try:
@@ -73,6 +73,7 @@ async def _ws_handle(ws, path):
          except Exception as e:
             result = f'error:{e}'
       await _send_message(ws, seq, result)
+   listeners.remove(ws.id)
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:
    app = web.Application()
@@ -88,8 +89,7 @@ async def _http_serve(addrs, port) -> web_runner.AppRunner:
    return runner
 
 async def _http_handle(request):
-   htdocs = dawscript_path('examples', 'browser_js', 'htdocs')
-   filepath = os.path.join(htdocs, request.match_info.get('filename'))
+   filepath = os.path.join(HTDOCS, request.match_info.get('filename'))
 
    if os.path.isdir(filepath):
       filepath = os.path.join(filepath, 'index.html')
@@ -104,7 +104,7 @@ async def _send_message(ws, seq, data):
    await ws.send(message)
 
 def _call_listener(ws, seq, data):
-   loop.run_until_complete(_send_message(ws, seq, data))
+   _loop.run_until_complete(_send_message(ws, seq, data))
 
 def _get_bind_address():
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
