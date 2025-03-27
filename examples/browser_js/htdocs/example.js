@@ -17,7 +17,7 @@ button.addEventListener('click', run);
 
 function run() {
     try {
-        const result = eval(input.value);
+        const result = eval('dawscript_host.' + input.value);
         if (result instanceof Promise) {
             result.then((asyncResult) => {
                 output.textContent = asyncResult;

@@ -56,7 +56,7 @@ async def _noop():
 async def _ws_serve(bind_addr, port):
    return await websockets.serve(_ws_handle, bind_addr, port)
 
-# TODO - support multiple client listeners
+# TODO - support listeners from multiple clients, simultaneously
 
 async def _ws_handle(ws, path):
    async for message in ws:
