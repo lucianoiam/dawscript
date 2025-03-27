@@ -6,6 +6,7 @@ import json
 import os
 import re
 import socket
+from typing import Callable, List
 
 import websockets
 from aiohttp import web, web_runner
@@ -21,31 +22,32 @@ PORT_HTTP = 8080
 SERVICE_NAME = 'dawscript'
 
 loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-ws_server: asyncio.AbstractServer = None
-http_server: web_runner.AppRunner = None
-
-# TODO - also bind to 127.0.0.1
+cleanup: List[Callable] = []
 
 def start():
-   bind_addr = _get_bind_address()
-   bind_addr_str = socket.inet_ntoa(bind_addr)
+   lan_addr = _get_bind_address()
+   lan_addr_str = socket.inet_ntoa(lan_addr)
+   addrs = ['127.0.0.1', lan_addr_str]
 
-   global ws_server
-   ws_server = loop.run_until_complete(_ws_serve(bind_addr_str, PORT_WEBSOCKET))
-   global http_server
-   http_server = loop.run_until_complete(_http_serve(bind_addr_str, PORT_HTTP))
-
-   host.log(f'dawscript @ http://{bind_addr_str}:{PORT_HTTP}')
+   ws = loop.run_until_complete(_ws_serve(addrs, PORT_WEBSOCKET))
+   http = loop.run_until_complete(_http_serve(addrs, PORT_HTTP))
 
    try:
-      dnssd.register_service(SERVICE_NAME, '_http._tcp', PORT_HTTP, bind_addr)
+      dnssd.register_service(SERVICE_NAME, '_http._tcp', PORT_HTTP, lan_addr)
+      cleanup.append(dnssd.unregister_service)
    except Exception as e:
       host.log(f'dawscript: {e}')
 
+   cleanup.append(lambda: loop.create_task(http.cleanup()))
+   cleanup.append(ws[1].close)
+   cleanup.append(ws[0].close)
+
+   for addr in addrs:
+      host.log(f'dawscript @ http://{addr}:{PORT_HTTP}')
+
 def stop():
-   dnssd.unregister_service()
-   loop.run_until_complete(http_server.cleanup())
-   ws_server.close()
+   for func in cleanup:
+      func()
 
 def do_work():
    loop.run_until_complete(_noop())
@@ -53,8 +55,8 @@ def do_work():
 async def _noop():
    pass
 
-async def _ws_serve(bind_addr, port):
-   return await websockets.serve(_ws_handle, bind_addr, port)
+async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
+   return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
 
 # TODO - support listeners from multiple clients, simultaneously
 
@@ -72,15 +74,16 @@ async def _ws_handle(ws, path):
             result = f'error:{e}'
       await _send_message(ws, seq, result)
 
-async def _http_serve(bind_addr, port):
+async def _http_serve(addrs, port) -> web_runner.AppRunner:
    app = web.Application()
    app.router.add_get('/{filename:.*}', _http_handle)
 
    runner = web.AppRunner(app)
    await runner.setup()
 
-   site = web.TCPSite(runner, bind_addr, port)
-   await site.start()
+   for addr in addrs:
+      site = web.TCPSite(runner, addr, port)
+      await site.start()
 
    return runner
 
