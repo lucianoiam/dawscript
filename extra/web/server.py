@@ -20,12 +20,16 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 PORT_WEBSOCKET = 49152
 PORT_HTTP = 8080
 SERVICE_NAME = 'dawscript'
-HTDOCS = dawscript_path('examples', 'browser_js', 'htdocs')
+BUILTIN_HTDOCS = os.path.join('extra', 'web')
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _cleanup: List[Callable] = []
+_htdocs_path: str = None
 
-def start():
+def start(htdocs_path):
+   global _htdocs_path
+   _htdocs_path = htdocs_path
+
    lan_addr = _get_bind_address()
    lan_addr_str = socket.inet_ntoa(lan_addr)
    addrs = ['127.0.0.1', lan_addr_str]
@@ -89,7 +93,12 @@ async def _http_serve(addrs, port) -> web_runner.AppRunner:
    return runner
 
 async def _http_handle(request):
-   filepath = os.path.join(HTDOCS, request.match_info.get('filename'))
+   filename = request.match_info.get('filename')
+
+   if filename.startswith(BUILTIN_HTDOCS):
+      filepath = dawscript_path(filename)
+   else:
+      filepath = os.path.join(_htdocs_path, filename)
 
    if os.path.isdir(filepath):
       filepath = os.path.join(filepath, 'index.html')

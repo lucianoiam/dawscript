@@ -84,7 +84,7 @@ def host_callback(midi: List[bytes]):
    footswitch.process(midi)
 ```
 
-[Plain calls to DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
+[Calls to raw DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
 ```python
 # controller.py
 

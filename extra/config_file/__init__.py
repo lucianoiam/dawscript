@@ -4,11 +4,14 @@
 from collections import namedtuple
 from typing import Callable, List
 
-import yaml
 from mido import Message
 
-from gadget import Footswitch
+from extra.gadget import Footswitch
 from host import Config
+from util import add_site_packages
+
+add_site_packages('extra', 'config_file')
+import yaml
 
 ParsedGadget = namedtuple('ParsedGadget', ['instance', 'name', 'midi_port'])
 

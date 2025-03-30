@@ -3,13 +3,13 @@
 
 from typing import List
 
-from util import add_site_packages
-add_site_packages('examples', 'browser_js')
+from extra.web import server
+from util import dawscript_path
 
-from examples.browser_js import server
+HTDOCS = dawscript_path('examples', 'web', 'htdocs')
 
 def on_script_start():
-   server.start()
+   server.start(HTDOCS)
 
 def on_script_stop():
    server.stop()
