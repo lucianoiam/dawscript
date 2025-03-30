@@ -98,7 +98,9 @@ function _call(func, ...args) {
    return new Promise((resolve, reject) => {
       const seq = _message_seq++;
 
-      if (args.length == 2 && typeof args[0] === 'string'
+      if (/^set_[a-z_]+_listener$/.test(func)
+                           && args.length == 2
+                           && typeof args[0] === 'string'
                            && typeof args[1] === 'function') {
          _listeners[seq] = args[1];
          args.pop();
