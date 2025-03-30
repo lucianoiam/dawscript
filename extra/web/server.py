@@ -17,16 +17,14 @@ from util import dawscript_path
 from . import dnssd, listeners
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
-PORT_WEBSOCKET = 49152
-PORT_HTTP = 8080
-SERVICE_NAME = 'dawscript'
-BUILTIN_HTDOCS = os.path.join('extra', 'web')
+BUILTIN_HTDOCS_PATH = os.path.join('extra', 'web')
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _cleanup: List[Callable] = []
 _htdocs_path: str = None
 
-def start(htdocs_path):
+def start(htdocs_path, ws_port=49152, http_port=8080,
+          service_name=None) -> List[str]:
    global _htdocs_path
    _htdocs_path = htdocs_path
 
@@ -34,21 +32,24 @@ def start(htdocs_path):
    lan_addr_str = socket.inet_ntoa(lan_addr)
    addrs = ['127.0.0.1', lan_addr_str]
 
-   ws = _loop.run_until_complete(_ws_serve(addrs, PORT_WEBSOCKET))
-   http = _loop.run_until_complete(_http_serve(addrs, PORT_HTTP))
+   ws = _loop.run_until_complete(_ws_serve(addrs, ws_port))
+   http = _loop.run_until_complete(_http_serve(addrs, http_port))
 
-   try:
-      dnssd.register_service(SERVICE_NAME, '_http._tcp', PORT_HTTP, lan_addr)
-      _cleanup.append(dnssd.unregister_service)
-   except Exception as e:
-      host.log(f'dawscript: {e}')
+   if service_name is not None:
+      try:
+         dnssd.register_service(service_name, '_http._tcp', http_port, lan_addr)
+         _cleanup.append(dnssd.unregister_service)
+      except Exception as e:
+         host.log(f'dawscript: {e}')
 
-   _cleanup.append(lambda: _loop.create_task(http.cleanup()))
-   _cleanup.append(ws[1].close)
-   _cleanup.append(ws[0].close)
+      _cleanup.append(lambda: _loop.create_task(http.cleanup()))
+      _cleanup.append(ws[1].close)
+      _cleanup.append(ws[0].close)
 
-   for addr in addrs:
-      host.log(f'dawscript @ http://{addr}:{PORT_HTTP}')
+   qs = f'?port={ws_port}' if ws_port != 49152 else ''
+   urls = [f'http://{addr}:{http_port}{qs}' for addr in addrs]
+
+   return urls
 
 def stop():
    for func in _cleanup:
@@ -95,7 +96,7 @@ async def _http_serve(addrs, port) -> web_runner.AppRunner:
 async def _http_handle(request):
    filename = request.match_info.get('filename')
 
-   if filename.startswith(BUILTIN_HTDOCS):
+   if filename.startswith(BUILTIN_HTDOCS_PATH):
       filepath = dawscript_path(filename)
    else:
       filepath = os.path.join(_htdocs_path, filename)

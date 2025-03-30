@@ -85,7 +85,7 @@ const public = Object.freeze({
    }
 });
 
-const DEFAULT_PORT_WEBSOCKET = 49152;
+const DEFAULT_WEBSOCKET_PORT = 49152;
 
 const _init_queue = [];
 const _promise_cb = {};
@@ -153,7 +153,7 @@ function _pop_promise_cb(seq) {
 
 function _create_websocket() {
    const port = new URLSearchParams(window.location.search).get('port')
-                  || DEFAULT_PORT_WEBSOCKET;
+                  || DEFAULT_WEBSOCKET_PORT;
    const socket = new WebSocket(`ws://${window.location.hostname}:${port}`);
 
    socket.onopen = () => {

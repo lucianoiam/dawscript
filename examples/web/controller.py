@@ -3,13 +3,16 @@
 
 from typing import List
 
+import host
 from extra.web import server
 from util import dawscript_path
 
-HTDOCS = dawscript_path('examples', 'web', 'htdocs')
-
 def on_script_start():
-   server.start(HTDOCS)
+   htdocs_path = dawscript_path('examples', 'web', 'htdocs')
+   urls = server.start(htdocs_path, service_name='dawscript')
+
+   for url in urls:
+      host.log(f'dawscript @ {url}')
 
 def on_script_stop():
    server.stop()
