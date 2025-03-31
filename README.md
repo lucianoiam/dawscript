@@ -1,4 +1,4 @@
-DAWScript
+dawscript
 =========
 This project provides an abstraction layer for a minimal subset of the scripting
 APIs found in some popular DAWs (Digital Audio Workstations), with a focus on
@@ -38,9 +38,10 @@ script depends on the DAW, detailed instructions coming soon.
 
 Examples
 --------
-All the examples are functionally equivalent but differ in implementation. The
-mute state of a track named *Track 1* is toggled when a footswitch that sends
-MIDI control messages for *Sustain Pedal* (CC64) is pressed:
+All examples except «web» are functionally equivalent but differ in
+implementation. The mute state of a track named *Track 1* is toggled when a
+footswitch that sends MIDI control messages for *Sustain Pedal* (CC64)
+is pressed:
 
 [No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file/config.yml)
 ```yaml
@@ -78,7 +79,7 @@ def on_project_load():
       callback = Track('Track 1').toggle_mute
       footswitch.set_callback_pressed(callback)
    except TrackNotFoundError:
-      Host.log('Incompatible project loaded')
+      Host.show_message('Incompatible project loaded')
 
 def host_callback(midi: List[bytes]):
    footswitch.process(midi)
@@ -104,13 +105,24 @@ def host_callback(midi: List[bytes]):
          host.toggle_track_mute(host.get_track('Track 1'))
 ```
 
+[Control track volume from a web browser](https://github.com/lucianoiam/dawscript/blob/master/examples/web/htdocs/example.js)
+```javascript
+
+
+TODO
+
+
+```
+
+The web service is advertised using DNS-SD (Bonjour) under the name «dawscript»
+
 How to Install
 --------------
 *Coming soon*
 
 Debug Environment
 -----------------
-Debugging while running on a DAW can be a tedious process, so DAWScript can also
+Debugging while running on a DAW can be a tedious process, so dawscript can also
 run stand-alone when started from a terminal. In this case, a JACK server is
 required to provide MIDI input, and calls to the DAW APIs target a mock
 implementation that prints to stdout. MIDI implementation is planned to be

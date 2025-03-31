@@ -23,6 +23,13 @@ _control_surface = None
 def name() -> str:
    return 'live'
 
+def set_context(context: Any):
+   global _control_surface
+   _control_surface = context
+
+def run_loop():
+   pass
+
 # tail -f ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
 def log(message: str):
    if _control_surface is not None:
@@ -30,12 +37,11 @@ def log(message: str):
    else:
       print(message, file=sys.stderr)
 
-def set_context(context: Any):
-   global _control_surface
-   _control_surface = context
-
-def run_loop():
-   pass
+def show_message(message: str):
+   if _control_surface is not None:
+      _control_surface.show_message(message)
+   else:
+      print(message, file=sys.stderr)
 
 def get_tracks() -> List[TrackHandle]:
    return list(_get_document().tracks)
@@ -134,7 +140,7 @@ def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[flo
       param.add_value_listener,
       param.remove_value_listener
    )
- 
+
 def _get_document():
    return Live.Application.get_application().get_document()
 

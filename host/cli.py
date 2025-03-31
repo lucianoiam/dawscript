@@ -21,9 +21,6 @@ _midi_queue = queue.Queue()
 def name() -> str:
    return 'cli'
 
-def log(message: str):
-   print(message)
-
 def set_context(context: Any):
    pass
 
@@ -61,6 +58,12 @@ def run_loop():
 
    _jack_client.deactivate()
    _jack_client.close()
+
+def log(message: str):
+   print(message)
+
+def show_message(message: str):
+   print(message)
 
 def get_tracks() -> List[TrackHandle]:
    log(f'stub: get_tracks()')

@@ -29,9 +29,10 @@ def toggle_plugin_enabled(plugin: PluginHandle):
 
 """
 def name() -> str
-def log(message: str)
 def set_context(context: Any)
 def run_loop()
+def log(message: str)
+def show_message(message: str)
 def get_tracks() -> List[TrackHandle]
 def get_track(name: str) -> TrackHandle
 def is_track_mute(track: TrackHandle) -> bool

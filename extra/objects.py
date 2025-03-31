@@ -18,6 +18,10 @@ class Host:
    def log(message: str):
       host.log(message)
 
+   @staticmethod
+   def show_message(message: str):
+      host.show_message(message)
+
 class Parameter:
    def __init__(self, plugin: PluginHandle, name: str):
       self._handle = host.get_parameter(plugin, name)

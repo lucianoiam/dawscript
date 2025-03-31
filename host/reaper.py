@@ -15,6 +15,7 @@ except ModuleNotFoundError:
    raise IncompatibleEnvironmentError
 
 import math
+import sys
 from ctypes import *
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -31,9 +32,6 @@ _state: Dict[str,Any] = {}
 
 def name() -> str:
    return 'reaper'
-
-def log(message: str):
-   RPR_ShowConsoleMsg(f'{message}\n')
 
 def set_context(context: Any):
    global RPR_defer, _controller
@@ -71,6 +69,12 @@ def cleanup():
       _controller.on_script_stop()
    except AttributeError:
       pass
+
+def log(message: str):
+   print(message, file=sys.stderr)
+
+def show_message(message: str):
+   RPR_ShowConsoleMsg(f'{message}\n')
 
 def get_tracks() -> List[TrackHandle]:
    tracks = list()

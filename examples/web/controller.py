@@ -12,7 +12,7 @@ def on_script_start():
    urls = server.start(htdocs_path, service_name='dawscript')
 
    for url in urls:
-      host.log(f'dawscript @ {url}')
+      host.show_message(f'dawscript @ {url}')
 
 def on_script_stop():
    server.stop()

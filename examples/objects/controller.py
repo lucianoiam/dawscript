@@ -5,7 +5,7 @@ from typing import List
 
 from extra.gadget import Footswitch
 from extra.objects import Host, Track
-from host import ALL_MIDI_INPUTS, Config, TrackNotFoundError, log
+from host import ALL_MIDI_INPUTS, Config, TrackNotFoundError
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
@@ -22,7 +22,7 @@ def on_project_load():
       #footswitch.set_callback_released(...)
       #footswitch.set_callback_released_slow(...)
    except TrackNotFoundError:
-      Host.log('Incompatible project loaded')
+      Host.show_message('Incompatible project loaded')
 
 def host_callback(midi: List[bytes]):
    footswitch.process(midi)
