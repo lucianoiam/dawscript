@@ -3,6 +3,8 @@
 
 from typing import Callable, Dict, List, Tuple
 
+import host
+
 # ( target_and_setter : [ (client, listener) ] )
 _listeners: Dict[str,List[Tuple[str,Callable]]] = {}
 
@@ -11,7 +13,10 @@ def set(client, listener, target, setter):
 
    if not key in _listeners:
       _listeners[key] = []
-      setter(target, lambda v: _call(key, v))
+      try:
+         setter(target, lambda v: _call(key, v))
+      except Exception as e:
+         host.log(e)
 
    _listeners[key].append((client, listener))
 
