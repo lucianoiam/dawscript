@@ -45,8 +45,6 @@ is pressed:
 
 [No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file/config.yml)
 ```yaml
-# config_file.yml
-
 - footswitch:
     midi:
       press: control_change 64 127
@@ -55,8 +53,6 @@ is pressed:
       pressed: host.toggle_track_mute_by_name, Track 1
 ```
 ```python
-# controller.py
-
 (config, gadgets) = parse_config_file('config.yml', globals())
 
 def host_callback(midi: List[bytes]):
@@ -66,8 +62,6 @@ def host_callback(midi: List[bytes]):
 
 [Object-oriented API](https://github.com/lucianoiam/dawscript/blob/master/examples/objects/controller.py)
 ```python
-# controller.py
-
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
 footswitch = Footswitch()
@@ -87,8 +81,6 @@ def host_callback(midi: List[bytes]):
 
 [Calls to raw DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
 ```python
-# controller.py
-
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 footswitch = Footswitch()
 
