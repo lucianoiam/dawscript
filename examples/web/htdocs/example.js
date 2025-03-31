@@ -2,22 +2,28 @@
 // SPDX-License-Identifier: MIT
 
 const input = document.createElement('input');
-input.placeholder = 'Check host.js for all available functions. For example: get_tracks()';
-input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') run() });
+input.placeholder = 'Check host.js for all available functions';
+input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') on_click_run() });
+document.body.appendChild(input);
+
+const run = document.createElement('button');
+run.textContent = 'Run';
+run.addEventListener('click', on_click_run);
+document.body.appendChild(run);
 
 const output = document.createElement('pre');
+document.body.appendChild(output);
 
-const button = document.createElement('button');
-button.textContent = 'Run';
-button.addEventListener('click', run);
+const get_tracks = document.createElement('button');
+get_tracks.textContent = 'Example: get_tracks()';
+get_tracks.addEventListener('click', on_click_get_tracks);
+document.body.appendChild(get_tracks);
 
-[input, output, button].forEach((element) => {
-    document.body.appendChild(element);
-});
 
-function run() {
+function on_click_run() {
     try {
         const result = eval('dawscript_host.' + input.value);
+
         if (result instanceof Promise) {
             result.then((asyncResult) => {
                 output.textContent = asyncResult;
@@ -30,4 +36,39 @@ function run() {
     } catch (error) {
         output.textContent = error.message;
     }
+}
+
+
+let last_track = null;
+
+async function on_click_get_tracks() {
+    if (last_track != null) {
+        return;
+    }
+
+    const tracks = await dawscript_host.get_tracks();
+
+    if (tracks.length == 0) {
+        output.textContent = 'No tracks found';
+        return;
+    }
+
+    last_track = tracks[tracks.length - 1];
+
+    const slider = document.createElement('input');
+    slider.style.display = 'block';
+    slider.type = 'range';
+    slider.min = -68;
+    slider.max = 6;
+    slider.value = await dawscript_host.get_track_volume(last_track);
+
+    slider.addEventListener('input', (ev) => {
+        dawscript_host.set_track_volume(last_track, parseFloat(slider.value));
+    });
+
+    dawscript_host.set_track_volume_listener(last_track, (vol) => {
+        slider.value = vol;
+    });
+
+    document.body.appendChild(slider);
 }

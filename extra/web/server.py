@@ -64,13 +64,14 @@ async def _noop():
 async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
    return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
 
+# TODO - prevent echo: do not call listener for the client doing set_xxx()
 async def _ws_handle(ws, path):
    async for message in ws:
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
       func = getattr(host, func_name)
       if re.match(r'^set_[a-z_]+_listener$', func_name):
-         listeners.set(ws.id, lambda v: _call_listener(ws, seq, v),
-            args[0], func)
+         listener = lambda v, c_ws=ws, c_seq=seq: _call_listener(c_ws, c_seq, v)
+         listeners.set(ws.id, listener, args[0], func)
          result = None
       else:
          try:

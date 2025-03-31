@@ -150,7 +150,7 @@ def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
 def _vol_value_to_db(v: float) -> float:
    if v == 0:
       return -math.inf
-   if v == 1.0:
+   if v >= 1.0:
       return 6.0
    return (-127.9278287 * pow(v, 4)
          +  390.2314102 * pow(v, 3)
@@ -161,34 +161,38 @@ def _vol_value_to_db(v: float) -> float:
 def _db_to_vol_value(v: float) -> float:
    if v == -math.inf:
       return 0
-   if v == 6.0:
+   if v >= 6.0:
       return 1.0
-   return (-9.867028203e-8    * pow(v, 4)
-         + -0.000009835475566 * pow(v, 3)
-         + -0.00001886034431  * pow(v, 2)
-         +  0.02632908703     * v
-         +  0.8496356422)
+   vol = (-9.867028203e-8    * pow(v, 4)
+        + -0.000009835475566 * pow(v, 3)
+        + -0.00001886034431  * pow(v, 2)
+        +  0.02632908703     * v
+        +  0.8496356422)
+   return max(0, vol)
 
 class DawscriptControlSurface(ControlSurface):
 
+   suggested_update_time_in_ms = 33
+
    def __init__(self, c_instance):
       super(DawscriptControlSurface, self).__init__(c_instance)
-      self.cleanup_callbacks: Dict[Any,Callable] = {}
-      self.events = list()
+      self._cleanup_callbacks: Dict[Any,Callable] = {}
+      self._events = list()
+      self._deferred = list()
       self.request_rebuild_midi_map()
       dawscript = importlib.import_module('.dawscript', 'dawscript')
       dawscript.main(self)
-      self.controller = load_controller()
+      self._controller = load_controller()
       try:
-         self.controller.on_script_start()
+         self._controller.on_script_start()
       except AttributeError:
          pass
 
    def disconnect(self):
-      for callback in self.cleanup_callbacks.values():
+      for callback in self._cleanup_callbacks.values():
          callback()
       try:
-         self.controller.on_script_stop()
+         self._controller.on_script_stop()
       except AttributeError:
          pass
       super(DawscriptControlSurface, self).disconnect()
@@ -202,25 +206,32 @@ class DawscriptControlSurface(ControlSurface):
 
    def receive_midi(self, midi_bytes):
       try:
-         self.events.append(bytes(midi_bytes))
+         self._events.append(bytes(midi_bytes))
       except Exception as e:
          log(repr(e))
 
    def update_display(self):
       try:
-         host_callback = self.controller.host_callback
+         host_callback = self._controller.host_callback
       except AttributeError:
          return
+      for func in self._deferred:
+         try:
+            func()
+         except Exception as e:
+            log(repr(e))
+      self._deferred.clear()
       try:
-         host_callback(self.events)
-         self.events.clear()
+         host_callback(self._events)
       except Exception as e:
          log(repr(e))
+      self._events.clear()
 
    def set_listener(self, target, listener, add_func, remove_func):
-      if target in self.cleanup_callbacks:
-         self.cleanup_callbacks[target]()
-         del self.cleanup_callbacks[target]
+      if target in self._cleanup_callbacks:
+         self._cleanup_callbacks[target]()
+         del self._cleanup_callbacks[target]
       if listener is not None:
-         self.cleanup_callbacks[target] = lambda: remove_func(listener)
-         add_func(listener)
+         def_listener = lambda: self._deferred.append(listener)
+         self._cleanup_callbacks[target] = lambda: remove_func(def_listener)
+         add_func(def_listener)

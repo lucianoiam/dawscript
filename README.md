@@ -107,11 +107,21 @@ def host_callback(midi: List[bytes]):
 
 [Control track volume from a web browser](https://github.com/lucianoiam/dawscript/blob/master/examples/web/htdocs/example.js)
 ```javascript
+const track = await dawscript_host.get_track('Track 1');
 
+const slider = document.createElement('input');
+slider.type = 'range';
+slider.min = -68;
+slider.max = 6;
+slider.value = await dawscript_host.get_track_volume(track);
 
-TODO
+slider.addEventListener('input', (ev) => {
+   dawscript_host.set_track_volume(track, parseFloat(slider.value));
+});
 
-
+dawscript_host.set_track_volume_listener(track, (vol) => {
+   slider.value = vol;
+});
 ```
 
 The web service is advertised using DNS-SD (Bonjour) under the name «dawscript»
