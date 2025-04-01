@@ -18,4 +18,4 @@ def on_script_stop():
    server.stop()
 
 def host_callback(midi: List[bytes]):
-   server.do_work()
+   server.tick()

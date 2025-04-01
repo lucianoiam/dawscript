@@ -55,7 +55,7 @@ def stop():
    for func in _cleanup:
       func()
 
-def do_work():
+def tick():
    _loop.run_until_complete(_noop())
 
 async def _noop():
@@ -64,7 +64,6 @@ async def _noop():
 async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
    return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
 
-# TODO - prevent echo: do not call listener for the client doing set_xxx()
 async def _ws_handle(ws, path):
    async for message in ws:
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
@@ -80,7 +79,8 @@ async def _ws_handle(ws, path):
             result = func(*args)
          except Exception as e:
             result = f'error:{e}'
-      await _send_message(ws, seq, result)
+      if result is not None:
+         await _send_message(ws, seq, result)
    listeners.remove(str(ws.id))
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:

@@ -130,9 +130,7 @@ function _send(seq, message) {
 
 function _handle(seq, result) {
    if (seq in _listeners) {
-      if (result !== null) { // discard set_xxx_listener() ack
-         _listeners[seq](result);
-      }
+      _listeners[seq](result);
       return;   
    }
 
