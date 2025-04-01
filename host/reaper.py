@@ -33,7 +33,7 @@ _state: Dict[str,Any] = {}
 def name() -> str:
    return 'reaper'
 
-def set_context(context: Any):
+def main(context: Any):
    global RPR_defer, _controller
    RPR_atexit = context['RPR_atexit']
    RPR_defer = context['RPR_defer']
@@ -43,26 +43,7 @@ def set_context(context: Any):
       _controller.on_script_start()
    except AttributeError:
       pass
-
-def run_loop():
-   global _proj_path
-   try:
-      try:
-         # Ignore default startup project when running as a global script
-         proj_path = RPR_GetProjectPath('', 256)[0]
-         if _proj_path != proj_path and not proj_path.endswith('REAPER Media'):
-            _proj_path = proj_path
-            _controller.on_project_load()
-      except AttributeError:
-         pass
-      try:
-         _controller.host_callback(_read_midi_events())
-      except AttributeError:
-         pass
-      _call_listeners()
-   except Exception as e:
-      log(repr(e))
-   RPR_defer('from host import reaper; reaper.run_loop()')
+   _tick()
 
 def cleanup():
    try:
@@ -174,6 +155,26 @@ def _vol_value_to_db(v: float) -> float:
 
 def _db_to_vol_value(v: float) -> float:
    return math.exp(LN10_OVER_TWENTY * v)
+
+def _tick():
+   global _proj_path
+   try:
+      try:
+         # Ignore default startup project when running as a global script
+         proj_path = RPR_GetProjectPath('', 256)[0]
+         if _proj_path != proj_path and not proj_path.endswith('REAPER Media'):
+            _proj_path = proj_path
+            _controller.on_project_load()
+      except AttributeError:
+         pass
+      try:
+         _controller.host_callback(_read_midi_events())
+      except AttributeError:
+         pass
+      _call_listeners()
+   except Exception as e:
+      log(repr(e))
+   RPR_defer('from host import reaper; reaper._tick()')
 
 def _read_midi_events():
    global _event_seq

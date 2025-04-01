@@ -23,12 +23,9 @@ _control_surface = None
 def name() -> str:
    return 'live'
 
-def set_context(context: Any):
+def main(context: Any):
    global _control_surface
    _control_surface = context
-
-def run_loop():
-   pass
 
 # tail -f ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
 def log(message: str):

@@ -12,8 +12,7 @@ import host
 add_site_packages()
 
 def main(context: Any):
-   host.set_context(context)
-   host.run_loop()
+   host.main(context)
 
 if __name__ == '__main__':
    main(globals())

@@ -29,8 +29,7 @@ def toggle_plugin_enabled(plugin: PluginHandle):
 
 """
 def name() -> str
-def set_context(context: Any)
-def run_loop()
+def main(context: Any)
 def log(message: str)
 def show_message(message: str)
 def get_tracks() -> List[TrackHandle]

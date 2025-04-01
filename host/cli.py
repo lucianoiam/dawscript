@@ -21,43 +21,8 @@ _midi_queue = queue.Queue()
 def name() -> str:
    return 'cli'
 
-def set_context(context: Any):
-   pass
-
-def run_loop():
-   global _controller, _jack_client, _jack_midi_in
-
-   _controller = load_controller()
-   ev_port_reg = threading.Event()
-   ev_quit = threading.Event()
-
-   try:
-      _jack_client = jack.Client(f'dawscript_{os.urandom(2).hex()}',
-         no_start_server=True)
-   except jack.JackOpenError:
-      sys.exit(1)
-
-   _jack_midi_in = _jack_client.midi_inports.register(f'input')
-   _jack_client.set_process_callback(_jack_proc)
-   _jack_client.set_port_registration_callback(lambda p,r: ev_port_reg.set())
-   _jack_client.activate()
-
-   signal.signal(signal.SIGINT, lambda sig, frame: ev_quit.set())
-
-   try:
-      _controller.on_script_start()
-   except AttributeError:
-      pass
-
-   while not ev_quit.is_set():
-      if ev_port_reg.is_set():
-         ev_port_reg.clear()
-         _connect_ports()
-      _controller.host_callback(_read_midi_events())
-      time.sleep(1/30)
-
-   _jack_client.deactivate()
-   _jack_client.close()
+def main(context: Any):
+   _run_loop()
 
 def log(message: str):
    print(message)
@@ -134,6 +99,41 @@ def set_parameter_value(param: ParameterHandle, value: float):
 
 def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
    log(f'stub: set_parameter_value_listener( {param}, {listener} )')
+
+def _run_loop():
+   global _controller, _jack_client, _jack_midi_in
+
+   _controller = load_controller()
+   ev_port_reg = threading.Event()
+   ev_quit = threading.Event()
+
+   try:
+      _jack_client = jack.Client(f'dawscript_{os.urandom(2).hex()}',
+         no_start_server=True)
+   except jack.JackOpenError:
+      sys.exit(1)
+
+   _jack_midi_in = _jack_client.midi_inports.register(f'input')
+   _jack_client.set_process_callback(_jack_proc)
+   _jack_client.set_port_registration_callback(lambda p,r: ev_port_reg.set())
+   _jack_client.activate()
+
+   signal.signal(signal.SIGINT, lambda sig, frame: ev_quit.set())
+
+   try:
+      _controller.on_script_start()
+   except AttributeError:
+      pass
+
+   while not ev_quit.is_set():
+      if ev_port_reg.is_set():
+         ev_port_reg.clear()
+         _connect_ports()
+      _controller.host_callback(_read_midi_events())
+      time.sleep(1/30)
+
+   _jack_client.deactivate()
+   _jack_client.close()
 
 def _jack_proc(frames: int):
    for offset, data in _jack_midi_in.incoming_midi_events():
