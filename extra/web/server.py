@@ -71,15 +71,17 @@ async def _ws_handle(ws, path):
       func = getattr(host, func_name)
       if re.match(r'^set_[a-z_]+_listener$', func_name):
          listener = lambda v, c_ws=ws, c_seq=seq: _call_listener(c_ws, c_seq, v)
-         listeners.set(ws.id, listener, args[0], func)
+         listeners.add(str(ws.id), func_name[:-9], listener, args[0], func)
          result = None
       else:
          try:
+            if func_name.startswith('set_'):
+               listeners.skip_next_call(str(ws.id), func_name)
             result = func(*args)
          except Exception as e:
             result = f'error:{e}'
       await _send_message(ws, seq, result)
-   listeners.remove(ws.id)
+   listeners.remove(str(ws.id))
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:
    app = web.Application()

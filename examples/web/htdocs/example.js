@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 const input = document.createElement('input');
+input.type = 'text';
 input.placeholder = 'Check host.js for all available functions';
 input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') on_click_run() });
 document.body.appendChild(input);

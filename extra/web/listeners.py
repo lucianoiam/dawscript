@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Set, Tuple
 
 import host
 
-# ( target_and_setter : [ (client, listener) ] )
-_listeners: Dict[str,List[Tuple[str,Callable]]] = {}
+# ( target_and_setter : [ (client, name, listener) ] )
+_listeners: Dict[str,List[Tuple[str,str,Callable]]] = dict()
+_locks: Set[Tuple[str,str]] = set()
 
-def set(client, listener, target, setter):
+def add(client, name, listener, target, setter):
    key = f'{target}_{setter}'
 
    if not key in _listeners:
@@ -18,12 +19,22 @@ def set(client, listener, target, setter):
       except Exception as e:
          host.log(e)
 
-   _listeners[key].append((client, listener))
+   _listeners[key].append((client, name, listener))
 
 def remove(client):
    for key in _listeners.keys():
-      _listeners[key] = [(c, _) for (c, _) in _listeners[key] if c is not client]
+      _listeners[key] = [(c, _, _) for (c, _, _) in _listeners[key] if c is not client]
+   for (c, n) in list(_locks):
+      if c is client:
+         _locks.remove((c, n))
+
+def skip_next_call(client, name):
+   _locks.add((client, name))
 
 def _call(key, value):
-   for (client, listener) in _listeners[key]:
-      listener(value)
+   for (client, name, listener) in _listeners[key]:
+      lock = (client, name)
+      if lock in _locks:
+         _locks.remove(lock)
+      else:
+         listener(value)
