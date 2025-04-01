@@ -68,20 +68,21 @@ async def _ws_handle(ws, path):
    async for message in ws:
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
       func = getattr(host, func_name)
+      client = str(ws.id)
       if re.match(r'^set_[a-z_]+_listener$', func_name):
          listener = lambda v, c_ws=ws, c_seq=seq: _call_listener(c_ws, c_seq, v)
-         listeners.add(str(ws.id), func_name[:-9], listener, args[0], func)
+         listeners.add(client, func_name[:-9], listener, args[0], func)
          result = None
       else:
          try:
             if func_name.startswith('set_'):
-               listeners.skip_next_call(str(ws.id), func_name)
+               listeners.skip_next_call(client, func_name)
             result = func(*args)
          except Exception as e:
             result = f'error:{e}'
       if result is not None:
          await _send_message(ws, seq, result)
-   listeners.remove(str(ws.id))
+   listeners.remove(client)
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:
    app = web.Application()
@@ -117,7 +118,11 @@ async def _send_message(ws, seq, data):
    await ws.send(message)
 
 def _call_listener(ws, seq, data):
-   _loop.run_until_complete(_send_message(ws, seq, data))
+   try:
+      _loop.run_until_complete(_send_message(ws, seq, data))
+   except Exception as e:
+      host.log(e)
+      listeners.remove(str(ws.id))
 
 def _get_bind_address():
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
