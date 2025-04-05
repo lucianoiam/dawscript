@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 import math
 import sys
 from ctypes import *
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List
 
 from .shared import load_controller
 from .types import (ParameterHandle, ParameterNotFoundError, PluginHandle,
@@ -27,7 +27,8 @@ RPR_defer = None
 _controller = None
 _proj_path = None
 _event_seq = 0
-_listeners: Dict[str,Tuple[Callable, Callable]] = {}
+_listeners: Dict[str,List[Callable]] = {}
+_getters: Dict[str,Callable] = {}
 _state: Dict[str,Any] = {}
 
 def name() -> str:
@@ -85,8 +86,11 @@ def is_track_mute(track: TrackHandle) -> bool:
 def set_track_mute(track: TrackHandle, mute: bool):
    RPR_SetTrackUIMute(track, mute, 0)
 
-def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-   _set_listener(f'{track}_mute', listener, lambda: is_track_mute(track))
+def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   _add_listener(track, listener, 'mute', is_track_mute)
+
+def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   _del_listener(track, listener, 'mute')
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
@@ -94,14 +98,20 @@ def get_track_volume(track: TrackHandle) -> float:
 def set_track_volume(track: TrackHandle, volume_db: float):
    RPR_SetTrackUIVolume(track, _db_to_vol_value(volume_db), False, False, 0)
 
-def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-   _set_listener(f'{track}_volume', listener, lambda: get_track_volume(track))
+def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _add_listener(track, listener, 'volume', get_track_volume)
+
+def del_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _del_listener(track, listener, 'volume')
 
 def get_track_pan(track: TrackHandle) -> float:
    return RPR_GetTrackUIVolPan(track, 0.0, 0.0)[3]
 
-def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-   _set_listener(f'{track}_pan', listener, lambda: get_track_pan(track))
+def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _add_listener(track, listener, 'pan', get_track_pan)
+
+def del_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _del_listener(track, listener, 'pan')
 
 def set_track_pan(track: TrackHandle, pan: float):
    RPR_SetTrackUIPan(track, pan, False, False, 0)
@@ -118,8 +128,11 @@ def is_plugin_enabled(plugin: PluginHandle) -> bool:
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
    RPR_TrackFX_SetEnabled(*plugin, enabled)
 
-def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-   _set_listener(f'{plugin}_enabled', listener, lambda: is_plugin_enabled(track))
+def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   _add_listener(plugin, listener, 'enabled', is_plugin_enabled)
+
+def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   _del_listener(plugin, listener, 'enabled')
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    name_lower = name.lower()
@@ -138,8 +151,11 @@ def get_parameter_value(param: ParameterHandle) -> float:
 def set_parameter_value(param: ParameterHandle, value: float):
    RPR_TrackFX_SetParam(*param, value)
 
-def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-   _set_listener(f'{param}_value', listener, lambda: get_parameter_value(param))
+def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   _add_listener(param, listener, 'value', get_parameter_value)
+
+def del_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   _del_listener(param, listener, 'value')
 
 TWENTY_OVER_LN10 = 8.6858896380650365530225783783321
 LN10_OVER_TWENTY = 0.11512925464970228420089957273422
@@ -206,22 +222,33 @@ def _read_midi_events():
 
    return events
 
-def _set_listener(target: Any, listener: Callable, getter: Callable):
-   try:
-      del _listeners[target]
-      del _state[target]
-   except KeyError:
-      pass
-   if listener is not None:
-      _listeners[target] = (listener, getter)
-      _state[target] = getter()
+def _add_listener(target: Any, listener: Callable, name: str, getter: Callable):
+   key = f'{target}_{name}'
+   trgt_getter = lambda: getter(target)
+
+   if key not in _listeners:
+      _listeners[key] = []
+      _getters[key] = trgt_getter
+      _state[key] = trgt_getter()
+
+   _listeners[key].append(listener)
+
+def _del_listener(target: Any, listener: Callable, name: str):
+   key = f'{target}_{name}'
+   _listeners[key] = [l for l in _listeners[key] if l != listener]
+
+   if not _listeners[key]:
+      del _listeners[key]
+      del _getters[key]
+      del _state[key]
 
 def _call_listeners():
-   for (target, (listener, getter)) in _listeners.items():
+   for key, getter in _getters.items():
       now = getter()
-      if now != _state[target]:
-         _state[target] = now
-         listener(now)
+      if now != _state[key]:
+         _state[key] = now;
+         for listener in _listeners[key]:
+            listener(now)
 
 """
 /opt/REAPER/Plugins/reaper_python.py @ 2826

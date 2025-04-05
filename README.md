@@ -111,7 +111,7 @@ slider.addEventListener('input', (ev) => {
    dawscript_host.set_track_volume(track, parseFloat(slider.value));
 });
 
-dawscript_host.set_track_volume_listener(track, (vol) => {
+dawscript_host.add_track_volume_listener(track, (vol) => {
    slider.value = vol;
 });
 ```

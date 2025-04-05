@@ -36,22 +36,27 @@ def get_tracks() -> List[TrackHandle]
 def get_track(name: str) -> TrackHandle
 def is_track_mute(track: TrackHandle) -> bool
 def set_track_mute(track: TrackHandle, mute: bool)
-def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
+def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
+def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
 def get_track_volume(track: TrackHandle) -> float
 def set_track_volume(track: TrackHandle, volume_db: float)
-def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None])
+def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None])
+def del_track_volume_listener(track: TrackHandle, listener: Callable[[float],None])
 def get_track_pan(track: TrackHandle) -> float
 def set_track_pan(track: TrackHandle, pan: float)
-def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
+def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
+def del_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
 TODO: def get_plugins(track: TrackHandle) -> List[PluginHandle]
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle
 def is_plugin_enabled(plugin: PluginHandle) -> bool
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool)
-def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
+def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
+def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
 TODO: def get_parameters(plugin: PluginHandle) -> List[ParameterHandle]
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle
 def get_parameter_range(param: ParameterHandle) -> (float, float)
 def get_parameter_value(param: ParameterHandle) -> float
 def set_parameter_value(param: ParameterHandle, value: float)
-def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
+def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
+def del_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 """

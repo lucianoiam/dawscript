@@ -6,7 +6,7 @@ import json
 import os
 import re
 import socket
-from typing import Callable, List
+from typing import Callable, List, Set, Tuple
 
 import websockets
 from aiohttp import web, web_runner
@@ -14,12 +14,13 @@ from aiohttp import web, web_runner
 import host
 from util import dawscript_path
 
-from . import dnssd, listeners
+from . import dnssd
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join('extra', 'web')
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+_listener_locks: Set[Tuple[str]] = set()
 _cleanup: List[Callable] = []
 _htdocs_path: str = None
 
@@ -69,17 +70,22 @@ async def _ws_handle(ws, path):
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
       func = getattr(host, func_name)
       client = str(ws.id)
-      if re.match(r'^set_[a-z_]+_listener$', func_name):
-         listener = lambda v, c_ws=ws, c_seq=seq: _call_listener(c_ws, c_seq, v)
-         listeners.add(client, func_name[:-9], listener, args[0], func)
-         result = None
-      else:
-         try:
-            if func_name.startswith('set_'):
-               listeners.skip_next_call(client, func_name)
-            result = func(*args)
-         except Exception as e:
-            result = f'error:{e}'
+      m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
+      if m:
+         g = m.groups()
+         if g[0] == 'add':
+            listener = lambda v, c_ws=ws, c_seq=seq, c_name=g[1]: _call_remote_listener(c_ws, c_seq, c_name, v)
+            args.append(listener)
+         elif g[0] == 'del':
+            # TODO - remove
+            pass
+      try:
+         m = re.match(r"^set_([a-z_]+)$", func_name)
+         if m:
+            _listener_locks.add(f'{client}_{m.groups()[0]}')
+         result = func(*args)
+      except Exception as e:
+         result = f'error:{e}'
       if result is not None:
          await _send_message(ws, seq, result)
    listeners.remove(client)
@@ -117,9 +123,13 @@ async def _send_message(ws, seq, data):
    message = json.dumps([seq, replace_inf(data)], cls=ReprJSONEncoder)
    await ws.send(message)
 
-def _call_listener(ws, seq, data):
+def _call_remote_listener(ws, seq, name, data):
    try:
-      _loop.run_until_complete(_send_message(ws, seq, data))
+      lock = f'{str(ws.id)}_{name}'
+      if lock in _listener_locks:
+         _listener_locks.remove(lock)
+      else:
+         _loop.run_until_complete(_send_message(ws, seq, data))
    except Exception as e:
       host.log(e)
       listeners.remove(str(ws.id))

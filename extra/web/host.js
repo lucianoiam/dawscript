@@ -20,8 +20,12 @@ const public = Object.freeze({
       await _call('set_track_mute', track, mute);
    },
 
-   set_track_mute_listener: async function(track, listener) {
-      await _call('set_track_mute_listener', track, listener);
+   add_track_mute_listener: async function(track, listener) {
+      await _call('add_track_mute_listener', track, listener);
+   },
+
+   del_track_mute_listener: async function(track, listener) {
+      await _call('del_track_mute_listener', track, listener);
    },
 
    get_track_volume: async function(track) {
@@ -32,8 +36,12 @@ const public = Object.freeze({
       await _call('set_track_volume', track, volume_db);
    },
 
-   set_track_volume_listener: async function(track, listener) {
-      await _call('set_track_volume_listener', track, listener);
+   add_track_volume_listener: async function(track, listener) {
+      await _call('add_track_volume_listener', track, listener);
+   },
+
+   del_track_volume_listener: async function(track, listener) {
+      await _call('del_track_volume_listener', track, listener);
    },
 
    get_track_pan: async function(track) {
@@ -44,8 +52,12 @@ const public = Object.freeze({
       await _call('set_track_pan', track, pan);
    },
 
-   set_track_pan_listener: async function(track, listener) {
-      await _call('set_track_pan_listener', track, listener);
+   add_track_pan_listener: async function(track, listener) {
+      await _call('add_track_pan_listener', track, listener);
+   },
+
+   del_track_pan_listener: async function(track, listener) {
+      await _call('del_track_pan_listener', track, listener);
    },
 
    get_plugin: async function(track, name) {
@@ -60,8 +72,12 @@ const public = Object.freeze({
       await _call('set_plugin_enabled', plugin, enabled);
    },
 
-   set_plugin_enabled_listener: async function(plugin, listener) {
-      await _call('set_plugin_enabled_listener', plugin, listener);
+   add_plugin_enabled_listener: async function(plugin, listener) {
+      await _call('add_plugin_enabled_listener', track, listener);
+   },
+
+   del_plugin_enabled_listener: async function(plugin, listener) {
+      await _call('del_plugin_enabled_listener', track, listener);
    },
 
    get_parameter: async function(plugin, name) {
@@ -80,8 +96,12 @@ const public = Object.freeze({
       await _call('set_parameter_value', param, value);
    },
 
-   set_parameter_value_listener: async function(param, listener) {
-      await _call('set_parameter_value_listener', param, listener);
+   add_parameter_value_listener: async function(param, listener) {
+      await _call('add_parameter_value_listener', track, listener);
+   },
+
+   del_parameter_value_listener: async function(param, listener) {
+      await _call('del_parameter_value_listener', track, listener);
    }
 });
 
@@ -90,22 +110,51 @@ const DEFAULT_WEBSOCKET_PORT = 49152;
 const _init_queue = [];
 const _promise_cb = {};
 const _listeners = {};
+const _listener_key_to_seq = {};
 const _socket = _create_websocket();
 
 let _message_seq = 0;
 
 function _call(func, ...args) {
    return new Promise((resolve, reject) => {
-      const seq = _message_seq++;
+      const m = func.match(/^(add|del)_([a-z_]+)_listener$/)
 
-      if (/^set_[a-z_]+_listener$/.test(func)
-                           && args.length == 2
-                           && typeof args[0] === 'string'
-                           && typeof args[1] === 'function') {
-         _listeners[seq] = args[1];
+      if (m && args.length == 2
+            && typeof args[0] === 'string'
+            && typeof args[1] === 'function') {
+         const key = `${args[0]}_${m[2]}`;
+         const listener = args[1];
+
          args.pop();
+
+         if (m[1] == 'add') {
+            if (key in _listener_key_to_seq) {
+               _listeners[_listener_key_to_seq[key]].push(listener);
+               resolve();
+               return;
+            }
+
+            _listener_key_to_seq[key] = _message_seq;
+            _listeners[_message_seq] = [listener];
+         } else if (m[1] == 'del') {
+            if (! (key in _listener_key_to_seq)) {
+               resolve();
+               return;
+            }
+
+            _listeners[key] = _listeners[key].filter(l => l != listener);
+            
+            if (_listeners[key].length > 0) {
+               resolve();
+               return;
+            }
+
+            delete _listeners[key];
+            delete _listener_key_to_seq[key];
+         }
       }
 
+      const seq = _message_seq++;
       const message = JSON.stringify([seq, func, ...args]);
 
       _promise_cb[seq] = [resolve, reject];
@@ -122,7 +171,6 @@ function _send(seq, message) {
    try {
       _socket.send(message);
    } catch (error) {
-      delete _listeners[seq];
       const [_, reject] = _pop_promise_cb(seq);
       reject(error);
    }
@@ -130,7 +178,9 @@ function _send(seq, message) {
 
 function _handle(seq, result) {
    if (seq in _listeners) {
-      _listeners[seq](result);
+      for (listener of _listeners[seq]) {
+         listener(result);
+      }
       return;   
    }
 

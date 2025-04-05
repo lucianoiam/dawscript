@@ -67,7 +67,7 @@ async function on_click_get_tracks() {
         dawscript_host.set_track_volume(last_track, parseFloat(slider.value));
     });
 
-    dawscript_host.set_track_volume_listener(last_track, (vol) => {
+    dawscript_host.add_track_volume_listener(last_track, (vol) => {
         slider.value = vol;
     });
 

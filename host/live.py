@@ -30,13 +30,13 @@ def main(context: Any):
 # tail -f ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
 def log(message: str):
    if _control_surface is not None:
-      _control_surface.log_message(message)
+      _control_surface.log_message(str(message))
    else:
       print(message, file=sys.stderr)
 
 def show_message(message: str):
    if _control_surface is not None:
-      _control_surface.show_message(message)
+      _control_surface.show_message(str(message))
    else:
       print(message, file=sys.stderr)
 
@@ -56,13 +56,12 @@ def is_track_mute(track: TrackHandle) -> bool:
 def set_track_mute(track: TrackHandle, mute: bool):
    track.mute = mute
 
-def set_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-   _control_surface.set_listener(
-      f'{track}_mute',
-      lambda: listener(is_track_mute(track)),
-      track.add_mute_listener,
-      track.remove_mute_listener
-   )
+def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   _control_surface.add_listener(track, listener, 'mute', is_track_mute,
+      track.add_mute_listener, track.remove_mute_listener)
+
+def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
+   _control_surface.del_listener(track, listener, 'mute')
 
 def get_track_volume(track: TrackHandle) -> float:
    return _vol_value_to_db(track.mixer_device.volume.value)
@@ -70,13 +69,13 @@ def get_track_volume(track: TrackHandle) -> float:
 def set_track_volume(track: TrackHandle, volume_db: float):
    track.mixer_device.volume.value = _db_to_vol_value(volume_db)
 
-def set_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-   _control_surface.set_listener(
-      f'{track}_volume',
-      lambda: listener(get_track_volume(track)),
+def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _control_surface.add_listener(track, listener, 'volume', get_track_volume,
       track.mixer_device.volume.add_value_listener,
-      track.mixer_device.volume.remove_value_listener
-   )
+      track.mixer_device.volume.remove_value_listener)
+
+def del_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _control_surface.del_listener(track, listener, 'volume')
 
 def get_track_pan(track: TrackHandle) -> float:
    return track.mixer_device.panning.value
@@ -84,13 +83,13 @@ def get_track_pan(track: TrackHandle) -> float:
 def set_track_pan(track: TrackHandle, pan: float):
    track.mixer_device.panning.value = pan
 
-def set_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-   _control_surface.set_listener(
-      f'{track}_pan',
-      lambda: listener(get_track_pan(track)),
+def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _control_surface.add_listener(track, listener, 'pan', get_track_pan,
       track.mixer_device.panning.add_value_listener,
-      track.mixer_device.panning.remove_value_listener
-   )
+      track.mixer_device.panning.remove_value_listener)
+
+def del_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
+   _control_surface.del_listener(track, listener, 'pan')
 
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
    name_lower = name.lower()
@@ -105,14 +104,14 @@ def is_plugin_enabled(plugin: PluginHandle) -> bool:
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
    set_parameter_value(_get_parameter_device_on(plugin), 1.0 if enabled else 0)
 
-def set_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
    device_on = _get_parameter_device_on(plugin)
-   _control_surface.set_listener(
-      f'{plugin}_enabled',
-      lambda: listener(is_plugin_enabled(plugin)),
-      device_on.add_value_listener,
-      device_on.remove_value_listener
-   )
+   _control_surface.add_listener(plugin, listener, 'enabled', is_plugin_enabled,
+      device_on.add_value_listener, device_on.remove_value_listener)
+
+def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
+   device_on = _get_parameter_device_on(plugin)
+   _control_surface.del_listener(plugin, listener, 'enabled')
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
    name_lower = name.lower()
@@ -130,13 +129,12 @@ def get_parameter_value(param: ParameterHandle) -> float:
 def set_parameter_value(param: ParameterHandle, value: float):
    param.value = value
 
-def set_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-   _control_surface.set_listener(
-      f'{param}_value',
-      lambda: get_parameter_value(param),
-      param.add_value_listener,
-      param.remove_value_listener
-   )
+def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   _control_surface.add_listener(param, listener, 'value', get_parameter_value,
+      param.add_value_listener, param.remove_value_listener)
+
+def del_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
+   _control_surface.del_listener(param, listener, 'value')
 
 def _get_document():
    return Live.Application.get_application().get_document()
@@ -173,20 +171,24 @@ class DawscriptControlSurface(ControlSurface):
 
    def __init__(self, c_instance):
       super(DawscriptControlSurface, self).__init__(c_instance)
-      self._cleanup_callbacks: Dict[Any,Callable] = {}
-      self._events = list()
-      self._deferred = list()
+
+      self._cleanup_cb: Dict[Any,Callable] = {}
+      self._events: List[bytes] = []
+      self._deferred: List[Callable] = []
+
       self.request_rebuild_midi_map()
+
       dawscript = importlib.import_module('.dawscript', 'dawscript')
       dawscript.main(self)
-      self._controller = load_controller()
+
       try:
+         self._controller = load_controller()
          self._controller.on_script_start()
       except AttributeError:
          pass
 
    def disconnect(self):
-      for callback in self._cleanup_callbacks.values():
+      for callback in self._cleanup_cb.values():
          callback()
       try:
          self._controller.on_script_stop()
@@ -224,11 +226,14 @@ class DawscriptControlSurface(ControlSurface):
          log(repr(e))
       self._events.clear()
 
-   def set_listener(self, target, listener, add_func, remove_func):
-      if target in self._cleanup_callbacks:
-         self._cleanup_callbacks[target]()
-         del self._cleanup_callbacks[target]
-      if listener is not None:
-         def_listener = lambda: self._deferred.append(listener)
-         self._cleanup_callbacks[target] = lambda: remove_func(def_listener)
-         add_func(def_listener)
+   def add_listener(self, target, listener, name, getter, add_func, del_func):
+      key = f'{target}_{name}'
+      trgt_getter = lambda: getter(target)
+      def_listener = lambda: self._deferred.append(lambda: listener(trgt_getter()))
+      self._cleanup_cb[key] = lambda: del_func(def_listener)
+      add_func(def_listener)
+
+   def del_listener(self, target, listener, name):
+      key = f'{target}_{name}'
+      self._cleanup_cb[key]()
+      del self._cleanup_cb[key]
