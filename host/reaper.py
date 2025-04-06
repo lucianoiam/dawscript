@@ -254,6 +254,8 @@ def _tick():
     global _proj_path
 
     try:
+        _call_listeners()
+
         try:
             # Ignore default startup project when running as a global script
             proj_path = RPR_GetProjectPath("", 256)[0]
@@ -266,8 +268,6 @@ def _tick():
             _controller.host_callback(_read_midi_events())
         except AttributeError:
             pass
-
-        _call_listeners()
     except Exception as e:
         log(repr(e))
 

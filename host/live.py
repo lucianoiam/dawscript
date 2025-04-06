@@ -250,7 +250,7 @@ def _db_to_vol_value(v: float) -> float:
 
 class DawscriptControlSurface(ControlSurface):
 
-    suggested_update_time_in_ms = 33
+    suggested_update_time_in_ms = 10
 
     def __init__(self, c_instance):
         super(DawscriptControlSurface, self).__init__(c_instance)
@@ -304,6 +304,14 @@ class DawscriptControlSurface(ControlSurface):
             log(repr(e))
 
     def update_display(self):
+        for func in self._deferred:
+            try:
+                func()
+            except Exception as e:
+                log(repr(e))
+
+        self._deferred.clear()
+
         try:
             host_callback = self._controller.host_callback
         except AttributeError:
@@ -314,13 +322,6 @@ class DawscriptControlSurface(ControlSurface):
         except Exception as e:
             log(repr(e))
 
-        for func in self._deferred:
-            try:
-                func()
-            except Exception as e:
-                log(repr(e))
-
-        self._deferred.clear()
         self._events.clear()
 
     def add_listener(self, target, listener, name, getter, add_func, del_func):

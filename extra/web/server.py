@@ -7,6 +7,7 @@ import math
 import os
 import re
 import socket
+import time
 from typing import Any, Callable, Dict, List
 
 import websockets
@@ -23,8 +24,8 @@ BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
 _htdocs_path: str = None
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _cleanup: List[Callable] = []
-_listener_mute: Dict[str, str] = {}
-_listener_wait: int = 0
+_setter_call_src: Dict[str, str] = {}
+_setter_call_t: float = 0
 
 
 def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List[str]:
@@ -61,7 +62,12 @@ def stop():
 
 
 def tick():
-    _unlock_remote_listeners()
+    global _setter_call_src, _setter_call_t
+
+    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.01:
+        _setter_call_src = {}
+        _setter_call_t = 0
+
     _loop.run_until_complete(_noop())
 
 
@@ -74,7 +80,7 @@ async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
 
 
 async def _ws_handle(ws, path):
-    global _listener_wait
+    global _setter_call_t
     client = str(ws.id)
 
     async for message in ws:
@@ -101,8 +107,8 @@ async def _ws_handle(ws, path):
 
             if m:
                 target = f"{args[0]}_{m.groups()[0]}"
-                _listener_mute[target] = client
-                _listener_wait = 2
+                _setter_call_src[target] = client
+                _setter_call_t = time.time()
         except Exception as e:
             result = f"error:{e}"
 
@@ -151,23 +157,11 @@ def _call_remote_listener(ws, seq, target, value):
     try:
         client = str(ws.id)
 
-        if _listener_mute.get(target) != client:
+        if _setter_call_src.get(target) != client:
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)
         # TODO - remove registered listeners for client
-
-
-def _unlock_remote_listeners():
-    global _listener_mute, _listener_wait
-
-    if _listener_wait == 0:
-        return
-
-    _listener_wait -= 1
-
-    if _listener_wait == 0:
-        _listener_mute = {}
 
 
 def _get_bind_address():
