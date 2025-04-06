@@ -14,7 +14,7 @@ import math
 import sys
 from typing import Any, Callable, Dict, List, Tuple
 
-from .shared import load_controller
+from .private import load_controller
 from .types import (
     ParameterHandle,
     ParameterNotFoundError,

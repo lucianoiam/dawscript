@@ -34,7 +34,7 @@ import sys
 from ctypes import *
 from typing import Any, Callable, Dict, List
 
-from .shared import load_controller
+from .private import load_controller
 from .types import (
     ParameterHandle,
     ParameterNotFoundError,

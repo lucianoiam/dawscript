@@ -102,7 +102,22 @@ const public = Object.freeze({
 
    del_parameter_value_listener: async function(param, listener) {
       await _call('del_parameter_value_listener', track, listener);
-   }
+   },
+
+   /**
+   /* Helpers
+    */
+   toggle_track_mute: async function(track) {
+      await _call('toggle_track_mute', track);
+   },
+
+   toggle_track_mute_by_name: async function(name) {
+      await _call('toggle_track_mute_by_name', name);
+   },
+
+   toggle_plugin_enabled: async function(plugin) {
+      await _call('toggle_plugin_enabled', plugin);
+   },
 });
 
 const DEFAULT_WEBSOCKET_PORT = 49152;
