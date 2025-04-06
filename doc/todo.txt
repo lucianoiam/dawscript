@@ -1,7 +1,3 @@
-- server.py : implement del_xxx_listener
-- server.py : properly handle client disconnection
-
-- host.js : test local multiple listeners
 - host.js : reconnection watchdog
 
 - Host API and objects.py : enumerate plugins and parameters

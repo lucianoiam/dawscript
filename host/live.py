@@ -250,7 +250,7 @@ def _db_to_vol_value(v: float) -> float:
 
 class DawscriptControlSurface(ControlSurface):
 
-    suggested_update_time_in_ms = 10
+    suggested_update_time_in_ms = 16
 
     def __init__(self, c_instance):
         super(DawscriptControlSurface, self).__init__(c_instance)

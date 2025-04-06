@@ -104,8 +104,8 @@ const dawscript_host = (() => {
     },
 
     /**
-   /* Helpers
-    */
+     * Helpers
+     */
     toggle_track_mute: async function (track) {
       await _call("toggle_track_mute", track);
     },
@@ -146,7 +146,8 @@ const dawscript_host = (() => {
 
         if (m[1] == "add") {
           if (key in _listener_key_to_seq) {
-            _listeners[_listener_key_to_seq[key]].push(listener);
+            const seq = _listener_key_to_seq[key];
+            _listeners[seq].push(listener);
             resolve();
             return;
           }
@@ -159,17 +160,20 @@ const dawscript_host = (() => {
             return;
           }
 
-          _listeners[key] = _listeners[key].filter((l) => l != listener);
+          const seq = _listener_key_to_seq[key];
+          _listeners[seq] = _listeners[seq].filter((l) => l != listener);
 
-          if (_listeners[key].length > 0) {
+          if (_listeners[seq].length > 0) {
             resolve();
             return;
           }
 
+          args.push(seq);
+
           delete _listeners[key];
           delete _listener_key_to_seq[key];
         } else {
-          reject(new Error("Invalid arguments"));
+          reject(new Error("Invalid argument"));
           return;
         }
       }
@@ -197,7 +201,7 @@ const dawscript_host = (() => {
   }
 
   function _handle(seq, result) {
-    if (seq in _listeners) {
+    if (seq in _listeners && result !== undefined) {
       for (listener of _listeners[seq]) {
         listener(result);
       }

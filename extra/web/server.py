@@ -24,6 +24,7 @@ BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
 _htdocs_path: str = None
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _cleanup: List[Callable] = []
+_listener_del: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
 _setter_call_t: float = 0
 
@@ -46,9 +47,9 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
         except Exception as e:
             host.display(f"dawscript: {e}")
 
-        _cleanup.append(lambda: _loop.create_task(http.cleanup()))
-        _cleanup.append(ws[1].close)
-        _cleanup.append(ws[0].close)
+    _cleanup.append(lambda: _loop.create_task(http.cleanup()))
+    _cleanup.append(ws[1].close)
+    _cleanup.append(ws[0].close)
 
     qs = f"?port={ws_port}" if ws_port != 49152 else ""
     urls = [f"http://{addr}:{http_port}{qs}" for addr in addrs]
@@ -80,41 +81,72 @@ async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
 
 
 async def _ws_handle(ws, path):
-    global _setter_call_t
     client = str(ws.id)
 
     async for message in ws:
         (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
-        func = getattr(host, func_name)
+        client = str(ws.id)
         m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
 
         if m:
-            g = m.groups()
-            if g[0] == "add":
-                target = f"{args[0]}_{g[1]}"
+            action, prop = m.groups()
+            target = args[0]
 
-                def listener(v, c_ws=ws, c_seq=seq, c_target=target):
-                    return _call_remote_listener(c_ws, c_seq, c_target, v)
+            if action == "add":
 
-                args.append(listener)
-            elif g[0] == "del":
-                # TODO - remove
-                pass
+                def listener(v, c_ws=ws, c_seq=seq, c_tp=f"{target}_{prop}"):
+                    return _call_remote_listener(c_ws, c_seq, c_tp, v)
+
+                setter = getattr(host, f"add_{prop}_listener")
+                setter(target, listener)
+
+                deleter = getattr(host, f"del_{prop}_listener")
+                bound_deleter = lambda d=deleter, t=target, l=listener: d(t, l)
+
+                if client not in _listener_del:
+                    _listener_del[client] = {}
+
+                _listener_del[client][seq] = bound_deleter
+
+                await _send_message(ws, seq)
+                continue
+            elif action == "del":
+                deleter_seq = args.pop()
+
+                if (
+                    client not in _listener_del
+                    or deleter_seq not in _listener_del[client]
+                ):
+                    raise Exception("Listener not registered")
+
+                _listener_del[client][deleter_seq]()
+                del _listener_del[client][deleter_seq]
+
+                if not _listener_del[client]:
+                    del _listener_del[client]
+
+                await _send_message(ws, seq)
+                continue
+            else:
+                raise ValueError("Invalid argument")
 
         try:
+            func = getattr(host, func_name)
             result = func(*args)
             m = re.match(r"^set_([a-z_]+)$", func_name)
 
             if m:
-                target = f"{args[0]}_{m.groups()[0]}"
-                _setter_call_src[target] = client
+                global _setter_call_t
+                target_and_prop = f"{args[0]}_{m.groups()[0]}"
+                _setter_call_src[target_and_prop] = client
                 _setter_call_t = time.time()
         except Exception as e:
+            host.log(e)
             result = f"error:{e}"
 
-        if result is not None:
-            await _send_message(ws, seq, result)
-    # TODO - remove registered listeners for client
+        await _send_message(ws, seq, result)
+
+    _cleanup_client(client)
 
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:
@@ -148,20 +180,34 @@ async def _http_handle(request):
     return web.FileResponse(filepath)
 
 
-async def _send_message(ws, seq, data):
-    message = json.dumps([seq, replace_inf(data)], cls=ReprJSONEncoder)
-    await ws.send(message)
+async def _send_message(ws, seq, payload=None):
+    message = [seq]
+
+    if payload is not None:
+        message.append(replace_inf(payload))
+
+    await ws.send(json.dumps(message, cls=ReprJSONEncoder))
 
 
-def _call_remote_listener(ws, seq, target, value):
+def _call_remote_listener(ws, seq, target_and_prop, value):
+    client = str(ws.id)
+
     try:
-        client = str(ws.id)
-
-        if _setter_call_src.get(target) != client:
+        if _setter_call_src.get(target_and_prop) != client:
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)
-        # TODO - remove registered listeners for client
+        _cleanup_client(client)
+
+
+def _cleanup_client(client):
+    if client not in _listener_del:
+        return
+
+    for deleter in _listener_del[client].values():
+        deleter()
+
+    del _listener_del[client]
 
 
 def _get_bind_address():
