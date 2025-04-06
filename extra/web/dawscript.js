@@ -1,8 +1,12 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
-const dawscript_host = (() => {
-  const public = Object.freeze({
+const dawscript = (() => {
+  function connect({ on_connect = null, on_disconnect = null } = {}) {
+    _connect(...arguments);
+  }
+
+  const host = Object.freeze({
     get_tracks: async function () {
       return await _call("get_tracks");
     },
@@ -103,9 +107,8 @@ const dawscript_host = (() => {
       await _call("del_parameter_value_listener", track, listener);
     },
 
-    /**
-     * Helpers
-     */
+    // Helpers
+
     toggle_track_mute: async function (track) {
       await _call("toggle_track_mute", track);
     },
@@ -119,17 +122,64 @@ const dawscript_host = (() => {
     },
   });
 
+  // Private
+
   const DEFAULT_WEBSOCKET_PORT = 49152;
+  const RECONNECT_WAIT_SEC = 3;
 
-  const _init_queue = [];
-  const _promise_cb = {};
-  const _listeners = {};
-  const _listener_tp_to_seq = {};
-  const _socket = _create_websocket();
+  let _socket = null;
+  let _seq = 0;
+  let _init_queue = [];
+  let _promise_cb = {};
+  let _listeners = {};
+  let _tp_to_seq = {};
 
-  let _message_seq = 0;
+  function _connect(callbacks = {}) {
+    const port =
+      new URLSearchParams(window.location.search).get("port") ||
+      DEFAULT_WEBSOCKET_PORT;
+    const url = `ws://${window.location.hostname}:${port}`;
 
-  function _call(func, ...args) {
+    function create_socket() {
+      _socket = new WebSocket(url);
+
+      _socket.onopen = () => {
+        console.info("dawscript: connected");
+
+        if (callbacks.on_connect) {
+          callbacks.on_connect();
+        }
+
+        while (_init_queue.length > 0) {
+          const [seq, message] = _init_queue.shift();
+          _send(seq, message);
+        }
+      };
+
+      _socket.onmessage = (event) => {
+        const [seq, result] = JSON.parse(event.data);
+        _handle(seq, result);
+      };
+
+      _socket.onerror = (event) => {
+        console.warn(`dawscript: ${event.error}`);
+        _socket.close();
+        _cleanup();
+      };
+
+      _socket.onclose = () => {
+        console.info("dawscript: disconnected");
+
+        if (! callbacks.on_disconnect || callbacks.on_disconnect()) {
+          setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
+        }
+      };
+    }
+
+    create_socket();
+  }
+
+  async function _call(func, ...args) {
     return new Promise((resolve, reject) => {
       const m = func.match(/^(add|del)_([a-z_]+)_listener$/);
 
@@ -146,17 +196,17 @@ const dawscript_host = (() => {
         args.pop();
 
         if (action == "add") {
-          if (target_and_prop in _listener_tp_to_seq) {
-            const seq = _listener_tp_to_seq[target_and_prop];
+          if (target_and_prop in _tp_to_seq) {
+            const seq = _tp_to_seq[target_and_prop];
             _listeners[seq].push(listener);
             resolve();
             return; // already registered with server
           }
 
-          _listener_tp_to_seq[target_and_prop] = _message_seq;
-          _listeners[_message_seq] = [listener];
+          _tp_to_seq[target_and_prop] = _seq;
+          _listeners[_seq] = [listener];
         } else if (action == "del") {
-          const seq = _listener_tp_to_seq[target_and_prop];
+          const seq = _tp_to_seq[target_and_prop];
           _listeners[seq] = _listeners[seq].filter((l) => l != listener);
 
           if (_listeners[seq].length > 0) {
@@ -165,7 +215,7 @@ const dawscript_host = (() => {
           }
 
           delete _listeners[target_and_prop];
-          delete _listener_tp_to_seq[target_and_prop];
+          delete _tp_to_seq[target_and_prop];
 
           args.push(seq);
         } else {
@@ -174,7 +224,7 @@ const dawscript_host = (() => {
         }
       }
 
-      const seq = _message_seq++;
+      const seq = _seq++;
       const message = JSON.stringify([seq, func, ...args]);
 
       _promise_cb[seq] = [resolve, reject];
@@ -219,35 +269,13 @@ const dawscript_host = (() => {
     return callbacks;
   }
 
-  function _create_websocket() {
-    const port =
-      new URLSearchParams(window.location.search).get("port") ||
-      DEFAULT_WEBSOCKET_PORT;
-    const socket = new WebSocket(`ws://${window.location.hostname}:${port}`);
-
-    socket.onopen = () => {
-      console.log("host: connected");
-
-      while (_init_queue.length > 0) {
-        const [seq, message] = _init_queue.shift();
-        _send(seq, message);
-      }
-    };
-
-    socket.onmessage = (event) => {
-      const [seq, result] = JSON.parse(event.data);
-      _handle(seq, result);
-    };
-
-    socket.onclose = () => {
-      console.log("host: disconnected");
-    };
-
-    socket.onerror = (error) => {
-      console.error(error);
-    };
-
-    return socket;
+  function _cleanup() {
+    _socket = null;
+    _seq = 0;
+    _init_queue = [];
+    _promise_cb = {};
+    _listeners = {};
+    _tp_to_seq = {};
   }
 
   class HostError extends Error {
@@ -257,5 +285,5 @@ const dawscript_host = (() => {
     }
   }
 
-  return public;
+  return { host, connect };
 })(); // dawscript_host

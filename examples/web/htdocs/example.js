@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
+const { host, connect } = dawscript;
+
 const input = document.createElement("input");
 input.type = "text";
-input.placeholder = "Check host.js for all available functions";
+input.placeholder = "Check dawscript.js for all available functions";
 input.addEventListener("keydown", (ev) => {
   if (ev.key === "Enter") on_click_run();
 });
@@ -22,56 +24,59 @@ get_tracks.textContent = "Example: get_tracks()";
 get_tracks.addEventListener("click", on_click_get_tracks);
 document.body.appendChild(get_tracks);
 
-function on_click_run() {
-  try {
-    const result = eval("dawscript_host." + input.value);
+const slider = document.createElement("input");
+slider.style.display = "block";
+slider.type = "range";
+slider.min = -68;
+slider.max = 6;
+slider.addEventListener("input", on_slider_input);
 
-    if (result instanceof Promise) {
-      result
-        .then((asyncResult) => {
-          output.textContent = asyncResult;
-        })
-        .catch((error) => {
-          output.textContent = error.message;
-        });
-    } else {
-      output.textContent = result;
-    }
+connect({ on_connect: add_host_listeners });
+
+
+async function on_click_run() {
+  try {
+    output.textContent = await eval("host." + input.value);
   } catch (error) {
     output.textContent = error.message;
   }
 }
 
+
 let last_track = null;
+
 
 async function on_click_get_tracks() {
   if (last_track != null) {
     return;
   }
 
-  const tracks = await dawscript_host.get_tracks();
+  const tracks = await host.get_tracks();
 
   if (tracks.length == 0) {
     output.textContent = "No tracks found";
     return;
   }
 
+  output.textContent = tracks;
   last_track = tracks[tracks.length - 1];
 
-  const slider = document.createElement("input");
-  slider.style.display = "block";
-  slider.type = "range";
-  slider.min = -68;
-  slider.max = 6;
-  slider.value = await dawscript_host.get_track_volume(last_track);
-
-  slider.addEventListener("input", (ev) => {
-    dawscript_host.set_track_volume(last_track, parseFloat(slider.value));
-  });
-
-  dawscript_host.add_track_volume_listener(last_track, (vol) => {
-    slider.value = vol;
-  });
-
+  slider.value = await host.get_track_volume(last_track);
   document.body.appendChild(slider);
+
+  add_host_listeners();
+}
+
+
+function on_slider_input() {
+  host.set_track_volume(last_track, parseFloat(slider.value));
+}
+
+
+function add_host_listeners() {
+  if (last_track) {
+    host.add_track_volume_listener(last_track, (vol) => {
+      slider.value = vol;
+    });
+  }
 }
