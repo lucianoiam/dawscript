@@ -19,8 +19,8 @@ class Host:
       host.log(message)
 
    @staticmethod
-   def show_message(message: str):
-      host.show_message(message)
+   def display(message: str):
+      host.display(message)
 
 class Parameter:
    def __init__(self, plugin: PluginHandle, name: str):

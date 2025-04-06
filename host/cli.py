@@ -27,7 +27,7 @@ def main(context: Any):
 def log(message: str):
    print(message)
 
-def show_message(message: str):
+def display(message: str):
    print(message)
 
 def get_tracks() -> List[TrackHandle]:

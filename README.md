@@ -73,7 +73,7 @@ def on_project_load():
       callback = Track('Track 1').toggle_mute
       footswitch.set_callback_pressed(callback)
    except TrackNotFoundError:
-      Host.show_message('Incompatible project loaded')
+      Host.display('Incompatible project loaded')
 
 def host_callback(midi: List[bytes]):
    footswitch.process(midi)

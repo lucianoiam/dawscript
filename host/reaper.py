@@ -55,7 +55,7 @@ def cleanup():
 def log(message: str):
    print(message, file=sys.stderr)
 
-def show_message(message: str):
+def display(message: str):
    RPR_ShowConsoleMsg(f'{message}\n')
 
 def get_tracks() -> List[TrackHandle]:

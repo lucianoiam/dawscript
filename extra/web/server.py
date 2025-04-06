@@ -43,7 +43,7 @@ def start(htdocs_path, ws_port=49152, http_port=8080,
          dnssd.register_service(service_name, '_http._tcp', http_port, lan_addr)
          _cleanup.append(dnssd.unregister_service)
       except Exception as e:
-         host.show_message(f'dawscript: {e}')
+         host.display(f'dawscript: {e}')
 
       _cleanup.append(lambda: _loop.create_task(http.cleanup()))
       _cleanup.append(ws[1].close)

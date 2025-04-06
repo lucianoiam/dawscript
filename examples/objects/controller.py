@@ -22,7 +22,7 @@ def on_project_load():
       #footswitch.set_callback_released(...)
       #footswitch.set_callback_released_slow(...)
    except TrackNotFoundError:
-      Host.show_message('Incompatible project loaded')
+      Host.display('Incompatible project loaded')
 
 def host_callback(midi: List[bytes]):
    footswitch.process(midi)

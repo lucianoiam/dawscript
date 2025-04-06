@@ -34,7 +34,7 @@ def log(message: str):
    else:
       print(message, file=sys.stderr)
 
-def show_message(message: str):
+def display(message: str):
    if _control_surface is not None:
       _control_surface.show_message(str(message))
    else:
