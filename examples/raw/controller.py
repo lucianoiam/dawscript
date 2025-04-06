@@ -11,20 +11,21 @@ config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
 footswitch = Footswitch()
 
-def host_callback(midi: List[bytes]):
-   for msg in make_midi_messages(midi):
-      if msg.is_cc() and msg.control == 64:
-         if msg.value == 127:
-            footswitch.press()
-         elif msg.value == 0:
-            footswitch.release()
 
-   if footswitch.poll():
-      if footswitch.pressed():
-         toggle_track_mute(get_track('Track 1'))
-      #elif footswitch.pressed_twice():
-      #   toggle_plugin_enabled(get_plugin(get_track('...'), 'Reverb'))
-      #elif footswitch.released():
-      #   ...
-      #elif footswitch.released_slow():
-      #   ...
+def host_callback(midi: List[bytes]):
+    for msg in make_midi_messages(midi):
+        if msg.is_cc() and msg.control == 64:
+            if msg.value == 127:
+                footswitch.press()
+            elif msg.value == 0:
+                footswitch.release()
+
+    if footswitch.poll():
+        if footswitch.pressed():
+            toggle_track_mute(get_track("Track 1"))
+        # elif footswitch.pressed_twice():
+        #   toggle_plugin_enabled(get_plugin(get_track('...'), 'Reverb'))
+        # elif footswitch.released():
+        #   ...
+        # elif footswitch.released_slow():
+        #   ...

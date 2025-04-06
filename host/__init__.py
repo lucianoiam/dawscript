@@ -4,28 +4,32 @@
 from .types import *
 
 try:
-   from .reaper import *
+    from .reaper import *
 except IncompatibleEnvironmentError:
-   pass
+    pass
 
 try:
-   from .live import *
+    from .live import *
 except IncompatibleEnvironmentError:
-   pass
+    pass
 
 try:
-   name()
+    name()
 except NameError:
-   from .cli import *
+    from .cli import *
+
 
 def toggle_track_mute(track: TrackHandle):
-   set_track_mute(track, not is_track_mute(track))
+    set_track_mute(track, not is_track_mute(track))
+
 
 def toggle_track_mute_by_name(track: str):
-   toggle_track_mute(get_track(track))
+    toggle_track_mute(get_track(track))
+
 
 def toggle_plugin_enabled(plugin: PluginHandle):
-   set_plugin_enabled(plugin, not is_plugin_enabled(plugin))
+    set_plugin_enabled(plugin, not is_plugin_enabled(plugin))
+
 
 """
 def name() -> str
@@ -46,13 +50,13 @@ def get_track_pan(track: TrackHandle) -> float
 def set_track_pan(track: TrackHandle, pan: float)
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
 def del_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
-TODO: def get_plugins(track: TrackHandle) -> List[PluginHandle]
+  TODO  def get_plugins(track: TrackHandle) -> List[PluginHandle]
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle
 def is_plugin_enabled(plugin: PluginHandle) -> bool
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool)
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
 def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
-TODO: def get_parameters(plugin: PluginHandle) -> List[ParameterHandle]
+  TODO  def get_parameters(plugin: PluginHandle) -> List[ParameterHandle]
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle
 def get_parameter_range(param: ParameterHandle) -> (float, float)
 def get_parameter_value(param: ParameterHandle) -> float

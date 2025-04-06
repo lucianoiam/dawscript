@@ -11,8 +11,10 @@ import host
 
 add_site_packages()
 
-def main(context: Any):
-   host.main(context)
 
-if __name__ == '__main__':
-   main(globals())
+def main(context: Any):
+    host.main(context)
+
+
+if __name__ == "__main__":
+    main(globals())

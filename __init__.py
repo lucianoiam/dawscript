@@ -3,11 +3,12 @@
 
 # This __init__.py file is only needed by Ableton Live
 
+from .host.live import DawscriptControlSurface
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 
-from .host.live import DawscriptControlSurface
 
 def create_instance(c_instance):
-   return DawscriptControlSurface(c_instance)
+    return DawscriptControlSurface(c_instance)

@@ -3,4 +3,4 @@
 
 from util import add_site_packages
 
-add_site_packages('extra', 'web')
+add_site_packages("extra", "web")

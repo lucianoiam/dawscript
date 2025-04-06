@@ -6,23 +6,27 @@ from typing import Any
 
 ALL_MIDI_INPUTS = []
 
-Config = namedtuple('Config', ['midi_inputs'])
+Config = namedtuple("Config", ["midi_inputs"])
 
 TrackHandle = Any
 PluginHandle = Any
 ParameterHandle = Any
 
-class IncompatibleEnvironmentError(Exception):
-   pass
 
 class TrackNotFoundError(Exception):
-   def __init__(self, name: str):
-      super().__init__(f'Track with name "{name}" does not exist')
+    def __init__(self, name: str):
+        super().__init__(f'Track with name "{name}" does not exist')
+
 
 class PluginNotFoundError(Exception):
-   def __init__(self, name: str):
-      super().__init__(f'Plugin with name "{name}" does not exist')
+    def __init__(self, name: str):
+        super().__init__(f'Plugin with name "{name}" does not exist')
+
 
 class ParameterNotFoundError(Exception):
-   def __init__(self, name: str):
-      super().__init__(f'Parameter with name "{name}" does not exist')
+    def __init__(self, name: str):
+        super().__init__(f'Parameter with name "{name}" does not exist')
+
+
+class IncompatibleEnvironmentError(Exception):
+    pass
