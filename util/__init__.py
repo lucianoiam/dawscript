@@ -2,3 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from .path import *
+
+add_site_packages()
+
+from .mido import *

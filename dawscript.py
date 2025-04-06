@@ -6,10 +6,7 @@
 
 from typing import Any
 
-from util import add_site_packages
 import host
-
-add_site_packages()
 
 
 def main(context: Any):

@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Callable, Dict, List, Union
 
 from mido import Message
-from util.mido import is_note_on_or_note_off
+from util import is_note_on_or_note_off
 
 
 class State(Enum):

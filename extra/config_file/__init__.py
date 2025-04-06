@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import yaml
 from collections import namedtuple
 from typing import Callable, List
 
@@ -12,6 +11,8 @@ from host import Config
 from util import add_site_packages
 
 add_site_packages("extra", "config_file")
+
+import yaml
 
 ParsedGadget = namedtuple("ParsedGadget", ["instance", "name", "midi_port"])
 
