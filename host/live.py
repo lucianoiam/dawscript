@@ -264,20 +264,28 @@ class DawscriptControlSurface(ControlSurface):
         dawscript = importlib.import_module(".dawscript", "dawscript")
         dawscript.main(self)
 
+        self._controller = load_controller()
+
         try:
-            self._controller = load_controller()
             self._controller.on_script_start()
         except AttributeError:
             pass
 
-    def disconnect(self):
-        for callback in self._cleanup_cb.values():
-            callback()
+        try:
+            # ControlSurface is reinstantiated every time a project is loaded
+            self._controller.on_project_load()
+        except AttributeError:
+            pass
 
+
+    def disconnect(self):
         try:
             self._controller.on_script_stop()
         except AttributeError:
             pass
+
+        for callback in self._cleanup_cb.values():
+            callback()
 
         super(DawscriptControlSurface, self).disconnect()
 
@@ -301,6 +309,11 @@ class DawscriptControlSurface(ControlSurface):
         except AttributeError:
             return
 
+        try:
+            host_callback(self._events)
+        except Exception as e:
+            log(repr(e))
+
         for func in self._deferred:
             try:
                 func()
@@ -308,12 +321,6 @@ class DawscriptControlSurface(ControlSurface):
                 log(repr(e))
 
         self._deferred.clear()
-
-        try:
-            host_callback(self._events)
-        except Exception as e:
-            log(repr(e))
-
         self._events.clear()
 
     def add_listener(self, target, listener, name, getter, add_func, del_func):
@@ -323,6 +330,7 @@ class DawscriptControlSurface(ControlSurface):
             return getter(target)
 
         def def_listener():
+            # Changes cannot be triggered by notifications. You will need to defer your response.
             return self._deferred.append(lambda: listener(target_getter()))
 
         self._cleanup_cb[key] = lambda: del_func(def_listener)

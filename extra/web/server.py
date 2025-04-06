@@ -22,9 +22,9 @@ BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
 
 _htdocs_path: str = None
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-_setter_src: Dict[str, str] = {}
-_setter_n: int = 0
 _cleanup: List[Callable] = []
+_listener_mute: Dict[str, str] = {}
+_listener_wait: int = 0
 
 
 def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List[str]:
@@ -74,7 +74,7 @@ async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
 
 
 async def _ws_handle(ws, path):
-    global _setter_n
+    global _listener_wait
     client = str(ws.id)
 
     async for message in ws:
@@ -101,8 +101,8 @@ async def _ws_handle(ws, path):
 
             if m:
                 target = f"{args[0]}_{m.groups()[0]}"
-                _setter_src[target] = client
-                _setter_n = 2
+                _listener_mute[target] = client
+                _listener_wait = 2
         except Exception as e:
             result = f"error:{e}"
 
@@ -151,7 +151,7 @@ def _call_remote_listener(ws, seq, target, value):
     try:
         client = str(ws.id)
 
-        if _setter_src.get(target) != client:
+        if _listener_mute.get(target) != client:
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)
@@ -159,15 +159,15 @@ def _call_remote_listener(ws, seq, target, value):
 
 
 def _unlock_remote_listeners():
-    global _setter_src, _setter_n
+    global _listener_mute, _listener_wait
 
-    if _setter_n == 0:
+    if _listener_wait == 0:
         return
 
-    _setter_n -= 1
+    _listener_wait -= 1
 
-    if _setter_n == 0:
-        _setter_src = {}
+    if _listener_wait == 0:
+        _listener_mute = {}
 
 
 def _get_bind_address():

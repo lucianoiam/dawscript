@@ -75,10 +75,19 @@ def main(context: Any):
 
 
 def cleanup():
+    global _controller, _proj_path, _event_n
+
     try:
         _controller.on_script_stop()
     except AttributeError:
         pass
+
+    _controller = None
+    _proj_path = None
+    _event_n = 0
+    _listeners.clear()
+    _getters.clear()
+    _state.clear()
 
 
 def log(message: str):
