@@ -124,7 +124,7 @@ const dawscript_host = (() => {
   const _init_queue = [];
   const _promise_cb = {};
   const _listeners = {};
-  const _listener_key_to_seq = {};
+  const _listener_tp_to_seq = {};
   const _socket = _create_websocket();
 
   let _message_seq = 0;
@@ -139,39 +139,35 @@ const dawscript_host = (() => {
         typeof args[0] === "string" &&
         typeof args[1] === "function"
       ) {
-        const key = `${args[0]}_${m[2]}`;
+        const [_, action, prop] = m;
+        const target_and_prop = `${args[0]}_${prop}`;
         const listener = args[1];
 
         args.pop();
 
-        if (m[1] == "add") {
-          if (key in _listener_key_to_seq) {
-            const seq = _listener_key_to_seq[key];
+        if (action == "add") {
+          if (target_and_prop in _listener_tp_to_seq) {
+            const seq = _listener_tp_to_seq[target_and_prop];
             _listeners[seq].push(listener);
             resolve();
-            return;
+            return; // already registered with server
           }
 
-          _listener_key_to_seq[key] = _message_seq;
+          _listener_tp_to_seq[target_and_prop] = _message_seq;
           _listeners[_message_seq] = [listener];
-        } else if (m[1] == "del") {
-          if (!(key in _listener_key_to_seq)) {
-            resolve();
-            return;
-          }
-
-          const seq = _listener_key_to_seq[key];
+        } else if (action == "del") {
+          const seq = _listener_tp_to_seq[target_and_prop];
           _listeners[seq] = _listeners[seq].filter((l) => l != listener);
 
           if (_listeners[seq].length > 0) {
             resolve();
-            return;
+            return; // do not unregister yet
           }
 
-          args.push(seq);
+          delete _listeners[target_and_prop];
+          delete _listener_tp_to_seq[target_and_prop];
 
-          delete _listeners[key];
-          delete _listener_key_to_seq[key];
+          args.push(seq);
         } else {
           reject(new Error("Invalid argument"));
           return;
@@ -201,7 +197,7 @@ const dawscript_host = (() => {
   }
 
   function _handle(seq, result) {
-    if (seq in _listeners && result !== undefined) {
+    if (seq in _listeners && typeof result !== "undefined") {
       for (listener of _listeners[seq]) {
         listener(result);
       }
