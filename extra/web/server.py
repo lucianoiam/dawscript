@@ -3,10 +3,11 @@
 
 import asyncio
 import json
+import math
 import os
 import re
 import socket
-from typing import Callable, List, Set, Tuple
+from typing import Any, Callable, Dict, List
 
 import websockets
 from aiohttp import web, web_runner
@@ -20,7 +21,8 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 BUILTIN_HTDOCS_PATH = os.path.join('extra', 'web')
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-_listener_locks: Set[Tuple[str]] = set()
+_setter_src: Dict[str,str] = {}
+_setter_n: int = 0
 _cleanup: List[Callable] = []
 _htdocs_path: str = None
 
@@ -57,6 +59,7 @@ def stop():
       func()
 
 def tick():
+   _unlock_remote_listeners()
    _loop.run_until_complete(_noop())
 
 async def _noop():
@@ -66,29 +69,34 @@ async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
    return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
 
 async def _ws_handle(ws, path):
+   client = str(ws.id)
+
    async for message in ws:
       (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
       func = getattr(host, func_name)
-      client = str(ws.id)
       m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
       if m:
          g = m.groups()
          if g[0] == 'add':
-            listener = lambda v, c_ws=ws, c_seq=seq, c_name=g[1]: _call_remote_listener(c_ws, c_seq, c_name, v)
+            target = f'{args[0]}_{g[1]}'
+            listener = lambda v, c_ws=ws, c_seq=seq, c_target=target: _call_remote_listener(c_ws, c_seq, c_target, v)
             args.append(listener)
          elif g[0] == 'del':
             # TODO - remove
             pass
       try:
+         result = func(*args)
          m = re.match(r"^set_([a-z_]+)$", func_name)
          if m:
-            _listener_locks.add(f'{client}_{m.groups()[0]}')
-         result = func(*args)
+            target = f'{args[0]}_{m.groups()[0]}'
+            _setter_src[target] = client
+            global _setter_n
+            _setter_n = 2
       except Exception as e:
          result = f'error:{e}'
       if result is not None:
          await _send_message(ws, seq, result)
-   listeners.remove(client)
+   # TODO - remove registered listeners for client
 
 async def _http_serve(addrs, port) -> web_runner.AppRunner:
    app = web.Application()
@@ -123,16 +131,22 @@ async def _send_message(ws, seq, data):
    message = json.dumps([seq, replace_inf(data)], cls=ReprJSONEncoder)
    await ws.send(message)
 
-def _call_remote_listener(ws, seq, name, data):
+def _call_remote_listener(ws, seq, target, value):
    try:
-      lock = f'{str(ws.id)}_{name}'
-      if lock in _listener_locks:
-         _listener_locks.remove(lock)
-      else:
-         _loop.run_until_complete(_send_message(ws, seq, data))
+      client = str(ws.id)
+      if _setter_src.get(target) != client:
+         _loop.run_until_complete(_send_message(ws, seq, value))
    except Exception as e:
       host.log(e)
-      listeners.remove(str(ws.id))
+      # TODO - remove registered listeners for client
+
+def _unlock_remote_listeners():
+   global _setter_src, _setter_n
+   if _setter_n == 0:
+      return
+   _setter_n -= 1
+   if _setter_n == 0:
+      _setter_src = {}
 
 def _get_bind_address():
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
