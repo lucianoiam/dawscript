@@ -169,17 +169,17 @@ async def _add_listener(ws, seq, client, target, prop):
     await _send_message(ws, seq)
 
 
-async def _del_listener(ws, seq, client, add_lstnr_seq):
+async def _del_listener(ws, seq, client, listener_seq):
     if (
         client not in _listener_del
-        or add_lstnr_seq not in _listener_del[client]
+        or listener_seq not in _listener_del[client]
     ):
         raise Exception("Listener not registered")
 
-    bound_deleter = _listener_del[client][add_lstnr_seq]
+    bound_deleter = _listener_del[client][listener_seq]
     bound_deleter()
 
-    del _listener_del[client][add_lstnr_seq]
+    del _listener_del[client][listener_seq]
 
     if not _listener_del[client]:
         del _listener_del[client]
@@ -201,11 +201,11 @@ def _unmute_remote_listeners():
         _setter_call_t = 0
 
 
-def _call_remote_listener(ws, seq, target_and_prop, value):
+def _call_remote_listener(ws, seq, key_tp, value):
     client = str(ws.id)
 
     try:
-        if _setter_call_src.get(target_and_prop) != client:
+        if _setter_call_src.get(key_tp) != client:
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)

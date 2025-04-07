@@ -133,11 +133,11 @@ def set_track_mute(track: TrackHandle, mute: bool):
 
 
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    _add_listener(track, listener, "mute", is_track_mute)
+    _add_listener(track, "mute", listener, is_track_mute)
 
 
 def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    _del_listener(track, listener, "mute")
+    _del_listener(track, "mute", listener)
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -149,11 +149,11 @@ def set_track_volume(track: TrackHandle, volume_db: float):
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _add_listener(track, listener, "volume", get_track_volume)
+    _add_listener(track, "volume", listener, get_track_volume)
 
 
 def del_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _del_listener(track, listener, "volume")
+    _del_listener(track, "volume", listener)
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -161,11 +161,11 @@ def get_track_pan(track: TrackHandle) -> float:
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _add_listener(track, listener, "pan", get_track_pan)
+    _add_listener(track, "pan", listener, get_track_pan)
 
 
 def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _del_listener(track, listener, "pan")
+    _del_listener(track, "pan", listener)
 
 
 def set_track_pan(track: TrackHandle, pan: float):
@@ -190,11 +190,11 @@ def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
 
 
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
-    _add_listener(plugin, listener, "enabled", is_plugin_enabled)
+    _add_listener(plugin, "enabled", listener, is_plugin_enabled)
 
 
 def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
-    _del_listener(plugin, listener, "enabled")
+    _del_listener(plugin, "enabled", listener)
 
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
@@ -223,13 +223,13 @@ def set_parameter_value(param: ParameterHandle, value: float):
 def add_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    _add_listener(param, listener, "value", get_parameter_value)
+    _add_listener(param, "value", listener, get_parameter_value)
 
 
 def del_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    _del_listener(param, listener, "value")
+    _del_listener(param, "value", listener)
 
 
 TWENTY_OVER_LN10 = 8.6858896380650365530225783783321
@@ -305,37 +305,37 @@ def _read_midi_events():
     return events
 
 
-def _add_listener(target: Any, listener: Callable, name: str, getter: Callable):
-    key = f"{target}_{name}"
+def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
+    key_tp = f"{target}_{prop}"
 
     def target_getter():
         return getter(target)
 
-    if key not in _listeners:
-        _listeners[key] = []
-        _getters[key] = target_getter
-        _state[key] = target_getter()
+    if key_tp not in _listeners:
+        _listeners[key_tp] = []
+        _getters[key_tp] = target_getter
+        _state[key_tp] = target_getter()
 
-    _listeners[key].append(listener)
+    _listeners[key_tp].append(listener)
 
 
-def _del_listener(target: Any, listener: Callable, name: str):
-    key = f"{target}_{name}"
+def _del_listener(target: Any, prop: str, listener: Callable):
+    key_tp = f"{target}_{prop}"
 
-    _listeners[key] = [l for l in _listeners[key] if l != listener]
+    _listeners[key_tp] = [l for l in _listeners[key_tp] if l != listener]
 
-    if not _listeners[key]:
-        del _listeners[key]
-        del _getters[key]
-        del _state[key]
+    if not _listeners[key_tp]:
+        del _listeners[key_tp]
+        del _getters[key_tp]
+        del _state[key_tp]
 
 
 def _call_listeners():
-    for key, getter in _getters.items():
+    for key_tp, getter in _getters.items():
         now = getter()
-        if now != _state[key]:
-            _state[key] = now
-            for listener in _listeners[key]:
+        if now != _state[key_tp]:
+            _state[key_tp] = now
+            for listener in _listeners[key_tp]:
                 listener(now)
 
 

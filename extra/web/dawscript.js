@@ -127,7 +127,7 @@ const dawscript = (() => {
   let _seq = 0;
   let _promise_cb = {};
   let _listeners = {};
-  let _tp_to_add_lstnr_seq = {};
+  let _tp_to_listener_seq = {};
 
   function _connect(callback) {
     const port =
@@ -191,14 +191,14 @@ const dawscript = (() => {
             return;
           }
         } else if (action == "del") {
-          const add_lstnr_seq = _del_listener(target, prop, listener);
+          const listener_seq = _del_listener(target, prop, listener);
 
-          if (add_lstnr_seq === null) {
+          if (listener_seq === null) {
             resolve();
             return;
           }
 
-          args.push(add_lstnr_seq);
+          args.push(listener_seq);
         } else {
           reject(new Error("Invalid argument"));
           return;
@@ -236,36 +236,36 @@ const dawscript = (() => {
   }
 
   function _add_listener(target, prop, listener, seq) {
-    const target_and_prop = `${target}_${prop}`;
+    const key_tp = `${target}_${prop}`;
 
-    if (target_and_prop in _tp_to_add_lstnr_seq) {
-      const add_lstnr_seq = _tp_to_add_lstnr_seq[target_and_prop];
-      _listeners[add_lstnr_seq].push(listener);
+    if (key_tp in _tp_to_listener_seq) {
+      const listener_seq = _tp_to_listener_seq[key_tp];
+      _listeners[listener_seq].push(listener);
 
       return false; // already registered with server
     }
 
-    _tp_to_add_lstnr_seq[target_and_prop] = seq;
+    _tp_to_listener_seq[key_tp] = seq;
     _listeners[seq] = [listener];
 
     return true;
   }
 
   function _del_listener(target, prop, listener) {
-    const target_and_prop = `${target}_${prop}`;
-    const add_lstnr_seq = _tp_to_add_lstnr_seq[target_and_prop];
+    const key_tp = `${target}_${prop}`;
+    const listener_seq = _tp_to_listener_seq[key_tp];
 
-    _listeners[add_lstnr_seq] = _listeners[add_lstnr_seq]
+    _listeners[listener_seq] = _listeners[listener_seq]
       .filter((l) => l != listener);
 
-    if (_listeners[add_lstnr_seq].length > 0) {
+    if (_listeners[listener_seq].length > 0) {
       return null;  // do not unregister from server yet
     }
 
-    delete _listeners[target_and_prop];
-    delete _tp_to_add_lstnr_seq[target_and_prop];
+    delete _listeners[key_tp];
+    delete _tp_to_listener_seq[key_tp];
 
-    return add_lstnr_seq;
+    return listener_seq;
   }
 
   function _pop_promise_cb(seq) {
@@ -279,7 +279,7 @@ const dawscript = (() => {
     _seq = 0;
     _promise_cb = {};
     _listeners = {};
-    _tp_to_add_lstnr_seq = {};
+    _tp_to_listener_seq = {};
   }
 
   class HostError extends Error {

@@ -76,8 +76,8 @@ def set_track_mute(track: TrackHandle, mute: bool):
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
     _control_surface.add_listener(
         track,
-        listener,
         "mute",
+        listener,
         is_track_mute,
         track.add_mute_listener,
         track.remove_mute_listener,
@@ -85,7 +85,7 @@ def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]
 
 
 def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    _control_surface.del_listener(track, listener, "mute")
+    _control_surface.del_listener(track, "mute", listener)
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -99,8 +99,8 @@ def set_track_volume(track: TrackHandle, volume_db: float):
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
     _control_surface.add_listener(
         track,
-        listener,
         "volume",
+        listener,
         get_track_volume,
         track.mixer_device.volume.add_value_listener,
         track.mixer_device.volume.remove_value_listener,
@@ -108,7 +108,7 @@ def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], No
 
 
 def del_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _control_surface.del_listener(track, listener, "volume")
+    _control_surface.del_listener(track, "volume", listener)
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -122,8 +122,8 @@ def set_track_pan(track: TrackHandle, pan: float):
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
     _control_surface.add_listener(
         track,
-        listener,
         "pan",
+        listener,
         get_track_pan,
         track.mixer_device.panning.add_value_listener,
         track.mixer_device.panning.remove_value_listener,
@@ -131,7 +131,7 @@ def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
 
 
 def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _control_surface.del_listener(track, listener, "pan")
+    _control_surface.del_listener(track, "pan", listener)
 
 
 def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
@@ -156,8 +156,8 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     device_on = _get_parameter_device_on(plugin)
     _control_surface.add_listener(
         plugin,
-        listener,
         "enabled",
+        listener,
         is_plugin_enabled,
         device_on.add_value_listener,
         device_on.remove_value_listener,
@@ -166,7 +166,7 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
 
 def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
     device_on = _get_parameter_device_on(plugin)
-    _control_surface.del_listener(plugin, listener, "enabled")
+    _control_surface.del_listener(plugin, "enabled", listener)
 
 
 def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
@@ -196,8 +196,8 @@ def add_parameter_value_listener(
 ):
     _control_surface.add_listener(
         param,
-        listener,
         "value",
+        listener,
         get_parameter_value,
         param.add_value_listener,
         param.remove_value_listener,
@@ -207,7 +207,7 @@ def add_parameter_value_listener(
 def del_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    _control_surface.del_listener(param, listener, "value")
+    _control_surface.del_listener(param, "value", listener)
 
 
 def _get_document():
@@ -324,8 +324,9 @@ class DawscriptControlSurface(ControlSurface):
 
         self._events.clear()
 
-    def add_listener(self, target, listener, name, getter, add_func, del_func):
-        key = f"{target}_{name}"
+
+    def add_listener(self, target, prop, listener, getter, add_func, del_func):
+        key_tp = f"{target}_{prop}"
 
         def target_getter():
             return getter(target)
@@ -334,10 +335,11 @@ class DawscriptControlSurface(ControlSurface):
             # Changes cannot be triggered by notifications. You will need to defer your response.
             return self._deferred.append(lambda: listener(target_getter()))
 
-        self._cleanup_cb[key] = lambda: del_func(def_listener)
+        self._cleanup_cb[key_tp] = lambda: del_func(def_listener)
         add_func(def_listener)
 
-    def del_listener(self, target, listener, name):
-        key = f"{target}_{name}"
-        self._cleanup_cb[key]()
-        del self._cleanup_cb[key]
+    def del_listener(self, target, prop, listener):
+        key_tp = f"{target}_{prop}"
+
+        self._cleanup_cb[key_tp]()
+        del self._cleanup_cb[key_tp]
