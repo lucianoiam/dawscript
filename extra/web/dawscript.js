@@ -107,8 +107,6 @@ const dawscript = (() => {
       await _call("del_parameter_value_listener", track, listener);
     },
 
-    // Helpers
-
     toggleTrackMute: async function (track) {
       await _call("toggle_track_mute", track);
     },
@@ -122,8 +120,6 @@ const dawscript = (() => {
     },
   });
 
-  // Private
-
   const DEFAULT_WEBSOCKET_PORT = 49152;
   const RECONNECT_WAIT_SEC = 3;
 
@@ -131,7 +127,7 @@ const dawscript = (() => {
   let _seq = 0;
   let _promise_cb = {};
   let _listeners = {};
-  let _tp_to_listener_seq = {};
+  let _tp_to_add_lstnr_seq = {};
 
   function _connect(callback) {
     const port =
@@ -184,32 +180,25 @@ const dawscript = (() => {
         typeof args[1] === "function"
       ) {
         const [_, action, prop] = m;
-        const target_and_prop = `${args[0]}_${prop}`;
+        const target = args[0];
         const listener = args.pop();
 
         if (action == "add") {
-          if (target_and_prop in _tp_to_listener_seq) {
-            const l_seq = _tp_to_listener_seq[target_and_prop];
-            _listeners[l_seq].push(listener);
-            resolve();
-            return; // already registered with server
-          }
+          const needs_reg = _add_listener(target, prop, listener, _seq);
 
-          _tp_to_listener_seq[target_and_prop] = _seq;
-          _listeners[_seq] = [listener];
+          if (! needs_reg) {
+            resolve();
+            return;
+          }
         } else if (action == "del") {
-          const l_seq = _tp_to_listener_seq[target_and_prop];
-          _listeners[l_seq] = _listeners[l_seq].filter((l) => l != listener);
+          const add_lstnr_seq = _del_listener(target, prop, listener);
 
-          if (_listeners[l_seq].length > 0) {
+          if (add_lstnr_seq === null) {
             resolve();
-            return; // do not unregister yet
+            return;
           }
 
-          delete _listeners[target_and_prop];
-          delete _tp_to_listener_seq[target_and_prop];
-
-          args.push(l_seq);
+          args.push(add_lstnr_seq);
         } else {
           reject(new Error("Invalid argument"));
           return;
@@ -246,6 +235,39 @@ const dawscript = (() => {
     }
   }
 
+  function _add_listener(target, prop, listener, seq) {
+    const target_and_prop = `${target}_${prop}`;
+
+    if (target_and_prop in _tp_to_add_lstnr_seq) {
+      const add_lstnr_seq = _tp_to_add_lstnr_seq[target_and_prop];
+      _listeners[add_lstnr_seq].push(listener);
+
+      return false; // already registered with server
+    }
+
+    _tp_to_add_lstnr_seq[target_and_prop] = seq;
+    _listeners[seq] = [listener];
+
+    return true;
+  }
+
+  function _del_listener(target, prop, listener) {
+    const target_and_prop = `${target}_${prop}`;
+    const add_lstnr_seq = _tp_to_add_lstnr_seq[target_and_prop];
+
+    _listeners[add_lstnr_seq] = _listeners[add_lstnr_seq]
+      .filter((l) => l != listener);
+
+    if (_listeners[add_lstnr_seq].length > 0) {
+      return null;  // do not unregister from server yet
+    }
+
+    delete _listeners[target_and_prop];
+    delete _tp_to_add_lstnr_seq[target_and_prop];
+
+    return add_lstnr_seq;
+  }
+
   function _pop_promise_cb(seq) {
     const callbacks = _promise_cb[seq];
     delete _promise_cb[seq];
@@ -257,7 +279,7 @@ const dawscript = (() => {
     _seq = 0;
     _promise_cb = {};
     _listeners = {};
-    _tp_to_listener_seq = {};
+    _tp_to_add_lstnr_seq = {};
   }
 
   class HostError extends Error {

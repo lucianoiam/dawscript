@@ -63,12 +63,7 @@ def stop():
 
 
 def tick():
-    global _setter_call_src, _setter_call_t
-
-    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.01:
-        _setter_call_src = {}
-        _setter_call_t = 0
-
+    _unmute_remote_listeners()
     _loop.run_until_complete(_noop())
 
 
@@ -85,68 +80,31 @@ async def _ws_handle(ws, path):
 
     async for message in ws:
         (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
-        client = str(ws.id)
-        m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
-
-        if m:
-            action, prop = m.groups()
-            target = args[0]
-
-            if action == "add":
-
-                def listener(v, c_ws=ws, c_seq=seq, c_tp=f"{target}_{prop}"):
-                    return _call_remote_listener(c_ws, c_seq, c_tp, v)
-
-                setter = getattr(host, f"add_{prop}_listener")
-                setter(target, listener)
-
-                deleter = getattr(host, f"del_{prop}_listener")
-                bound_deleter = lambda d=deleter, t=target, l=listener: d(t, l)
-
-                if client not in _listener_del:
-                    _listener_del[client] = {}
-
-                _listener_del[client][seq] = bound_deleter
-
-                await _send_message(ws, seq)
-
-                continue
-            elif action == "del":
-                deleter_seq = args.pop()
-
-                if (
-                    client not in _listener_del
-                    or deleter_seq not in _listener_del[client]
-                ):
-                    raise Exception("Listener not registered")
-
-                deleter = _listener_del[client][deleter_seq]
-                deleter()
-
-                del _listener_del[client][deleter_seq]
-
-                if not _listener_del[client]:
-                    del _listener_del[client]
-
-                await _send_message(ws, seq)
-
-                continue
-            else:
-                raise ValueError("Invalid argument")
 
         try:
-            func = getattr(host, func_name)
-            result = func(*args)
+            m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
+
+            if m:
+                action, prop = m.groups()
+
+                if action == "add":
+                    await _add_listener(ws, seq, client, args[0], prop)
+                    continue
+                elif action == "del":
+                    await _del_listener(ws, seq, client, args.pop())
+                    continue
+                else:
+                    raise ValueError("Invalid argument")
+
+            result = getattr(host, func_name)(*args)
+
             m = re.match(r"^set_([a-z_]+)$", func_name)
 
             if m:
-                global _setter_call_t
-                target_and_prop = f"{args[0]}_{m.groups()[0]}"
-                _setter_call_src[target_and_prop] = client
-                _setter_call_t = time.time()
+                _mute_remote_listener(client, args[0], m.groups()[0])
         except Exception as e:
-            host.log(e)
             result = f"error:{e}"
+            host.log(e)
 
         await _send_message(ws, seq, result)
 
@@ -191,6 +149,56 @@ async def _send_message(ws, seq, payload=None):
         message.append(replace_inf(payload))
 
     await ws.send(json.dumps(message, cls=ReprJSONEncoder))
+
+
+async def _add_listener(ws, seq, client, target, prop):
+    def listener(v, c_ws=ws, c_seq=seq, c_tp=f"{target}_{prop}"):
+        return _call_remote_listener(c_ws, c_seq, c_tp, v)
+
+    setter = getattr(host, f"add_{prop}_listener")
+    setter(target, listener)
+
+    deleter = getattr(host, f"del_{prop}_listener")
+    bound_deleter = lambda d=deleter, t=target, l=listener: d(t, l)
+
+    if client not in _listener_del:
+        _listener_del[client] = {}
+
+    _listener_del[client][seq] = bound_deleter
+
+    await _send_message(ws, seq)
+
+
+async def _del_listener(ws, seq, client, add_lstnr_seq):
+    if (
+        client not in _listener_del
+        or add_lstnr_seq not in _listener_del[client]
+    ):
+        raise Exception("Listener not registered")
+
+    bound_deleter = _listener_del[client][add_lstnr_seq]
+    bound_deleter()
+
+    del _listener_del[client][add_lstnr_seq]
+
+    if not _listener_del[client]:
+        del _listener_del[client]
+
+    await _send_message(ws, seq)
+
+
+def _mute_remote_listener(client, target, prop):
+    global _setter_call_t
+    _setter_call_t = time.time()
+    _setter_call_src[f"{target}_{prop}"] = client
+
+
+def _unmute_remote_listeners():
+    global _setter_call_src, _setter_call_t
+
+    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.01:
+        _setter_call_src = {}
+        _setter_call_t = 0
 
 
 def _call_remote_listener(ws, seq, target_and_prop, value):

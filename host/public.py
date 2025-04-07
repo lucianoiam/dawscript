@@ -39,10 +39,6 @@ def del_parameter_value_listener(param: ParameterHandle, listener: Callable[[flo
 """
 
 
-"""
-Helpers
-"""
-
 def toggle_track_mute(track: TrackHandle):
     set_track_mute(track, not is_track_mute(track))
 
