@@ -2,122 +2,122 @@
 // SPDX-License-Identifier: MIT
 
 const dawscript = (() => {
-  function connect({ on_connect = null, on_disconnect = null } = {}) {
+  function connect(callback = (/* [re] */connected) => /* reconnect */true) {
     _connect(...arguments);
   }
 
   const host = Object.freeze({
-    get_tracks: async function () {
+    getTracks: async function () {
       return await _call("get_tracks");
     },
 
-    get_track: async function (name) {
+    getTrack: async function (name) {
       return await _call("get_track", name);
     },
 
-    is_track_mute: async function (track) {
+    isTrackMute: async function (track) {
       return await _call("is_track_mute", track);
     },
 
-    set_track_mute: async function (track, mute) {
+    setTrackMute: async function (track, mute) {
       await _call("set_track_mute", track, mute);
     },
 
-    add_track_mute_listener: async function (track, listener) {
+    addTrackMuteListener: async function (track, listener) {
       await _call("add_track_mute_listener", track, listener);
     },
 
-    del_track_mute_listener: async function (track, listener) {
+    delTrackMuteListener: async function (track, listener) {
       await _call("del_track_mute_listener", track, listener);
     },
 
-    get_track_volume: async function (track) {
+    getTrackVolume: async function (track) {
       return await _call("get_track_volume", track);
     },
 
-    set_track_volume: async function (track, volume_db) {
-      await _call("set_track_volume", track, volume_db);
+    setTrackVolume: async function (track, volumeDb) {
+      await _call("set_track_volume", track, volumeDb);
     },
 
-    add_track_volume_listener: async function (track, listener) {
+    addTrackVolumeListener: async function (track, listener) {
       await _call("add_track_volume_listener", track, listener);
     },
 
-    del_track_volume_listener: async function (track, listener) {
+    delTrackVolumeListener: async function (track, listener) {
       await _call("del_track_volume_listener", track, listener);
     },
 
-    get_track_pan: async function (track) {
+    getTrackPan: async function (track) {
       return await _call("get_track_pan", track);
     },
 
-    set_track_pan: async function (track, pan) {
+    setTrackPan: async function (track, pan) {
       await _call("set_track_pan", track, pan);
     },
 
-    add_track_pan_listener: async function (track, listener) {
+    addTrackPanListener: async function (track, listener) {
       await _call("add_track_pan_listener", track, listener);
     },
 
-    del_track_pan_listener: async function (track, listener) {
+    delTrackPanListener: async function (track, listener) {
       await _call("del_track_pan_listener", track, listener);
     },
 
-    get_plugin: async function (track, name) {
+    getPlugin: async function (track, name) {
       return await _call("get_plugin", track, name);
     },
 
-    is_plugin_enabled: async function (plugin) {
+    isPluginEnabled: async function (plugin) {
       return await _call("is_plugin_enabled", plugin);
     },
 
-    set_plugin_enabled: async function (plugin, enabled) {
+    setPluginEnabled: async function (plugin, enabled) {
       await _call("set_plugin_enabled", plugin, enabled);
     },
 
-    add_plugin_enabled_listener: async function (plugin, listener) {
+    addPluginEnabledListener: async function (plugin, listener) {
       await _call("add_plugin_enabled_listener", track, listener);
     },
 
-    del_plugin_enabled_listener: async function (plugin, listener) {
+    delPluginEnabledListener: async function (plugin, listener) {
       await _call("del_plugin_enabled_listener", track, listener);
     },
 
-    get_parameter: async function (plugin, name) {
+    getParameter: async function (plugin, name) {
       return await _call("get_parameter", plugin, name);
     },
 
-    get_parameter_range: async function (param) {
+    getParameterRange: async function (param) {
       return await _call("get_parameter_range", param);
     },
 
-    get_parameter_value: async function (param) {
+    getParameterValue: async function (param) {
       return await _call("get_parameter_value", param);
     },
 
-    set_parameter_value: async function (param, value) {
+    setParameterValue: async function (param, value) {
       await _call("set_parameter_value", param, value);
     },
 
-    add_parameter_value_listener: async function (param, listener) {
+    addParameterValueListener: async function (param, listener) {
       await _call("add_parameter_value_listener", track, listener);
     },
 
-    del_parameter_value_listener: async function (param, listener) {
+    delParameterValueListener: async function (param, listener) {
       await _call("del_parameter_value_listener", track, listener);
     },
 
     // Helpers
 
-    toggle_track_mute: async function (track) {
+    toggleTrackMute: async function (track) {
       await _call("toggle_track_mute", track);
     },
 
-    toggle_track_mute_by_name: async function (name) {
+    toggleTrackMuteByName: async function (name) {
       await _call("toggle_track_mute_by_name", name);
     },
 
-    toggle_plugin_enabled: async function (plugin) {
+    togglePluginEnabled: async function (plugin) {
       await _call("toggle_plugin_enabled", plugin);
     },
   });
@@ -129,12 +129,11 @@ const dawscript = (() => {
 
   let _socket = null;
   let _seq = 0;
-  let _init_queue = [];
   let _promise_cb = {};
   let _listeners = {};
-  let _tp_to_seq = {};
+  let _tp_to_listener_seq = {};
 
-  function _connect(callbacks = {}) {
+  function _connect(callback) {
     const port =
       new URLSearchParams(window.location.search).get("port") ||
       DEFAULT_WEBSOCKET_PORT;
@@ -146,13 +145,8 @@ const dawscript = (() => {
       _socket.onopen = () => {
         console.info("dawscript: connected");
 
-        if (callbacks.on_connect) {
-          callbacks.on_connect();
-        }
-
-        while (_init_queue.length > 0) {
-          const [seq, message] = _init_queue.shift();
-          _send(seq, message);
+        if (callback) {
+          callback(true);
         }
       };
 
@@ -170,7 +164,7 @@ const dawscript = (() => {
       _socket.onclose = () => {
         console.info("dawscript: disconnected");
 
-        if (! callbacks.on_disconnect || callbacks.on_disconnect()) {
+        if (! callback || callback(false)) {
           setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
         }
       };
@@ -191,33 +185,31 @@ const dawscript = (() => {
       ) {
         const [_, action, prop] = m;
         const target_and_prop = `${args[0]}_${prop}`;
-        const listener = args[1];
-
-        args.pop();
+        const listener = args.pop();
 
         if (action == "add") {
-          if (target_and_prop in _tp_to_seq) {
-            const seq = _tp_to_seq[target_and_prop];
-            _listeners[seq].push(listener);
+          if (target_and_prop in _tp_to_listener_seq) {
+            const l_seq = _tp_to_listener_seq[target_and_prop];
+            _listeners[l_seq].push(listener);
             resolve();
             return; // already registered with server
           }
 
-          _tp_to_seq[target_and_prop] = _seq;
+          _tp_to_listener_seq[target_and_prop] = _seq;
           _listeners[_seq] = [listener];
         } else if (action == "del") {
-          const seq = _tp_to_seq[target_and_prop];
-          _listeners[seq] = _listeners[seq].filter((l) => l != listener);
+          const l_seq = _tp_to_listener_seq[target_and_prop];
+          _listeners[l_seq] = _listeners[l_seq].filter((l) => l != listener);
 
-          if (_listeners[seq].length > 0) {
+          if (_listeners[l_seq].length > 0) {
             resolve();
             return; // do not unregister yet
           }
 
           delete _listeners[target_and_prop];
-          delete _tp_to_seq[target_and_prop];
+          delete _tp_to_listener_seq[target_and_prop];
 
-          args.push(seq);
+          args.push(l_seq);
         } else {
           reject(new Error("Invalid argument"));
           return;
@@ -225,25 +217,15 @@ const dawscript = (() => {
       }
 
       const seq = _seq++;
-      const message = JSON.stringify([seq, func, ...args]);
 
-      _promise_cb[seq] = [resolve, reject];
-
-      if (_socket.readyState == WebSocket.OPEN) {
-        _send(seq, message);
-      } else {
-        _init_queue.push([seq, message]);
+      try {
+        _promise_cb[seq] = [resolve, reject];
+        _socket.send(JSON.stringify([seq, func, ...args]));
+      } catch (error) {
+        _pop_promise_cb(seq);
+        reject(error);
       }
     });
-  }
-
-  function _send(seq, message) {
-    try {
-      _socket.send(message);
-    } catch (error) {
-      const [_, reject] = _pop_promise_cb(seq);
-      reject(error);
-    }
   }
 
   function _handle(seq, result) {
@@ -251,6 +233,7 @@ const dawscript = (() => {
       for (listener of _listeners[seq]) {
         listener(result);
       }
+
       return;
     }
 
@@ -272,10 +255,9 @@ const dawscript = (() => {
   function _cleanup() {
     _socket = null;
     _seq = 0;
-    _init_queue = [];
     _promise_cb = {};
     _listeners = {};
-    _tp_to_seq = {};
+    _tp_to_listener_seq = {};
   }
 
   class HostError extends Error {

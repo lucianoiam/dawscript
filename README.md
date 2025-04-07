@@ -112,7 +112,7 @@ slider.addEventListener('input', (ev) => {
    host.set_track_volume(track, parseFloat(slider.value));
 });
 
-host.add_track_volume_listener(track, (vol) => {
+host.addTrackVolumeListener(track, (vol) => {
    slider.value = vol;
 });
 

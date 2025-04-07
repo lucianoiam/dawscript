@@ -3,38 +3,60 @@
 
 const { host, connect } = dawscript;
 
-const input = document.createElement("input");
-input.type = "text";
-input.placeholder = "Check dawscript.js for all available functions";
-input.addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter") on_click_run();
+const code = document.createElement("input");
+code.type = "text";
+code.placeholder = "Available functions in dawscript.js";
+code.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") onRunClick();
 });
-document.body.appendChild(input);
+document.body.appendChild(code);
 
 const run = document.createElement("button");
 run.textContent = "Run";
-run.addEventListener("click", on_click_run);
+run.addEventListener("click", onRunClick);
 document.body.appendChild(run);
 
 const output = document.createElement("pre");
 document.body.appendChild(output);
 
-const get_tracks = document.createElement("button");
-get_tracks.textContent = "Example: get_tracks()";
-get_tracks.addEventListener("click", on_click_get_tracks);
-document.body.appendChild(get_tracks);
+const getTracks = document.createElement("button");
+getTracks.textContent = "getTracks()";
+getTracks.addEventListener("click", onGetTracksClick);
+document.body.appendChild(getTracks);
 
-const slider = document.createElement("input");
-slider.style.display = "block";
-slider.type = "range";
-slider.min = -68;
-slider.max = 6;
-slider.addEventListener("input", on_slider_input);
+const trackVolume = document.createElement("input");
+trackVolume.style.display = "block";
+trackVolume.type = "range";
+trackVolume.min = -68;
+trackVolume.max = 6;
+trackVolume.addEventListener("input", onTrackVolumeInput);
 
-connect({ on_connect: add_host_listeners });
+connect(connectCallback);
 
 
-async function on_click_run() {
+
+let lastTrack = null;
+
+
+function connectCallback(connected) {
+  if (connected) {
+    addHostListeners();
+  }
+
+  return true;
+}
+
+
+function addHostListeners() {
+  if (lastTrack) {
+    host.addTrackVolumeListener(lastTrack, (vol) => {
+      trackVolume.value = vol;
+    });
+  }
+}
+
+
+async function onRunClick() {
   try {
     output.textContent = await eval("host." + input.value);
   } catch (error) {
@@ -43,15 +65,12 @@ async function on_click_run() {
 }
 
 
-let last_track = null;
-
-
-async function on_click_get_tracks() {
-  if (last_track != null) {
+async function onGetTracksClick() {
+  if (lastTrack != null) {
     return;
   }
 
-  const tracks = await host.get_tracks();
+  const tracks = await host.getTracks();
 
   if (tracks.length == 0) {
     output.textContent = "No tracks found";
@@ -59,24 +78,15 @@ async function on_click_get_tracks() {
   }
 
   output.textContent = tracks;
-  last_track = tracks[tracks.length - 1];
+  lastTrack = tracks[tracks.length - 1];
 
-  slider.value = await host.get_track_volume(last_track);
-  document.body.appendChild(slider);
+  trackVolume.value = await host.getTrackVolume(lastTrack);
+  document.body.appendChild(trackVolume);
 
-  add_host_listeners();
+  addHostListeners();
 }
 
 
-function on_slider_input() {
-  host.set_track_volume(last_track, parseFloat(slider.value));
-}
-
-
-function add_host_listeners() {
-  if (last_track) {
-    host.add_track_volume_listener(last_track, (vol) => {
-      slider.value = vol;
-    });
-  }
+function onTrackVolumeInput() {
+  host.setTrackVolume(lastTrack, parseFloat(trackVolume.value));
 }

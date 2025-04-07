@@ -109,6 +109,7 @@ async def _ws_handle(ws, path):
                 _listener_del[client][seq] = bound_deleter
 
                 await _send_message(ws, seq)
+
                 continue
             elif action == "del":
                 deleter_seq = args.pop()
@@ -119,13 +120,16 @@ async def _ws_handle(ws, path):
                 ):
                     raise Exception("Listener not registered")
 
-                _listener_del[client][deleter_seq]()
+                deleter = _listener_del[client][deleter_seq]
+                deleter()
+
                 del _listener_del[client][deleter_seq]
 
                 if not _listener_del[client]:
                     del _listener_del[client]
 
                 await _send_message(ws, seq)
+
                 continue
             else:
                 raise ValueError("Invalid argument")
