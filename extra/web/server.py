@@ -81,30 +81,32 @@ async def _ws_handle(ws, path):
     async for message in ws:
         (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
 
+        m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
+
+        if m:
+            action, prop = m.groups()
+
+            if action == "add":
+                await _add_listener(ws, seq, client, args[0], prop)
+                await _send_ack(ws, seq)
+            elif action == "del":
+                await _del_listener(ws, seq, client, args[0])
+                await _send_ack(ws, seq)
+
+            continue
+
         try:
-            m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
-
-            if m:
-                action, prop = m.groups()
-
-                if action == "add":
-                    await _add_listener(ws, seq, client, args[0], prop)
-                    continue
-                elif action == "del":
-                    await _del_listener(ws, seq, client, args.pop())
-                    continue
-                else:
-                    raise ValueError("Invalid argument")
-
             result = getattr(host, func_name)(*args)
-
-            m = re.match(r"^set_([a-z_]+)$", func_name)
-
-            if m:
-                _mute_remote_listener(client, args[0], m.groups()[0])
         except Exception as e:
             result = f"error:{e}"
             host.log(e)
+
+        m = re.match(r"^set_([a-z_]+)$", func_name)
+
+        if m:
+            _mute_remote_listener(client, args[0], m.groups()[0])
+            # skip ack
+            continue
 
         await _send_message(ws, seq, result)
 
@@ -142,13 +144,17 @@ async def _http_handle(request):
     return web.FileResponse(filepath)
 
 
-async def _send_message(ws, seq, payload=None):
+async def _send_message(ws, seq, payload):
     message = [seq]
 
     if payload is not None:
         message.append(replace_inf(payload))
 
     await ws.send(json.dumps(message, cls=ReprJSONEncoder))
+
+
+async def _send_ack(ws, seq):
+    await _send_message(ws, seq, None)
 
 
 async def _add_listener(ws, seq, client, target, prop):
@@ -166,8 +172,6 @@ async def _add_listener(ws, seq, client, target, prop):
 
     _listener_del[client][seq] = bound_deleter
 
-    await _send_message(ws, seq)
-
 
 async def _del_listener(ws, seq, client, listener_seq):
     if (
@@ -183,8 +187,6 @@ async def _del_listener(ws, seq, client, listener_seq):
 
     if not _listener_del[client]:
         del _listener_del[client]
-
-    await _send_message(ws, seq)
 
 
 def _mute_remote_listener(client, target, prop):

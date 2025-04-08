@@ -169,9 +169,9 @@ const dawscript = (() => {
     create_socket();
   }
 
-  async function _call(func, ...args) {
+  async function _call(func_name, ...args) {
     return new Promise((resolve, reject) => {
-      const m = func.match(/^(add|del)_([a-z_]+)_listener$/);
+      const m = func_name.match(/^(add|del)_([a-z_]+)_listener$/);
 
       if (
         m &&
@@ -205,13 +205,24 @@ const dawscript = (() => {
         }
       }
 
+      const wait_reply = ! func_name.match(/^set_([a-z_]+)$/);
       const seq = _seq++;
 
       try {
-        _promise_cb[seq] = [resolve, reject];
-        _socket.send(JSON.stringify([seq, func, ...args]));
+        if (wait_reply) {
+          _promise_cb[seq] = [resolve, reject];
+        }
+
+        _socket.send(JSON.stringify([seq, func_name, ...args]));
+
+        if (! wait_reply) {
+          resolve();
+        }
       } catch (error) {
-        _pop_promise_cb(seq);
+        if (wait_reply) {
+          _pop_promise_cb(seq);
+        }
+
         reject(error);
       }
     });
