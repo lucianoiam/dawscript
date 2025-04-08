@@ -44,22 +44,10 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
         pass
 
     try:
-        ws = _loop.run_until_complete(_ws_serve(addrs, ws_port))
-        if len(ws) > 0:
-            _cleanup.append(ws[0].close)
-        else:
-            raise Exception('could not create websocket')
-        if len(ws) > 1:
-            _cleanup.append(ws[1].close)
+        _loop.run_until_complete(_ws_serve(addrs, ws_port))
+        _loop.run_until_complete(_http_serve(addrs, http_port))
     except Exception as e:
-        host.log(f"{LOG_TAG} _ws_serve(): {e}")
-        return []
-
-    try:
-        http = _loop.run_until_complete(_http_serve(addrs, http_port))
-        _cleanup.append(lambda: _loop.create_task(http.cleanup()))
-    except Exception as e:
-        host.log(f"{LOG_TAG} _http_serve(): {e}")
+        host.log(f"{LOG_TAG}: {e}")
         stop()
         return []
 
@@ -68,7 +56,7 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
             dnssd.register_service(service_name, "_http._tcp", http_port, lan_addr)
             _cleanup.append(dnssd.unregister_service)
         except Exception as e:
-            host.log(f"{LOG_TAG} register_service(): {e}")
+            host.log(f"{LOG_TAG}: {e}")
 
     qs = f"?port={ws_port}" if ws_port != 49152 else ""
     urls = [f"http://{addr}:{http_port}{qs}" for addr in addrs]
@@ -91,7 +79,18 @@ async def _noop():
 
 
 async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
-    return [await websockets.serve(_ws_handle, addr, port) for addr in addrs]
+    servers = []
+
+    for addr in addrs:
+        try:
+            server = await websockets.serve(_ws_handle, addr, port)
+            _cleanup.append(server.close)
+            servers.append(server)
+        except:
+            host.log(f"{LOG_TAG} _ws_serve(): {e}")
+
+    if not servers:
+        raise Exception('Could not start websocket server')
 
 
 async def _ws_handle(ws, path):
@@ -132,18 +131,17 @@ async def _ws_handle(ws, path):
     _cleanup_client(client)
 
 
-async def _http_serve(addrs, port) -> web_runner.AppRunner:
+async def _http_serve(addrs, port):
     app = web.Application()
     app.router.add_get("/{filename:.*}", _http_handle)
 
     runner = web.AppRunner(app)
     await runner.setup()
+    _cleanup.append(lambda: _loop.create_task(runner.cleanup()))
 
     for addr in addrs:
         site = web.TCPSite(runner, addr, port)
         await site.start()
-
-    return runner
 
 
 async def _http_handle(request):
