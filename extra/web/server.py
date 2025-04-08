@@ -22,8 +22,8 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
 LOG_TAG = "server.py"
 
-_htdocs_path: str = None
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+_htdocs_path: str = None
 _cleanup: List[Callable] = []
 _listener_del: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
@@ -39,7 +39,7 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
 
     try:
         lan_addr = _get_bind_address()
-        addrs.append(socket.inet_ntoa(lan_addr))
+        addrs.append(lan_addr)
     except:
         pass
 
@@ -247,4 +247,4 @@ def _get_bind_address():
     naddr = socket.inet_aton(s.getsockname()[0])
     s.close()
 
-    return naddr
+    return socket.inet_ntoa(naddr)

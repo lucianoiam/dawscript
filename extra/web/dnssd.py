@@ -2,58 +2,30 @@
 # SPDX-License-Identifier: MIT
 
 import os
-import socket
 import subprocess
 
-zc_instance = None
-serv_info = None
-subproc: subprocess.Popen = None
-
-try:
-    from zeroconf import ServiceInfo, Zeroconf
-
-    zc_instance = Zeroconf()
-except BaseException:
-    """
-    # The zeroconf module is not available on Live because its built-in Python
-    # interpreter lacks support for ctypes, which is required by ifaddr.
-    """
-    pass
+proc: subprocess.Popen = None
 
 
 def register_service(name, service_type, port, address):
-    address_str = socket.inet_ntoa(address)
-
-    if zc_instance is not None:
-        global serv_info
-        serv_info = ServiceInfo(
-            f"{service_type}.local.",
-            f"{name}.{service_type}.local.",
-            addresses=[address],
-            port=port,
+    global proc
+    
+    if _is_command_in_path("dns-sd"):
+        proc = subprocess.Popen(
+            ["dns-sd", "-R", name, service_type, ".", str(port), address]
         )
-        zc_instance.register_service(serv_info)
+    elif _is_command_in_path("avahi-publish"):
+        proc = subprocess.Popen(
+            ["avahi-publish", "-s", name, service_type, str(port), address]
+        )
     else:
-        global subproc
-        if _is_command_in_path("dns-sd"):
-            subproc = subprocess.Popen(
-                ["dns-sd", "-R", name, service_type, ".", str(port), address_str]
-            )
-        elif _is_command_in_path("avahi-publish"):
-            subproc = subprocess.Popen(
-                ["avahi-publish", "-s", name, service_type, str(port), address_str]
-            )
-        else:
-            raise RuntimeError("dns-sd unavailable")
+        raise RuntimeError("dns-sd unavailable")
 
 
 def unregister_service():
-    if zc_instance is not None:
-        zc_instance.unregister_service(serv_info)
-        zc_instance.close()
-    elif subproc is not None:
-        subproc.terminate()
-        subproc.wait()
+    if proc is not None:
+        proc.terminate()
+        proc.wait()
 
 
 def _is_command_in_path(command):
