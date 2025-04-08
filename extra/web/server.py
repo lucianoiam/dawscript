@@ -20,6 +20,7 @@ from . import dnssd
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
+LOG_TAG = "server.py"
 
 _htdocs_path: str = None
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
@@ -33,23 +34,41 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
     global _htdocs_path
     _htdocs_path = htdocs_path
 
-    lan_addr = _get_bind_address()
-    lan_addr_str = socket.inet_ntoa(lan_addr)
-    addrs = ["127.0.0.1", lan_addr_str]
+    addrs = ["127.0.0.1"]
+    lan_addr = None
 
-    ws = _loop.run_until_complete(_ws_serve(addrs, ws_port))
-    http = _loop.run_until_complete(_http_serve(addrs, http_port))
+    try:
+        lan_addr = _get_bind_address()
+        addrs.append(socket.inet_ntoa(lan_addr))
+    except:
+        pass
 
-    if service_name is not None:
+    try:
+        ws = _loop.run_until_complete(_ws_serve(addrs, ws_port))
+        if len(ws) > 0:
+            _cleanup.append(ws[0].close)
+        else:
+            raise Exception('could not create websocket')
+        if len(ws) > 1:
+            _cleanup.append(ws[1].close)
+    except Exception as e:
+        host.log(f"{LOG_TAG} _ws_serve(): {e}")
+        return []
+
+    try:
+        http = _loop.run_until_complete(_http_serve(addrs, http_port))
+        _cleanup.append(lambda: _loop.create_task(http.cleanup()))
+    except Exception as e:
+        host.log(f"{LOG_TAG} _http_serve(): {e}")
+        stop()
+        return []
+
+    if lan_addr is not None and service_name is not None:
         try:
             dnssd.register_service(service_name, "_http._tcp", http_port, lan_addr)
             _cleanup.append(dnssd.unregister_service)
         except Exception as e:
-            host.display(f"dawscript: {e}")
-
-    _cleanup.append(lambda: _loop.create_task(http.cleanup()))
-    _cleanup.append(ws[1].close)
-    _cleanup.append(ws[0].close)
+            host.log(f"{LOG_TAG} register_service(): {e}")
 
     qs = f"?port={ws_port}" if ws_port != 49152 else ""
     urls = [f"http://{addr}:{http_port}{qs}" for addr in addrs]
