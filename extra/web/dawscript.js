@@ -145,6 +145,7 @@ const dawscript = (() => {
 
   let _socket = null;
   let _seq = 0;
+  let _init_queue = [];
   let _promise_cb = {};
   let _listeners = {};
   let _tp_to_listener_seq = {};
@@ -164,12 +165,13 @@ const dawscript = (() => {
         if (callback) {
           callback(true);
         }
+
+        while (_init_queue.length > 0) {
+          _send(_init_queue.shift());
+        }
       };
 
-      _socket.onmessage = (event) => {
-        const [seq, result] = JSON.parse(event.data);
-        _handle(seq, result);
-      };
+      _socket.onmessage = (event) => _handle(event.data);
 
       _socket.onerror = (event) => {
         console.warn(`dawscript: ${event.error}`);
@@ -225,30 +227,38 @@ const dawscript = (() => {
         }
       }
 
-      const wait_reply = ! func_name.match(/^set_([a-z_]+)$/);
       const seq = _seq++;
+      const message = [seq, func_name, ...args];
+      const wait_reply = ! func_name.match(/^set_([a-z_]+)$/);
 
-      try {
-        if (wait_reply) {
-          _promise_cb[seq] = [resolve, reject];
-        }
+      if (wait_reply) {
+        _promise_cb[seq] = [resolve, reject];
+      }
 
-        _socket.send(JSON.stringify([seq, func_name, ...args]));
-
-        if (! wait_reply) {
-          resolve();
-        }
-      } catch (error) {
-        if (wait_reply) {
-          _pop_promise_cb(seq);
-        }
-
-        reject(error);
+      if (_socket && _socket.readyState == WebSocket.OPEN) {
+        _send(message);
+      } else {
+        _init_queue.push(message);
       }
     });
   }
 
-  function _handle(seq, result) {
+  function _send(message, wait) {
+    try {
+      _socket.send(JSON.stringify(message));
+    } catch (error) {
+      const callbacks = _pop_promise_cb(message[0]);
+
+      if (callbacks) {
+        const [_, reject] = callbacks;
+        reject(error);
+      }
+    }
+  }
+
+  function _handle(message) {
+    const [seq, result] = JSON.parse(message);
+
     if (seq in _listeners && typeof result !== "undefined") {
       for (listener of _listeners[seq]) {
         listener(result);
@@ -308,6 +318,7 @@ const dawscript = (() => {
   function _cleanup() {
     _socket = null;
     _seq = 0;
+    _init_queue = [];
     _promise_cb = {};
     _listeners = {};
     _tp_to_listener_seq = {};

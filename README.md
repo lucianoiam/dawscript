@@ -53,7 +53,7 @@ is pressed:
       pressed: host.toggle_track_mute_by_name, Track 1
 ```
 ```python
-(config, gadgets) = parse_config_file('config.yml', globals())
+config, gadgets = parse_config_file('config.yml', globals())
 
 def host_callback(midi: List[bytes]):
    for gadget in gadgets:
@@ -100,16 +100,17 @@ def host_callback(midi: List[bytes]):
 [Control track volume from a web browser](https://github.com/lucianoiam/dawscript/blob/master/examples/web/htdocs/example.js)
 ```javascript
 const { host, connect } = dawscript;
-const track = await host.get_track('Track 1');
+
+const track = await host.getTrack('Track 1');
 
 const slider = document.createElement('input');
 slider.type = 'range';
 slider.min = -68;
 slider.max = 6;
-slider.value = await host.get_track_volume(track);
+slider.value = await host.getTrackVolume(track);
 
 slider.addEventListener('input', (ev) => {
-   host.set_track_volume(track, parseFloat(slider.value));
+   host.setTrackVolume(track, parseFloat(slider.value));
 });
 
 host.addTrackVolumeListener(track, (vol) => {

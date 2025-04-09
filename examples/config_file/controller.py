@@ -10,8 +10,9 @@ from util import dawscript_path
 
 # from example_functions import pressed_twice_callback
 
-(config, gadgets) = parse_config_file(
-    dawscript_path("examples", "config_file", "config.yml"), globals()
+config, gadgets = parse_config_file(
+    dawscript_path("examples", "config_file", "config.yml"),
+    globals()
 )
 
 
