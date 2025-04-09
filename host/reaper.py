@@ -14,6 +14,8 @@ try:
         RPR_SetTrackUIVolume,
         RPR_SetTrackUIPan,
         RPR_TrackFX_GetByName,
+        RPR_TrackFX_GetFXName,
+        RPR_TrackFX_GetCount,
         RPR_TrackFX_GetEnabled,
         RPR_TrackFX_SetEnabled,
         RPR_TrackFX_GetNumParams,
@@ -124,6 +126,10 @@ def get_track(name: str) -> TrackHandle:
     raise TrackNotFoundError(name)
 
 
+def get_track_name(track: TrackHandle) -> str:
+    return 'FIXME'
+
+
 def is_track_mute(track: TrackHandle) -> bool:
     return RPR_GetTrackUIMute(track, False)[2] == 1
 
@@ -172,13 +178,21 @@ def set_track_pan(track: TrackHandle, pan: float):
     RPR_SetTrackUIPan(track, pan, False, False, 0)
 
 
-def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
+def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
+    return list(range(0, RPR_TrackFX_GetCount(track)))
+
+
+def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
     plugin = RPR_TrackFX_GetByName(track, name, False)
 
     if plugin == -1:
         raise PluginNotFoundError(name)
 
     return (track, plugin)
+
+
+def get_plugin_name(plugin: PluginHandle) -> str:
+    return 'FIXME'
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
@@ -197,14 +211,23 @@ def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     _del_listener(plugin, "enabled", listener)
 
 
-def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
-    name_lower = name.lower()
+def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
+    return [] # FIXME
 
-    for i in range(0, RPR_TrackFX_GetNumParams(*plugin)):
+
+def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
+    name_lower = name.lower()
+    num = RPR_TrackFX_GetNumParams(*plugin)
+
+    for i in range(0, num):
         if RPR_TrackFX_GetParamName(*plugin, i, "", 32)[4].lower() == name_lower:
             return (*plugin, i)
 
     raise ParameterNotFoundError(name)
+
+
+def get_parameter_name(param: ParameterHandle) -> str:
+    return 'FIXME'
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):

@@ -15,6 +15,10 @@ const dawscript = (() => {
       return await _call("get_track", name);
     },
 
+    getTrackName: async function (track) {
+      return await _call("get_track_name", track);
+    },
+
     isTrackMute: async function (track) {
       return await _call("is_track_mute", track);
     },
@@ -63,8 +67,16 @@ const dawscript = (() => {
       await _call("del_track_pan_listener", track, listener);
     },
 
-    getPlugin: async function (track, name) {
-      return await _call("get_plugin", track, name);
+    getTrackPlugins: async function (track) {
+      return await _call("get_track_plugins", track);
+    },
+
+    getTrackPlugin: async function (track, name) {
+      return await _call("get_track_plugin", track, name);
+    },
+
+    getPluginName: async function (plugin) {
+      return await _call("get_plugin_name", plugin);
     },
 
     isPluginEnabled: async function (plugin) {
@@ -83,8 +95,16 @@ const dawscript = (() => {
       await _call("del_plugin_enabled_listener", track, listener);
     },
 
-    getParameter: async function (plugin, name) {
-      return await _call("get_parameter", plugin, name);
+    getPluginParameters: async function (plugin) {
+      return await _call("get_plugin_parameters", plugin);
+    },
+
+    getPluginParameter: async function (plugin, name) {
+      return await _call("get_plugin_parameter", plugin, name);
+    },
+
+    getParameterName: async function (param) {
+      return await _call("get_parameter_name", param);
     },
 
     getParameterRange: async function (param) {
@@ -301,4 +321,4 @@ const dawscript = (() => {
   }
 
   return { host, connect };
-})(); // dawscript_host
+})(); // dawscript

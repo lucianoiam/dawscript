@@ -12,6 +12,7 @@ class Host:
         raise TypeError("Host class is not instantiable")
 
     @staticmethod
+    @property
     def name() -> str:
         return host.name()
 
@@ -25,8 +26,16 @@ class Host:
 
 
 class Parameter:
-    def __init__(self, plugin: PluginHandle, name: str):
-        self._handle = host.get_parameter(plugin, name)
+    def __init__(self, plugin: PluginHandle, name: str, **kwargs):
+        if "handle" in kwargs:
+            self._handle = kwargs["handle"]
+        else:
+            self._handle = host.get_plugin_parameter(plugin, name)
+
+    @staticmethod
+    @property
+    def name() -> str:
+        return host.get_parameter_name(self._handle)
 
     @property
     def range(self) -> (float, float):
@@ -48,8 +57,16 @@ class Parameter:
 
 
 class Plugin:
-    def __init__(self, track: TrackHandle, name: str):
-        self._handle = host.get_plugin(track, name)
+    def __init__(self, track: TrackHandle, name: str, **kwargs):
+        if "handle" in kwargs:
+            self._handle = kwargs["handle"]
+        else:
+            self._handle = host.get_track_plugin(track, name)
+
+    @staticmethod
+    @property
+    def name() -> str:
+        return host.get_plugin_name(self._handle)
 
     @property
     def enabled(self) -> bool:
@@ -68,6 +85,11 @@ class Plugin:
     def toggle_enabled(self):
         host.toggle_plugin_enabled(self._handle)
 
+    @property
+    def parameters(self) -> List[Parameter]:
+        p_handles = host.get_plugin_parameters(self._handle)
+        return [Parameter(None, None, p_handle) for p_handle in p_handles]
+
     def parameter(self, name: str) -> Parameter:
         return Parameter(self._handle, name)
 
@@ -84,9 +106,14 @@ class Track:
         tracks = list()
 
         for handle in host.get_tracks():
-            tracks.append(Track(handle=handle))
+            tracks.append(Track(None, handle=handle))
 
         return tracks
+
+    @staticmethod
+    @property
+    def name() -> str:
+        return host.get_track_name(self._handle)
 
     @property
     def mute(self) -> bool:
@@ -132,6 +159,11 @@ class Track:
 
     def del_pan_listener(self, listener: Callable[[float], None]):
         host.del_track_pan_listener(self._handle, listener)
+
+    @property
+    def plugins(self) -> List[Plugin]:
+        p_handles = host.get_track_plugins(self._handle)
+        return [Plugin(None, None, p_handle) for p_handle in p_handles]
 
     def plugin(self, name: str) -> Plugin:
         return Plugin(self._handle, name)

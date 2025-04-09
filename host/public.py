@@ -11,6 +11,7 @@ def log(message: str)
 def display(message: str)
 def get_tracks() -> List[TrackHandle]
 def get_track(name: str) -> TrackHandle
+def get_track_name(track: TrackHandle) -> str
 def is_track_mute(track: TrackHandle) -> bool
 def set_track_mute(track: TrackHandle, mute: bool)
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
@@ -23,14 +24,16 @@ def get_track_pan(track: TrackHandle) -> float
 def set_track_pan(track: TrackHandle, pan: float)
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
 def del_track_pan_listener(track: TrackHandle, listener: Callable[[float],None])
-  TODO  def get_plugins(track: TrackHandle) -> List[PluginHandle]
-def get_plugin(track: TrackHandle, name: str) -> PluginHandle
+def get_track_plugins(track: TrackHandle) -> List[PluginHandle]
+def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle
+def get_plugin_name(plugin: PluginHandle) -> str
 def is_plugin_enabled(plugin: PluginHandle) -> bool
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool)
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
 def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
-  TODO  def get_parameters(plugin: PluginHandle) -> List[ParameterHandle]
-def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle
+def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]
+def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle
+def get_parameter_name(param: ParameterHandle) -> str
 def get_parameter_range(param: ParameterHandle) -> (float, float)
 def get_parameter_value(param: ParameterHandle) -> float
 def set_parameter_value(param: ParameterHandle, value: float)

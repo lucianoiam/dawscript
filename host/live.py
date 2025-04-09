@@ -65,6 +65,10 @@ def get_track(name: str) -> TrackHandle:
     raise TrackNotFoundError(name)
 
 
+def get_track_name(track: TrackHandle) -> str:
+    return 'FIXME'
+
+
 def is_track_mute(track: TrackHandle) -> bool:
     return track.mute
 
@@ -134,7 +138,11 @@ def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
     _control_surface.del_listener(track, "pan", listener)
 
 
-def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
+def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
+    return [] # FIXME
+
+
+def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
     name_lower = name.lower()
 
     for device in track.devices:
@@ -142,6 +150,10 @@ def get_plugin(track: TrackHandle, name: str) -> PluginHandle:
             return device
 
     raise PluginNotFoundError(name)
+
+
+def get_plugin_name(plugin: PluginHandle) -> str:
+    return 'FIXME'
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
@@ -169,7 +181,11 @@ def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     _control_surface.del_listener(plugin, "enabled", listener)
 
 
-def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
+def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
+    return [] # FIXME
+
+
+def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
     name_lower = name.lower()
 
     for param in plugin.parameters:
@@ -177,6 +193,10 @@ def get_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
             return param
 
     raise ParameterNotFoundError(name)
+
+
+def get_parameter_name(param: ParameterHandle) -> str:
+    return 'FIXME'
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
@@ -215,7 +235,7 @@ def _get_document():
 
 
 def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
-    return get_parameter(plugin, "Device On")
+    return get_plugin_parameter(plugin, "Device On")
 
 
 def _vol_value_to_db(v: float) -> float:
