@@ -3,6 +3,6 @@
 
 from .path import *
 
-add_site_packages()
+add_site_packages("util")
 
 from .mido import *
