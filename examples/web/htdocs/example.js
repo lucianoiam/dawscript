@@ -58,7 +58,7 @@ function addHostListeners() {
 
 async function onRunClick() {
   try {
-    output.textContent = await eval("host." + input.value);
+    output.textContent = await eval("host." + code.value);
   } catch (error) {
     output.textContent = error.message;
   }
