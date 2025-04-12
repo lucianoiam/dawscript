@@ -3,9 +3,9 @@
 
 from typing import List
 
-from dawscript import host
-from dawscript.extra.web import server
-from dawscript.util import dawscript_path
+from dawscript_core import host
+from dawscript_core.extra.web import server
+from dawscript_core.util import dawscript_path
 
 
 def on_script_start():

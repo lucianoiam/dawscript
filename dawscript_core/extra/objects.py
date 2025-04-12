@@ -3,8 +3,8 @@
 
 from typing import Any, Callable, List
 
-from dawscript import host
-from dawscript.host.types import ParameterHandle, PluginHandle, TrackHandle
+from dawscript_core import host
+from dawscript_core.host.types import ParameterHandle, PluginHandle, TrackHandle
 
 
 class Host:

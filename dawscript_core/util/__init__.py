@@ -3,6 +3,6 @@
 
 from .path import *
 
-add_site_packages("dawscript", "util")
+add_site_packages("dawscript_core", "util")
 
 from .mido import *

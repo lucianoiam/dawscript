@@ -13,13 +13,13 @@ from typing import Any, Callable, Dict, List
 import websockets
 from aiohttp import web, web_runner
 
-from dawscript import host
-from dawscript.util import dawscript_path
+from dawscript_core import host
+from dawscript_core.util import dawscript_path
 
 from . import dnssd
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
-BUILTIN_HTDOCS_PATH = os.path.join("dawscript", "extra", "web")
+BUILTIN_HTDOCS_PATH = os.path.join("dawscript_core", "extra", "web")
 LOG_TAG = "server.py"
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from dawscript import util
+from dawscript_core import util
 from .public import *
 from .types import *
 

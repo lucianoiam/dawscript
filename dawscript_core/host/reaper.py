@@ -66,7 +66,7 @@ def main(context: Any):
     RPR_defer = context["RPR_defer"]
     _controller = load_controller()
 
-    RPR_atexit("from host import reaper; reaper.cleanup()")
+    RPR_atexit("from dawscript_core.host import reaper; reaper.cleanup()")
 
     try:
         _controller.on_script_start()
@@ -273,7 +273,7 @@ def _tick():
     except Exception as e:
         log(repr(e))
 
-    RPR_defer("from host import reaper; reaper._tick()")
+    RPR_defer("from dawscript_core.host import reaper; reaper._tick()")
 
 
 def _read_midi_events():
