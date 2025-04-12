@@ -30,7 +30,7 @@ class Parameter:
         if "handle" in kwargs:
             self._handle = kwargs["handle"]
         else:
-            self._handle = host.get_plugin_parameter(plugin, name)
+            self._handle = host.get_plugin_parameter_by_name(plugin, name)
 
     @staticmethod
     @property
@@ -61,7 +61,7 @@ class Plugin:
         if "handle" in kwargs:
             self._handle = kwargs["handle"]
         else:
-            self._handle = host.get_track_plugin(track, name)
+            self._handle = host.get_track_plugin_by_name(track, name)
 
     @staticmethod
     @property
@@ -99,7 +99,7 @@ class Track:
         if "handle" in kwargs:
             self._handle = kwargs["handle"]
         else:
-            self._handle = host.get_track(name)
+            self._handle = host.get_track_by_name(name)
 
     @staticmethod
     def all() -> List[TrackHandle]:

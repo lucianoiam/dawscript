@@ -39,7 +39,7 @@ def del_parameter_value_listener(param: ParameterHandle, listener: Callable[[flo
 """
 
 
-def get_track(name: str) -> TrackHandle:
+def get_track_by_name(name: str) -> TrackHandle:
     name_lower = name.lower()
 
     for track in get_tracks():
@@ -54,10 +54,10 @@ def toggle_track_mute(track: TrackHandle):
 
 
 def toggle_track_mute_by_name(name: str):
-    toggle_track_mute(get_track(name))
+    toggle_track_mute(get_track_by_name(name))
 
 
-def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
+def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
     name_lower = name.lower()
 
     for plugin in get_track_plugins(track):
@@ -67,7 +67,7 @@ def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
     raise PluginNotFoundError(name)
 
 
-def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
+def get_plugin_parameter_by_name(plugin: PluginHandle, name: str) -> ParameterHandle:
     name_lower = name.lower()
 
     for param in get_plugin_parameters(plugin):

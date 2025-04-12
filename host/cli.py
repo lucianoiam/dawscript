@@ -40,8 +40,8 @@ def get_tracks() -> List[TrackHandle]:
     return []
 
 
-def get_track(name: str) -> TrackHandle:
-    log(f"stub: get_track( {name} )")
+def get_track_by_name(name: str) -> TrackHandle:
+    log(f"stub: get_track_by_name( {name} )")
     return name
 
 
@@ -96,8 +96,8 @@ def set_track_pan(track: TrackHandle, pan: float):
     log(f"stub: set_track_pan( {track}, {pan} )")
 
 
-def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
-    log(f"stub: get_track_plugin( {track}, {name} )")
+def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
+    log(f"stub: get_track_plugin_by_name( {track}, {name} )")
     return name
 
 
@@ -118,8 +118,8 @@ def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     log(f"stub: del_plugin_enabled_listener( {plugin}, {listener} )")
 
 
-def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
-    log(f"stub: get_plugin_parameter( {plugin}, {name} )")
+def get_plugin_parameter_by_name(plugin: PluginHandle, name: str) -> ParameterHandle:
+    log(f"stub: get_plugin_parameter_by_name( {plugin}, {name} )")
     return name
 
 

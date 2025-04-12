@@ -34,11 +34,11 @@ const host = Object.freeze({
    setParameterValue: async (param, value)             => _call("set_parameter_value", param, value),
    addParameterValueListener: async (param, listener)  => _call("add_parameter_value_listener", track, listener),
    delParameterValueListener: async (param, listener)  => _call("del_parameter_value_listener", track, listener),
-   getTrack: async (name)                              => _call("get_track", name),
+   getTrackByName: async (name)                        => _call("get_track_by_name", name),
    toggleTrackMute: async (track)                      => _call("toggle_track_mute", track),
    toggleTrackMuteByName: async (name)                 => _call("toggle_track_mute_by_name", name),
-   getTrackPlugin: async (track, name)                 => _call("get_track_plugin", track, name),
-   getPluginParameter: async (plugin, name)            => _call("get_plugin_parameter", plugin, name),
+   getTrackPluginByName: async (track, name)           => _call("get_track_plugin_by_name", track, name),
+   getPluginParameterByName: async (plugin, name)      => _call("get_plugin_parameter_by_name", plugin, name),
    togglePluginEnabled: async (plugin)                 => _call("toggle_plugin_enabled", plugin),
 });
 

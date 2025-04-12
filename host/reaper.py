@@ -172,7 +172,7 @@ def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
     return [(track, fx) for fx in list(range(0, RPR_TrackFX_GetCount(track)))]
 
 
-def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
+def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
     fx = RPR_TrackFX_GetByName(track, name, False)
 
     if fx == -1:

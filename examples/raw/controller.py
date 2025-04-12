@@ -22,9 +22,9 @@ def host_callback(midi: List[bytes]):
 
     if footswitch.poll():
         if footswitch.pressed():
-            toggle_track_mute(get_track("Track 1"))
+            toggle_track_mute(get_track_by_name("Track 1"))
         # elif footswitch.pressed_twice():
-        #   toggle_plugin_enabled(get_track_plugin(get_track('...'), 'Reverb'))
+        #   toggle_plugin_enabled(get_track_plugin_by_name(get_track_by_name('...'), 'Reverb'))
         # elif footswitch.released():
         #   ...
         # elif footswitch.released_slow():

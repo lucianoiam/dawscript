@@ -94,7 +94,7 @@ def host_callback(midi: List[bytes]):
 
    if footswitch.poll():
       if footswitch.pressed():
-         host.toggle_track_mute(host.get_track('Track 1'))
+         host.toggle_track_mute(host.get_track_by_name('Track 1'))
 ```
 
 [Control track volume from a web browser](https://github.com/lucianoiam/dawscript/blob/master/examples/web/htdocs/example.js)

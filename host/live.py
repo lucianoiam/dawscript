@@ -205,7 +205,7 @@ def _get_document():
 
 
 def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
-    return get_plugin_parameter(plugin, "Device On")
+    return get_plugin_parameter_by_name(plugin, "Device On")
 
 
 def _vol_value_to_db(v: float) -> float:
