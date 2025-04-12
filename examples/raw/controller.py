@@ -3,9 +3,9 @@
 
 from typing import List
 
-from extra.gadget import Footswitch
-from host import ALL_MIDI_INPUTS, Config, get_track, toggle_track_mute
-from util import make_midi_messages
+from dawscript.host import ALL_MIDI_INPUTS, Config, get_track_by_name, toggle_track_mute
+from dawscript.util import make_midi_messages
+from dawscript.extra.gadget import Footswitch
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 

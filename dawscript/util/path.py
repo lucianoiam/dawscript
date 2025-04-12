@@ -20,4 +20,4 @@ def add_site_packages(*args):
 
 def dawscript_path(*args) -> str:
     this_source_path = os.path.dirname(os.path.realpath(__file__))
-    return os.path.abspath(os.path.join(this_source_path, "..", *args))
+    return os.path.abspath(os.path.join(this_source_path, "..", '..', *args))

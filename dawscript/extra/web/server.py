@@ -13,13 +13,13 @@ from typing import Any, Callable, Dict, List
 import websockets
 from aiohttp import web, web_runner
 
-import host
-from util import dawscript_path
+from dawscript import host
+from dawscript.util import dawscript_path
 
 from . import dnssd
 from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
-BUILTIN_HTDOCS_PATH = os.path.join("extra", "web")
+BUILTIN_HTDOCS_PATH = os.path.join("dawscript", "extra", "web")
 LOG_TAG = "server.py"
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
@@ -86,7 +86,7 @@ async def _ws_serve(addrs, port) -> List[asyncio.AbstractServer]:
             server = await websockets.serve(_ws_handle, addr, port)
             _cleanup.append(server.close)
             servers.append(server)
-        except:
+        except Exception as e:
             host.log(f"{LOG_TAG} _ws_serve(): {e}")
 
     if not servers:

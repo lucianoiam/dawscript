@@ -5,8 +5,8 @@ import os
 import sys
 from typing import List
 
-from extra.config_file import parse_config_file
-from util import dawscript_path
+from dawscript.util import dawscript_path
+from dawscript.extra.config_file import parse_config_file
 
 # from example_functions import pressed_twice_callback
 

@@ -6,11 +6,11 @@ from typing import Callable, List
 
 from mido import Message
 
-from extra.gadget import Footswitch
-from host import Config
-from util import add_site_packages
+from dawscript.extra.gadget import Footswitch
+from dawscript.host import Config
+from dawscript.util import add_site_packages
 
-add_site_packages("extra", "config_file")
+add_site_packages("dawscript", "extra", "config_file")
 
 import yaml
 

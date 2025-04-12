@@ -9,7 +9,7 @@ import sys
 # Entry point for Ableton Live
 def create_instance(c_instance):
     sys.path.insert(0, os.path.dirname(__file__))
-    from host import DawscriptControlSurface, main
+    from dawscript.host import DawscriptControlSurface, main
 
     instance = DawscriptControlSurface(c_instance)
     main(instance)
@@ -19,6 +19,6 @@ def create_instance(c_instance):
 
 # Entry point for REAPER and CLI
 if __name__ == "__main__":
-    from host import main
+    from dawscript.host import main
 
     main(globals())

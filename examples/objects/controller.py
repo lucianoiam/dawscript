@@ -3,9 +3,9 @@
 
 from typing import List
 
-from extra.gadget import Footswitch
-from extra.objects import Host, Track
-from host import ALL_MIDI_INPUTS, Config, TrackNotFoundError
+from dawscript.host import ALL_MIDI_INPUTS, Config, TrackNotFoundError
+from dawscript.extra.gadget import Footswitch
+from dawscript.extra.objects import Host, Track
 
 config = Config(midi_inputs=ALL_MIDI_INPUTS)
 
