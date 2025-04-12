@@ -6,7 +6,6 @@ const dawscript = (() => {
 // host/public.py
 const host = Object.freeze({
    getTracks: async ()                                 => _call("get_tracks"),
-   getTrack: async (name)                              => _call("get_track", name),
    getTrackName: async (track)                         => _call("get_track_name", track),
    isTrackMute: async (track)                          => _call("is_track_mute", track),
    setTrackMute: async (track, mute)                   => _call("set_track_mute", track, mute),
@@ -35,8 +34,11 @@ const host = Object.freeze({
    setParameterValue: async (param, value)             => _call("set_parameter_value", param, value),
    addParameterValueListener: async (param, listener)  => _call("add_parameter_value_listener", track, listener),
    delParameterValueListener: async (param, listener)  => _call("del_parameter_value_listener", track, listener),
+   getTrack: async (name)                              => _call("get_track", name),
    toggleTrackMute: async (track)                      => _call("toggle_track_mute", track),
    toggleTrackMuteByName: async (name)                 => _call("toggle_track_mute_by_name", name),
+   getTrackPlugin: async (track, name)                 => _call("get_track_plugin", track, name),
+   getPluginParameter: async (plugin, name)            => _call("get_plugin_parameter", plugin, name),
    togglePluginEnabled: async (plugin)                 => _call("toggle_plugin_enabled", plugin),
 });
 

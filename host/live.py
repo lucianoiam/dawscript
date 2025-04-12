@@ -55,18 +55,8 @@ def get_tracks() -> List[TrackHandle]:
     return list(_get_document().tracks)
 
 
-def get_track(name: str) -> TrackHandle:
-    name_lower = name.lower()
-
-    for track in _get_document().tracks:
-        if track.name.lower() == name_lower:
-            return track
-
-    raise TrackNotFoundError(name)
-
-
 def get_track_name(track: TrackHandle) -> str:
-    return 'FIXME'
+    return track.name
 
 
 def is_track_mute(track: TrackHandle) -> bool:
@@ -139,21 +129,11 @@ def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
-    return [] # FIXME
-
-
-def get_track_plugin(track: TrackHandle, name: str) -> PluginHandle:
-    name_lower = name.lower()
-
-    for device in track.devices:
-        if device.name.lower() == name_lower:
-            return device
-
-    raise PluginNotFoundError(name)
+    return list(track.devices)
 
 
 def get_plugin_name(plugin: PluginHandle) -> str:
-    return 'FIXME'
+    return plugin.name
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
@@ -182,21 +162,11 @@ def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-    return [] # FIXME
-
-
-def get_plugin_parameter(plugin: PluginHandle, name: str) -> ParameterHandle:
-    name_lower = name.lower()
-
-    for param in plugin.parameters:
-        if param.name.lower() == name_lower:
-            return param
-
-    raise ParameterNotFoundError(name)
+    return list(plugin.parameters)
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
-    return 'FIXME'
+    return param.name
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
