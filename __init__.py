@@ -1,15 +1,24 @@
+#!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
-
-# This __init__.py file is only needed by Ableton Live
 
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(__file__))
 
-from .host.live import DawscriptControlSurface
-
-
+# Entry point for Ableton Live
 def create_instance(c_instance):
-    return DawscriptControlSurface(c_instance)
+    sys.path.insert(0, os.path.dirname(__file__))
+    from host import DawscriptControlSurface, main
+
+    instance = DawscriptControlSurface(c_instance)
+    main(instance)
+
+    return instance
+
+
+# Entry point for REAPER and CLI
+if __name__ == "__main__":
+    from host import main
+
+    main(globals())

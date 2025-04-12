@@ -33,8 +33,9 @@ Requirements
 Quick Start
 -----------
 Copy or symlink one of the controller.py files in the `examples` directory to
-the project's root directory (where dawscript.py resides). How to install the
-script depends on the DAW, detailed instructions coming soon.
+the project's root directory (where README.md resides). The script entry point
+is defined in \__init__.py . How to install the script depends on the DAW,
+detailed instructions coming soon.
 
 Examples
 --------

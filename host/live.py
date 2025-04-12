@@ -9,7 +9,6 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
-import importlib
 import math
 import sys
 from typing import Any, Callable, Dict, List, Tuple
@@ -250,9 +249,6 @@ class DawscriptControlSurface(ControlSurface):
         self._deferred: List[Callable] = []
 
         self.request_rebuild_midi_map()
-
-        dawscript = importlib.import_module(".dawscript", "dawscript")
-        dawscript.main(self)
 
         self._controller = load_controller()
 
