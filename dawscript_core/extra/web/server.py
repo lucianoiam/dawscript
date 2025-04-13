@@ -46,17 +46,13 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
     try:
         _loop.run_until_complete(_ws_serve(addrs, ws_port))
         _loop.run_until_complete(_http_serve(addrs, http_port))
-    except Exception as e:
-        host.log(f"{LOG_TAG}: {e}")
-        stop()
-        return []
 
-    if lan_addr is not None and service_name is not None:
-        try:
+        if lan_addr is not None and service_name is not None:
             dnssd.register_service(service_name, "_http._tcp", http_port, lan_addr)
             _cleanup.append(dnssd.unregister_service)
-        except Exception as e:
-            host.log(f"{LOG_TAG}: {e}")
+    except Exception as e:
+        stop()
+        raise e
 
     qs = f"?port={ws_port}" if ws_port != 49152 else ""
     urls = [f"http://{addr}:{http_port}{qs}" for addr in addrs]

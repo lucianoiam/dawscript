@@ -9,11 +9,14 @@ from dawscript_core.util import dawscript_path
 
 
 def on_script_start():
-    htdocs_path = dawscript_path("examples", "web", "htdocs")
-    urls = server.start(htdocs_path, service_name="dawscript")
+    try:
+        htdocs_path = dawscript_path("examples", "web", "htdocs")
+        urls = server.start(htdocs_path, service_name="dawscript")
 
-    for url in urls:
-        host.display(f"dawscript @ {url}")
+        for url in urls:
+            host.display(f"dawscript @ {url}")
+    except Exception as e:
+        host.display(f"error: {e}")
 
 
 def on_script_stop():
