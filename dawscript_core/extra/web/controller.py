@@ -36,9 +36,9 @@ def on_script_start():
         	service_name=_service_name)
 
         for url in urls:
-            display(f"dawscript @ {url}")
+            display(f"{_service_name} @ {url}")
     except Exception as e:
-        display(f"error: {e}")
+        display(f"{_service_name} error: {e}")
 
 
 def on_script_stop():
