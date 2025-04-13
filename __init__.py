@@ -2,12 +2,13 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+import importlib
 import os
 import sys
 
 try:
     from dawscript_core.host import main
-except ImportError:
+except ModuleNotFoundError:
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
     from dawscript_core.host import DawscriptControlSurface, main
 
@@ -25,7 +26,7 @@ def import_controller():
     except NameError:
         pass
 
-    import controller
+    controller = importlib.import_module("controller")
 
     try:
         if sys.path[0] == alt_controller_path:
