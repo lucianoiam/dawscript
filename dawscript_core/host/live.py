@@ -11,9 +11,9 @@ except ModuleNotFoundError:
 
 import math
 import sys
+from types import ModuleType
 from typing import Any, Callable, Dict, List, Tuple
 
-from .private import load_controller
 from .types import (
     ParameterHandle,
     ParameterNotFoundError,
@@ -30,9 +30,10 @@ def name() -> str:
     return "live"
 
 
-def main(context: Any):
+def main(controller: ModuleType, context: Any):
     global _control_surface
     _control_surface = context
+    _control_surface.set_controller(controller)
 
 
 # tail -f ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
@@ -250,31 +251,6 @@ class DawscriptControlSurface(ControlSurface):
 
         self.request_rebuild_midi_map()
 
-        self._controller = load_controller()
-
-        try:
-            self._controller.on_script_start()
-        except AttributeError:
-            pass
-
-        try:
-            # ControlSurface is reinstantiated every time a project is loaded
-            self._controller.on_project_load()
-        except AttributeError:
-            pass
-
-
-    def disconnect(self):
-        try:
-            self._controller.on_script_stop()
-        except AttributeError:
-            pass
-
-        for callback in self._cleanup_cb.values():
-            callback()
-
-        super(DawscriptControlSurface, self).disconnect()
-
     def build_midi_map(self, midi_map_handle):
         script_handle = self._c_instance.handle()
 
@@ -310,6 +286,30 @@ class DawscriptControlSurface(ControlSurface):
 
         self._events.clear()
 
+    def disconnect(self):
+        try:
+            self._controller.on_script_stop()
+        except AttributeError:
+            pass
+
+        for callback in self._cleanup_cb.values():
+            callback()
+
+        super(DawscriptControlSurface, self).disconnect()
+
+    def set_controller(self, controller):
+        self._controller = controller
+
+        try:
+            self._controller.on_script_start()
+        except AttributeError:
+            pass
+
+        try:
+            # ControlSurface is reinstantiated every time a project is loaded
+            self._controller.on_project_load()
+        except AttributeError:
+            pass
 
     def add_listener(self, target, prop, listener, getter, add_func, del_func):
         key_tp = f"{target}_{prop}"

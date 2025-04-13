@@ -6,7 +6,7 @@ from .types import TrackHandle, PluginHandle, ParameterHandle
 
 """
 def name() -> str
-def main(context: Any)
+def main(controller: ModuleType, context: Any)
 def log(message: str)
 def display(message: str)
 def get_tracks() -> List[TrackHandle]

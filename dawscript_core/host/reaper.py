@@ -34,9 +34,9 @@ except ModuleNotFoundError:
 import math
 import sys
 from ctypes import *
+from types import ModuleType
 from typing import Any, Callable, Dict, List
 
-from .private import load_controller
 from .types import (
     ParameterHandle,
     ParameterNotFoundError,
@@ -59,12 +59,11 @@ def name() -> str:
     return "reaper"
 
 
-def main(context: Any):
-    global RPR_defer, _controller
-
-    RPR_atexit = context["RPR_atexit"]
+def main(controller: ModuleType, context: Any):
+    global _controller, RPR_defer
+    _controller = controller
     RPR_defer = context["RPR_defer"]
-    _controller = load_controller()
+    RPR_atexit = context["RPR_atexit"]
 
     RPR_atexit("from dawscript_core.host import reaper; reaper.cleanup()")
 

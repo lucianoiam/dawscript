@@ -8,9 +8,9 @@ import signal
 import sys
 import time
 import threading
+from types import ModuleType
 from typing import Any, Callable, List
 
-from .private import load_controller
 from .types import ParameterHandle, PluginHandle, TrackHandle
 
 _controller = None
@@ -23,7 +23,9 @@ def name() -> str:
     return "cli"
 
 
-def main(context: Any):
+def main(controller: ModuleType, context: Any):
+    global _controller
+    _controller = controller
     _run_loop()
 
 
@@ -150,9 +152,8 @@ def del_parameter_value_listener(
 
 
 def _run_loop():
-    global _controller, _jack_client, _jack_midi_in
+    global _jack_client, _jack_midi_in
 
-    _controller = load_controller()
     ev_port_reg = threading.Event()
     ev_quit = threading.Event()
 
