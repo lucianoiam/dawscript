@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import importlib
 import os
 import sys
 
@@ -12,39 +11,20 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
     from dawscript_core.host import DawscriptControlSurface, main
 
-from dawscript_core.util import dawscript_path
+import controller
 
-
-# Uncomment when adding dawscript as a git submodule
-# __file__ is not defined for __init__.py on REAPER
-#alt_controller_path = dawscript_path("..")
-
-
-def import_controller():
-    try:
-        sys.path.insert(0, alt_controller_path)
-    except NameError:
-        pass
-
-    controller = importlib.import_module("controller")
-
-    try:
-        if sys.path[0] == alt_controller_path:
-            del sys.path[0]
-    except NameError:
-        pass
-
-    return controller
+#from dawscript_core.extra.web import controller
+#controller.set_config( ... )
 
 
 # Entry point for Ableton Live
 def create_instance(c_instance):
     instance = DawscriptControlSurface(c_instance)
-    main(import_controller(), instance)
+    main(controller, instance)
 
     return instance
 
 
 # Entry point for REAPER and CLI
 if __name__ == "__main__":
-    main(import_controller(), globals())
+    main(controller, globals())
