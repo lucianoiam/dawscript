@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
-const dawscript = (() => {
+window.dawscript = (() => {
 
 // host/public.py
 const host = Object.freeze({
