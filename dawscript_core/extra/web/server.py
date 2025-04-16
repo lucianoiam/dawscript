@@ -128,7 +128,7 @@ async def _ws_handle(ws, path):
 
 
 async def _http_serve(addrs, port):
-    app = web.Application()
+    app = web.Application(middlewares=[inject_dawscript_tag])
     app.router.add_get("/{filename:.*}", _http_handle)
 
     runner = web.AppRunner(app)
@@ -244,3 +244,21 @@ def _get_bind_address():
     s.close()
 
     return socket.inet_ntoa(naddr)
+
+@web.middleware
+async def inject_dawscript_tag(request, handler):
+    response = await handler(request)
+    
+    if isinstance(response, web.FileResponse):
+        file_path = str(response._path)
+        
+        if file_path.endswith(".html"):
+            with open(file_path, 'r') as file:
+                content = file.read()
+
+            script_tag = f'<script src="/{BUILTIN_HTDOCS_PATH}/dawscript.js"></script>'
+            content = content.replace('<body>', f'<body>\n{script_tag}\n')
+
+            return web.Response(text=content, content_type='text/html')
+
+    return response
