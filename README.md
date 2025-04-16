@@ -56,6 +56,9 @@ is pressed:
 ```python
 config, gadgets = parse_config_file('config.yml', globals())
 
+def get_config() -> Config:
+   return config
+
 def host_callback(midi: List[bytes]):
    for gadget in gadgets:
       gadget.process(midi)
@@ -63,11 +66,12 @@ def host_callback(midi: List[bytes]):
 
 [Object-oriented API](https://github.com/lucianoiam/dawscript/blob/master/examples/objects/controller.py)
 ```python
-config = Config(midi_inputs=ALL_MIDI_INPUTS)
-
 footswitch = Footswitch()
 footswitch.map_midi_press(type='control_change',control=64, value=127, omni=True)
 footswitch.map_midi_release(type='control_change', control=64, value=0, omni=True)
+
+def get_config() -> Config:
+   return Config(midi_inputs=ALL_MIDI_INPUTS)
 
 def on_project_load():
    try:
@@ -82,8 +86,10 @@ def host_callback(midi: List[bytes]):
 
 [Calls to raw DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
 ```python
-config = Config(midi_inputs=ALL_MIDI_INPUTS)
 footswitch = Footswitch()
+
+def get_config() -> Config:
+   return Config(midi_inputs=ALL_MIDI_INPUTS)
 
 def host_callback(midi: List[bytes]):
    for msg in make_midi_messages(midi):

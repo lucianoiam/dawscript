@@ -7,11 +7,13 @@ from dawscript_core.host import ALL_MIDI_INPUTS, Config, TrackNotFoundError
 from dawscript_core.extra.gadget import Footswitch
 from dawscript_core.extra.objects import Host, Track
 
-config = Config(midi_inputs=ALL_MIDI_INPUTS)
-
 footswitch = Footswitch()
 footswitch.map_midi_press(type="control_change", control=64, value=127, omni=True)
 footswitch.map_midi_release(type="control_change", control=64, value=0, omni=True)
+
+
+def get_config() -> Config:
+    return Config(midi_inputs=ALL_MIDI_INPUTS)
 
 
 def on_project_load():

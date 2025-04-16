@@ -7,9 +7,11 @@ from dawscript_core.host import ALL_MIDI_INPUTS, Config, get_track_by_name, togg
 from dawscript_core.util import make_midi_messages
 from dawscript_core.extra.gadget import Footswitch
 
-config = Config(midi_inputs=ALL_MIDI_INPUTS)
-
 footswitch = Footswitch()
+
+
+def get_config() -> Config:
+    return Config(midi_inputs=ALL_MIDI_INPUTS)
 
 
 def host_callback(midi: List[bytes]):

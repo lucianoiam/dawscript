@@ -5,6 +5,7 @@ import os
 import sys
 from typing import List
 
+from dawscript_core.host import Config
 from dawscript_core.util import dawscript_path
 from dawscript_core.extra.config_file import parse_config_file
 
@@ -14,6 +15,10 @@ config, gadgets = parse_config_file(
     dawscript_path("examples", "config_file", "config.yml"),
     globals()
 )
+
+
+def get_config() -> Config:
+    return config
 
 
 def host_callback(midi: List[bytes]):

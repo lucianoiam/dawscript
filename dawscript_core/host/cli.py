@@ -195,7 +195,7 @@ def _jack_proc(frames: int):
 def _connect_ports():
     try:
         midi_inputs = _jack_client.get_ports(
-            name_pattern="|".join(_controller.config.midi_inputs),
+            name_pattern="|".join(_controller.get_config().midi_inputs),
             is_midi=True,
             is_output=True,
         )
