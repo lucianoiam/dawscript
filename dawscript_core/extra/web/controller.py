@@ -14,7 +14,7 @@ _service_name = None
 _display_messges = None
 
 
-def set_config(htdocs_path, ws_port=49152, http_port=8080,
+def set_server_config(htdocs_path, ws_port=49152, http_port=8080,
 	service_name=None, display_messges=True):
 
 	global _htdocs_path, _ws_port, _http_port, _service_name, _display_messges

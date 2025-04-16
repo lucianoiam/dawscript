@@ -13,7 +13,7 @@ def load_controller():
 
     # Default controller for web scripts
     #from dawscript_core.extra.web import controller
-    #controller.set_config( ... )
+    #controller.set_server_config( ... )
 
     return controller
 
