@@ -131,8 +131,8 @@ def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]
     _add_listener(track, "mute", listener, is_track_mute)
 
 
-def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    _del_listener(track, "mute", listener)
+def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
+    _remove_listener(track, "mute", listener)
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -147,8 +147,8 @@ def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], No
     _add_listener(track, "volume", listener, get_track_volume)
 
 
-def del_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _del_listener(track, "volume", listener)
+def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
+    _remove_listener(track, "volume", listener)
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -159,8 +159,8 @@ def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
     _add_listener(track, "pan", listener, get_track_pan)
 
 
-def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _del_listener(track, "pan", listener)
+def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
+    _remove_listener(track, "pan", listener)
 
 
 def set_track_pan(track: TrackHandle, pan: float):
@@ -196,8 +196,8 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     _add_listener(plugin, "enabled", listener, is_plugin_enabled)
 
 
-def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
-    _del_listener(plugin, "enabled", listener)
+def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
+    _remove_listener(plugin, "enabled", listener)
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
@@ -227,10 +227,10 @@ def add_parameter_value_listener(
     _add_listener(param, "value", listener, get_parameter_value)
 
 
-def del_parameter_value_listener(
+def remove_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    _del_listener(param, "value", listener)
+    _remove_listener(param, "value", listener)
 
 
 TWENTY_OVER_LN10 = 8.6858896380650365530225783783321
@@ -320,7 +320,7 @@ def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
     _listeners[key_tp].append(listener)
 
 
-def _del_listener(target: Any, prop: str, listener: Callable):
+def _remove_listener(target: Any, prop: str, listener: Callable):
     key_tp = f"{target}_{prop}"
 
     _listeners[key_tp] = [l for l in _listeners[key_tp] if l != listener]

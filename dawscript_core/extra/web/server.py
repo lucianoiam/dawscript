@@ -25,7 +25,7 @@ LOG_TAG = "server.py"
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _htdocs_path: str = None
 _cleanup: List[Callable] = []
-_listener_del: Dict[str, Dict[int, Callable]] = {}
+_listener_remover: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
 _setter_call_t: float = 0
 
@@ -95,7 +95,7 @@ async def _ws_handle(ws, path):
     async for message in ws:
         (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
 
-        m = re.match(r"^(add|del)_([a-z_]+)_listener$", func_name)
+        m = re.match(r"^(add|remove)_([a-z_]+)_listener$", func_name)
 
         if m:
             action, prop = m.groups()
@@ -103,8 +103,8 @@ async def _ws_handle(ws, path):
             if action == "add":
                 await _add_listener(ws, seq, client, args[0], prop)
                 await _send_ack(ws, seq)
-            elif action == "del":
-                await _del_listener(ws, seq, client, args[0])
+            elif action == "remove":
+                await _remove_listener(ws, seq, client, args[0])
                 await _send_ack(ws, seq)
 
             continue
@@ -177,29 +177,29 @@ async def _add_listener(ws, seq, client, target, prop):
     setter = getattr(host, f"add_{prop}_listener")
     setter(target, listener)
 
-    deleter = getattr(host, f"del_{prop}_listener")
-    bound_deleter = lambda d=deleter, t=target, l=listener: d(t, l)
+    remover = getattr(host, f"remove_{prop}_listener")
+    bound_remover = lambda r=remover, t=target, l=listener: r(t, l)
 
-    if client not in _listener_del:
-        _listener_del[client] = {}
+    if client not in _listener_remover:
+        _listener_remover[client] = {}
 
-    _listener_del[client][seq] = bound_deleter
+    _listener_remover[client][seq] = bound_remover
 
 
-async def _del_listener(ws, seq, client, listener_seq):
+async def _remove_listener(ws, seq, client, listener_seq):
     if (
-        client not in _listener_del
-        or listener_seq not in _listener_del[client]
+        client not in _listener_remover
+        or listener_seq not in _listener_remover[client]
     ):
         raise Exception("Listener not registered")
 
-    bound_deleter = _listener_del[client][listener_seq]
-    bound_deleter()
+    bound_remover = _listener_remover[client][listener_seq]
+    bound_remover()
 
-    del _listener_del[client][listener_seq]
+    del _listener_remover[client][listener_seq]
 
-    if not _listener_del[client]:
-        del _listener_del[client]
+    if not _listener_remover[client]:
+        del _listener_remover[client]
 
 
 def _mute_remote_listener(client, target, prop):
@@ -228,13 +228,13 @@ def _call_remote_listener(ws, seq, key_tp, value):
 
 
 def _cleanup_client(client):
-    if client not in _listener_del:
+    if client not in _listener_remover:
         return
 
-    for deleter in _listener_del[client].values():
-        deleter()
+    for remover in _listener_remover[client].values():
+        remover()
 
-    del _listener_del[client]
+    del _listener_remover[client]
 
 
 def _get_bind_address():

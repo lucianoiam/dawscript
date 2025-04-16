@@ -78,8 +78,8 @@ def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]
     )
 
 
-def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    _control_surface.del_listener(track, "mute", listener)
+def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
+    _control_surface.remove_listener(track, "mute", listener)
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -101,8 +101,8 @@ def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], No
     )
 
 
-def del_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _control_surface.del_listener(track, "volume", listener)
+def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
+    _control_surface.remove_listener(track, "volume", listener)
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -124,8 +124,8 @@ def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
     )
 
 
-def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    _control_surface.del_listener(track, "pan", listener)
+def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
+    _control_surface.remove_listener(track, "pan", listener)
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
@@ -156,9 +156,9 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     )
 
 
-def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
+def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
     device_on = _get_parameter_device_on(plugin)
-    _control_surface.del_listener(plugin, "enabled", listener)
+    _control_surface.remove_listener(plugin, "enabled", listener)
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
@@ -194,10 +194,10 @@ def add_parameter_value_listener(
     )
 
 
-def del_parameter_value_listener(
+def remove_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    _control_surface.del_listener(param, "value", listener)
+    _control_surface.remove_listener(param, "value", listener)
 
 
 def _get_document():
@@ -311,7 +311,7 @@ class DawscriptControlSurface(ControlSurface):
         except AttributeError:
             pass
 
-    def add_listener(self, target, prop, listener, getter, add_func, del_func):
+    def add_listener(self, target, prop, listener, getter, add_func, remove_func):
         key_tp = f"{target}_{prop}"
 
         def target_getter():
@@ -321,10 +321,10 @@ class DawscriptControlSurface(ControlSurface):
             # Changes cannot be triggered by notifications. You will need to defer your response.
             return self._deferred.append(lambda: listener(target_getter()))
 
-        self._cleanup_cb[key_tp] = lambda: del_func(def_listener)
+        self._cleanup_cb[key_tp] = lambda: remove_func(def_listener)
         add_func(def_listener)
 
-    def del_listener(self, target, prop, listener):
+    def remove_listener(self, target, prop, listener):
         key_tp = f"{target}_{prop}"
 
         self._cleanup_cb[key_tp]()

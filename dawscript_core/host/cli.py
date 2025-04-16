@@ -60,8 +60,8 @@ def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]
     log(f"stub: add_track_mute_listener( {track}, {listener} )")
 
 
-def del_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
-    log(f"stub: del_track_mute_listener( {track}, {listener} )")
+def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], None]):
+    log(f"stub: remove_track_mute_listener( {track}, {listener} )")
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -77,8 +77,8 @@ def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], No
     log(f"stub: add_track_volume_listener( {track}, {listener} )")
 
 
-def del_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
-    log(f"stub: del_track_volume_listener( {track}, {listener} )")
+def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
+    log(f"stub: remove_track_volume_listener( {track}, {listener} )")
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -90,8 +90,8 @@ def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]
     log(f"stub: add_track_pan_listener( {track}, {listener} )")
 
 
-def del_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
-    log(f"stub: del_track_pan_listener( {track}, {listener} )")
+def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
+    log(f"stub: remove_track_pan_listener( {track}, {listener} )")
 
 
 def set_track_pan(track: TrackHandle, pan: float):
@@ -116,8 +116,8 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
     log(f"stub: add_plugin_enabled_listener( {plugin}, {listener} )")
 
 
-def del_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
-    log(f"stub: del_plugin_enabled_listener( {plugin}, {listener} )")
+def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool], None]):
+    log(f"stub: remove_plugin_enabled_listener( {plugin}, {listener} )")
 
 
 def get_plugin_parameter_by_name(plugin: PluginHandle, name: str) -> ParameterHandle:
@@ -145,10 +145,10 @@ def add_parameter_value_listener(
     log(f"stub: add_parameter_value_listener( {param}, {listener} )")
 
 
-def del_parameter_value_listener(
+def remove_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
-    log(f"stub: del_parameter_value_listener( {param}, {listener} )")
+    log(f"stub: remove_parameter_value_listener( {param}, {listener} )")
 
 
 def _run_loop():

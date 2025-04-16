@@ -5,41 +5,41 @@ window.dawscript = (() => {
 
 // host/public.py
 const host = Object.freeze({
-   getTracks: async ()                                 => _call("get_tracks"),
-   getTrackName: async (track)                         => _call("get_track_name", track),
-   isTrackMute: async (track)                          => _call("is_track_mute", track),
-   setTrackMute: async (track, mute)                   => _call("set_track_mute", track, mute),
-   addTrackMuteListener: async (track, listener)       => _call("add_track_mute_listener", track, listener),
-   delTrackMuteListener: async (track, listener)       => _call("del_track_mute_listener", track, listener),
-   getTrackVolume: async (track)                       => _call("get_track_volume", track),
-   setTrackVolume: async (track, volumeDb)             => _call("set_track_volume", track, volumeDb),
-   addTrackVolumeListener: async (track, listener)     => _call("add_track_volume_listener", track, listener),
-   delTrackVolumeListener: async (track, listener)     => _call("del_track_volume_listener", track, listener),
-   getTrackPan: async (track)                          => _call("get_track_pan", track),
-   setTrackPan: async (track, pan)                     => _call("set_track_pan", track, pan),
-   addTrackPanListener: async (track, listener)        => _call("add_track_pan_listener", track, listener),
-   delTrackPanListener: async (track, listener)        => _call("del_track_pan_listener", track, listener),
-   getTrackPlugins: async (track)                      => _call("get_track_plugins", track),
-   getTrackPlugin: async (track, name)                 => _call("get_track_plugin", track, name),
-   getPluginName: async (plugin)                       => _call("get_plugin_name", plugin),
-   isPluginEnabled: async (plugin)                     => _call("is_plugin_enabled", plugin),
-   setPluginEnabled: async (plugin, enabled)           => _call("set_plugin_enabled", plugin, enabled),
-   addPluginEnabledListener: async (plugin, listener)  => _call("add_plugin_enabled_listener", track, listener),
-   delPluginEnabledListener: async (plugin, listener)  => _call("del_plugin_enabled_listener", track, listener),
-   getPluginParameters: async (plugin)                 => _call("get_plugin_parameters", plugin),
-   getPluginParameter: async (plugin, name)            => _call("get_plugin_parameter", plugin, name),
-   getParameterName: async (param)                     => _call("get_parameter_name", param),
-   getParameterRange: async (param)                    => _call("get_parameter_range", param),
-   getParameterValue: async (param)                    => _call("get_parameter_value", param),
-   setParameterValue: async (param, value)             => _call("set_parameter_value", param, value),
-   addParameterValueListener: async (param, listener)  => _call("add_parameter_value_listener", track, listener),
-   delParameterValueListener: async (param, listener)  => _call("del_parameter_value_listener", track, listener),
-   getTrackByName: async (name)                        => _call("get_track_by_name", name),
-   toggleTrackMute: async (track)                      => _call("toggle_track_mute", track),
-   toggleTrackMuteByName: async (name)                 => _call("toggle_track_mute_by_name", name),
-   getTrackPluginByName: async (track, name)           => _call("get_track_plugin_by_name", track, name),
-   getPluginParameterByName: async (plugin, name)      => _call("get_plugin_parameter_by_name", plugin, name),
-   togglePluginEnabled: async (plugin)                 => _call("toggle_plugin_enabled", plugin),
+   getTracks: async ()                                   => _call("get_tracks"),
+   getTrackName: async (track)                           => _call("get_track_name", track),
+   isTrackMute: async (track)                            => _call("is_track_mute", track),
+   setTrackMute: async (track, mute)                     => _call("set_track_mute", track, mute),
+   addTrackMuteListener: async (track, listener)         => _call("add_track_mute_listener", track, listener),
+   removeTrackMuteListener: async (track, listener)      => _call("remove_track_mute_listener", track, listener),
+   getTrackVolume: async (track)                         => _call("get_track_volume", track),
+   setTrackVolume: async (track, volumeDb)               => _call("set_track_volume", track, volumeDb),
+   addTrackVolumeListener: async (track, listener)       => _call("add_track_volume_listener", track, listener),
+   removeTrackVolumeListener: async (track, listener)    => _call("remove_track_volume_listener", track, listener),
+   getTrackPan: async (track)                            => _call("get_track_pan", track),
+   setTrackPan: async (track, pan)                       => _call("set_track_pan", track, pan),
+   addTrackPanListener: async (track, listener)          => _call("add_track_pan_listener", track, listener),
+   removeTrackPanListener: async (track, listener)       => _call("remove_track_pan_listener", track, listener),
+   getTrackPlugins: async (track)                        => _call("get_track_plugins", track),
+   getTrackPlugin: async (track, name)                   => _call("get_track_plugin", track, name),
+   getPluginName: async (plugin)                         => _call("get_plugin_name", plugin),
+   isPluginEnabled: async (plugin)                       => _call("is_plugin_enabled", plugin),
+   setPluginEnabled: async (plugin, enabled)             => _call("set_plugin_enabled", plugin, enabled),
+   addPluginEnabledListener: async (plugin, listener)    => _call("add_plugin_enabled_listener", track, listener),
+   removePluginEnabledListener: async (plugin, listener) => _call("remove_plugin_enabled_listener", track, listener),
+   getPluginParameters: async (plugin)                   => _call("get_plugin_parameters", plugin),
+   getPluginParameter: async (plugin, name)              => _call("get_plugin_parameter", plugin, name),
+   getParameterName: async (param)                       => _call("get_parameter_name", param),
+   getParameterRange: async (param)                      => _call("get_parameter_range", param),
+   getParameterValue: async (param)                      => _call("get_parameter_value", param),
+   setParameterValue: async (param, value)               => _call("set_parameter_value", param, value),
+   addParameterValueListener: async (param, listener)    => _call("add_parameter_value_listener", track, listener),
+   removeParameterValueListener: async (param, listener) => _call("remove_parameter_value_listener", track, listener),
+   getTrackByName: async (name)                          => _call("get_track_by_name", name),
+   toggleTrackMute: async (track)                        => _call("toggle_track_mute", track),
+   toggleTrackMuteByName: async (name)                   => _call("toggle_track_mute_by_name", name),
+   getTrackPluginByName: async (track, name)             => _call("get_track_plugin_by_name", track, name),
+   getPluginParameterByName: async (plugin, name)        => _call("get_plugin_parameter_by_name", plugin, name),
+   togglePluginEnabled: async (plugin)                   => _call("toggle_plugin_enabled", plugin),
 });
 
 function connect(callback = (connected) => /* reconnect */true) {
@@ -102,7 +102,7 @@ function _connect(callback) {
 
 async function _call(func_name, ...args) {
    return new Promise((resolve, reject) => {
-      const m = func_name.match(/^(add|del)_([a-z_]+)_listener$/);
+      const m = func_name.match(/^(add|remove)_([a-z_]+)_listener$/);
 
       if (
          m &&
@@ -121,8 +121,8 @@ async function _call(func_name, ...args) {
                resolve();
                return;
             }
-         } else if (action == "del") {
-            const listener_seq = _del_listener(target, prop, listener);
+         } else if (action == "remove") {
+            const listener_seq = _remove_listener(target, prop, listener);
 
             if (listener_seq === null) {
                resolve();
@@ -201,7 +201,7 @@ function _add_listener(target, prop, listener, seq) {
    return true;
 }
 
-function _del_listener(target, prop, listener) {
+function _remove_listener(target, prop, listener) {
    const key_tp = `${target}_${prop}`;
    const listener_seq = _tp_to_listener_seq[key_tp];
 

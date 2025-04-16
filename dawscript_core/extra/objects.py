@@ -52,8 +52,8 @@ class Parameter:
     def add_value_listener(self, listener: Callable[[float], None]):
         host.add_parameter_value_listener(self._handle, listener)
 
-    def del_value_listener(self, listener: Callable[[float], None]):
-        host.del_parameter_value_listener(self._handle, listener)
+    def remove_value_listener(self, listener: Callable[[float], None]):
+        host.remove_parameter_value_listener(self._handle, listener)
 
 
 class Plugin:
@@ -79,8 +79,8 @@ class Plugin:
     def add_enabled_listener(self, listener: Callable[[bool], None]):
         host.add_plugin_enabled_listener(self._handle, listener)
 
-    def del_enabled_listener(self, listener: Callable[[bool], None]):
-        host.del_plugin_enabled_listener(self._handle, listener)
+    def remove_enabled_listener(self, listener: Callable[[bool], None]):
+        host.remove_plugin_enabled_listener(self._handle, listener)
 
     def toggle_enabled(self):
         host.toggle_plugin_enabled(self._handle)
@@ -126,14 +126,14 @@ class Track:
     def add_mute_listener(self, listener: Callable[[bool], None]):
         host.add_track_mute_listener(self._handle, listener)
 
-    def del_mute_listener(self, listener: Callable[[bool], None]):
-        host.del_track_mute_listener(self._handle, listener)
+    def remove_mute_listener(self, listener: Callable[[bool], None]):
+        host.remove_track_mute_listener(self._handle, listener)
 
     def add_volume_listener(self, listener: Callable[[float], None]):
         host.add_track_volume_listener(self._handle, listener)
 
-    def del_volume_listener(self, listener: Callable[[float], None]):
-        host.del_track_volume_listener(self._handle, listener)
+    def remove_volume_listener(self, listener: Callable[[float], None]):
+        host.remove_track_volume_listener(self._handle, listener)
 
     def toggle_mute(self):
         host.toggle_track_mute(self._handle)
@@ -157,8 +157,8 @@ class Track:
     def add_pan_listener(self, listener: Callable[[float], None]):
         host.add_track_pan_listener(self._handle, listener)
 
-    def del_pan_listener(self, listener: Callable[[float], None]):
-        host.del_track_pan_listener(self._handle, listener)
+    def remove_pan_listener(self, listener: Callable[[float], None]):
+        host.remove_track_pan_listener(self._handle, listener)
 
     @property
     def plugins(self) -> List[Plugin]:
