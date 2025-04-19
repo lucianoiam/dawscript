@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections import namedtuple
+from enum import Enum
 from typing import Any
 
 ALL_MIDI_INPUTS = []
@@ -11,6 +12,12 @@ Config = namedtuple("Config", ["midi_inputs"])
 TrackHandle = Any
 PluginHandle = Any
 ParameterHandle = Any
+
+
+class TrackType(Enum):
+    AUDIO = 0
+    MIDI = 1
+    OTHER = 2
 
 
 class TrackNotFoundError(Exception):

@@ -8,6 +8,7 @@ const connect = (callback = (status) => true)            => _connect(callback);
 // host/public.py
 const host = Object.freeze({
    getTracks: async ()                                   => _call("get_tracks"),
+   getTrackType: async (track)                           => _call("get_track_type", track),
    getTrackName: async (track)                           => _call("get_track_name", track),
    isTrackMute: async (track)                            => _call("is_track_mute", track),
    setTrackMute: async (track, mute)                     => _call("set_track_mute", track, mute),
@@ -42,6 +43,12 @@ const host = Object.freeze({
    getTrackPluginByName: async (track, name)             => _call("get_track_plugin_by_name", track, name),
    getPluginParameterByName: async (plugin, name)        => _call("get_plugin_parameter_by_name", plugin, name),
    togglePluginEnabled: async (plugin)                   => _call("toggle_plugin_enabled", plugin),
+});
+
+const TrackType = Object.freeze({
+   AUDIO : 0,
+   MIDI  : 1,
+   OTHER : 2
 });
 
 
@@ -233,11 +240,11 @@ function _cleanup() {
 
 class HostError extends Error {
    constructor(message) {
-      super(`host: ${message}`);
+      super(message);
       this.name = this.constructor.name;
    }
 }
 
-return Object.freeze({ connect, host });
+return Object.freeze({ connect, host, TrackType });
 
 })(); // dawscript

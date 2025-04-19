@@ -11,7 +11,7 @@ import threading
 from types import ModuleType
 from typing import Any, Callable, List
 
-from .types import ParameterHandle, PluginHandle, TrackHandle
+from .types import ParameterHandle, PluginHandle, TrackHandle, TrackType
 
 _controller = None
 _jack_client: jack.Client = None
@@ -42,9 +42,14 @@ def get_tracks() -> List[TrackHandle]:
     return []
 
 
-def get_track_by_name(name: str) -> TrackHandle:
-    log(f"stub: get_track_by_name( {name} )")
-    return name
+def get_track_type(track: TrackHandle) -> TrackType:
+    log(f"stub: get_track_type( {track} )")
+    return TrackType.AUDIO
+
+
+def get_track_name(track: TrackHandle) -> str:
+    log(f"stub: get_track_name( {track} )")
+    return ''
 
 
 def is_track_mute(track: TrackHandle) -> bool:
@@ -86,6 +91,10 @@ def get_track_pan(track: TrackHandle) -> float:
     return 0.0
 
 
+def set_track_pan(track: TrackHandle, pan: float):
+    log(f"stub: set_track_pan( {track}, {pan} )")
+
+
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
     log(f"stub: add_track_pan_listener( {track}, {listener} )")
 
@@ -94,13 +103,14 @@ def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float], No
     log(f"stub: remove_track_pan_listener( {track}, {listener} )")
 
 
-def set_track_pan(track: TrackHandle, pan: float):
-    log(f"stub: set_track_pan( {track}, {pan} )")
+def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
+    log(f"stub: get_track_plugins( {track} )")
+    return []
 
 
-def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
-    log(f"stub: get_track_plugin_by_name( {track}, {name} )")
-    return name
+def get_plugin_name(plugin: PluginHandle) -> str:
+    log(f"stub: get_plugin_name( {plugin} )")
+    return ''
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
@@ -120,9 +130,14 @@ def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[boo
     log(f"stub: remove_plugin_enabled_listener( {plugin}, {listener} )")
 
 
-def get_plugin_parameter_by_name(plugin: PluginHandle, name: str) -> ParameterHandle:
-    log(f"stub: get_plugin_parameter_by_name( {plugin}, {name} )")
-    return name
+def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
+    log(f"stub: get_plugin_parameters( {plugin} )")
+    return []
+
+
+def get_parameter_name(param: ParameterHandle) -> str:
+    log(f"stub: get_parameter_name( {param} )")
+    return ''
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):

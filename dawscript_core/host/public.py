@@ -10,6 +10,7 @@ def main(controller: ModuleType, context: Any)
 def log(message: str)
 def display(message: str)
 def get_tracks() -> List[TrackHandle]
+def get_track_type(track: TrackHandle) -> TrackType
 def get_track_name(track: TrackHandle) -> str
 def is_track_mute(track: TrackHandle) -> bool
 def set_track_mute(track: TrackHandle, mute: bool)

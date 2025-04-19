@@ -5,6 +5,7 @@ from .types import IncompatibleEnvironmentError
 
 try:
     from reaper_python import (
+        RPR_GetMediaTrackInfo_Value,
         RPR_GetMIDIInputName,
         RPR_GetTrack,
         RPR_GetTrackName,
@@ -44,6 +45,7 @@ from .types import (
     PluginNotFoundError,
     TrackHandle,
     TrackNotFoundError,
+    TrackType
 )
 
 RPR_defer = None
@@ -113,6 +115,17 @@ def get_tracks() -> List[TrackHandle]:
         tracks.append(track)
 
     return tracks
+
+
+def get_track_type(track: TrackHandle) -> TrackType:
+    input_val = int(RPR_GetMediaTrackInfo_Value(track, "I_RECINPUT"))
+
+    if 0 <= input_val < 512:
+        return TrackType.AUDIO
+    elif 512 <= input_val < 1024:
+        return TrackType.MIDI
+    else:
+        return TrackType.OTHER
 
 
 def get_track_name(track: TrackHandle) -> str:

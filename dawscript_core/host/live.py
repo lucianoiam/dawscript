@@ -21,6 +21,7 @@ from .types import (
     PluginNotFoundError,
     TrackHandle,
     TrackNotFoundError,
+    TrackType
 )
 
 _control_surface = None
@@ -53,6 +54,15 @@ def display(message: str):
 
 def get_tracks() -> List[TrackHandle]:
     return list(_get_document().tracks)
+
+
+def get_track_type(track: TrackHandle) -> TrackType:
+    if track in _control_surface.song().return_tracks or track.is_foldable:
+        return TrackType.OTHER
+    elif track.has_midi_input:
+        return TrackType.MIDI
+    else:
+        return TrackType.AUDIO
 
 
 def get_track_name(track: TrackHandle) -> str:

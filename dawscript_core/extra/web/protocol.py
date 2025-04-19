@@ -3,6 +3,7 @@
 
 import json
 import re
+from enum import Enum
 from typing import Any, Dict
 
 _host_obj: Dict[str, Any] = {}
@@ -44,6 +45,9 @@ class ReprJSONDecoder(json.JSONDecoder):
 
 class ReprJSONEncoder(json.JSONEncoder):
     def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+
         try:
             return super().default(obj)
         except TypeError:
