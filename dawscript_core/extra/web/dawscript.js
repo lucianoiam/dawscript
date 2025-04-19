@@ -3,6 +3,8 @@
 
 window.dawscript = (() => {
 
+const connect = (callback = (status) => true)            => _connect(callback);
+
 // host/public.py
 const host = Object.freeze({
    getTracks: async ()                                   => _call("get_tracks"),
@@ -42,10 +44,6 @@ const host = Object.freeze({
    togglePluginEnabled: async (plugin)                   => _call("toggle_plugin_enabled", plugin),
 });
 
-function connect(callback = (connected) => /* reconnect */true) {
-   _connect(...arguments);
-}
-
 
 // Private
 
@@ -82,14 +80,14 @@ function _connect(callback) {
 
       _socket.onmessage = (event) => _handle(event.data);
 
-      _socket.onerror = (event) => {
-         console.warn(`dawscript: ${event.error}`);
+      _socket.onerror = (error) => {
          _socket.close();
          _cleanup();
       };
 
-      _socket.onclose = () => {
-         console.info("dawscript: disconnected");
+      _socket.onclose = (event) => {
+         const s = `dawscript: disconnected (${event.code}) ${event.reason}`;
+         console.warn(s);
 
          if (! callback || callback(false)) {
             setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
@@ -240,6 +238,6 @@ class HostError extends Error {
    }
 }
 
-return Object.freeze({ host, connect });
+return Object.freeze({ connect, host });
 
 })(); // dawscript
