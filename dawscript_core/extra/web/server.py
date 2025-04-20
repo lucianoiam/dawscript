@@ -257,7 +257,8 @@ async def inject_dawscript_tag(request, handler):
                 content = file.read()
 
             script_tag = f'<script src="/{BUILTIN_HTDOCS_PATH}/dawscript.js"></script>'
-            content = content.replace('<body>', f'<body>\n{script_tag}\n')
+            pattern = re.compile(r'(<body[^>]*>)', re.IGNORECASE)
+            content = pattern.sub(r'\1\n' + script_tag, content, count=1)
 
             return web.Response(text=content, content_type='text/html')
 
