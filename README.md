@@ -157,6 +157,10 @@ Live \
 https://nsuspray.github.io/Live_API_Doc/11.0.0.xml \
 https://github.com/gluon/AbletonLive11_MIDIRemoteScripts
 
+Bitwig \
+https://mvnrepository.com/artifact/com.bitwig/extension-api/22 \
+https://www.py4j.org/contents.html
+
 Other \
 https://jackclient-python.readthedocs.io/en/0.5.5/ \
 https://mido.readthedocs.io/en/stable/ \
