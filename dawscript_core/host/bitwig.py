@@ -5,7 +5,7 @@ from types import ModuleType
 from typing import Any, Callable, List
 
 from .types import (
-	IncompatibleEnvironmentError,
+    IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
     PluginHandle,
@@ -15,133 +15,138 @@ from .types import (
     TrackType
 )
 
-# TODO - if cannot connect to bitwig server throw IncompatibleEnvironmentError
-raise IncompatibleEnvironmentError
+from py4j.java_gateway import JavaGateway, GatewayParameters, Py4JNetworkError
+
+try:
+    java = JavaGateway(gateway_parameters=GatewayParameters(auto_convert=True))
+    java.jvm.java.lang.System.getProperty("java.version")
+except Py4JNetworkError:
+    raise IncompatibleEnvironmentError
 
 
 def name() -> str:
-	return "bitwig"
+    return "bitwig"
 
 
 def main(controller: ModuleType, context: Any):
-	pass
+    pass
 
 
 def log(message: str):
-	pass
+    pass
 
 
 def display(message: str):
-	pass
+    pass
 
 
 def get_tracks() -> List[TrackHandle]:
-	pass
+    pass
 
 
 def get_track_type(track: TrackHandle) -> TrackType:
-	pass
+    pass
 
 
 def get_track_name(track: TrackHandle) -> str:
-	pass
+    pass
 
 
 def is_track_mute(track: TrackHandle) -> bool:
-	pass
+    pass
 
 
 def set_track_mute(track: TrackHandle, mute: bool):
-	pass
+    pass
 
 
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-	pass
+    pass
 
 
 def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-	pass
+    pass
 
 
 def get_track_volume(track: TrackHandle) -> float:
-	pass
+    pass
 
 
 def set_track_volume(track: TrackHandle, volume_db: float):
-	pass
+    pass
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-	pass
+    pass
 
 
 def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-	pass
+    pass
 
 
 def get_track_pan(track: TrackHandle) -> float:
-	pass
+    pass
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-	pass
+    pass
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-	pass
+    pass
 
 
 def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-	pass
+    pass
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
-	pass
+    pass
 
 
 def get_plugin_name(plugin: PluginHandle) -> str:
-	pass
+    pass
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
-	pass
+    pass
 
 
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
-	pass
+    pass
 
 
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-	pass
+    pass
 
 
 def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-	pass
+    pass
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-	pass
+    pass
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
-	pass
+    pass
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
-	pass
+    pass
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
-	pass
+    pass
 
 
 def set_parameter_value(param: ParameterHandle, value: float):
-	pass
+    pass
 
 
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-	pass
+    pass
 
 
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-	pass
+    pass

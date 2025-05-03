@@ -1,4 +1,8 @@
-package com.lucianoiam;
+// SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
+// SPDX-License-Identifier: MIT
+
+package dawscript;
+
 import java.util.UUID;
 
 import com.bitwig.extension.api.PlatformType;

@@ -1,4 +1,9 @@
-package com.lucianoiam;
+// SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
+// SPDX-License-Identifier: MIT
+
+package dawscript;
+
+import py4j.GatewayServer;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
