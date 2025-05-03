@@ -3,4 +3,4 @@
 
 from dawscript_core.util import add_site_packages
 
-add_site_packages("dawscript_core", "extra", "web")
+add_site_packages(__file__)

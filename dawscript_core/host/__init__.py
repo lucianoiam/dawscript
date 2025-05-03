@@ -16,6 +16,11 @@ except IncompatibleEnvironmentError:
     pass
 
 try:
+    from .bitwig import *
+except IncompatibleEnvironmentError:
+    pass
+
+try:
     name()
 except NameError:
     from .cli import *

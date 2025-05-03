@@ -1,7 +1,22 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from .types import IncompatibleEnvironmentError
+import math
+import sys
+from ctypes import *
+from types import ModuleType
+from typing import Any, Callable, Dict, List
+
+from .types import (
+    IncompatibleEnvironmentError,
+    ParameterHandle,
+    ParameterNotFoundError,
+    PluginHandle,
+    PluginNotFoundError,
+    TrackHandle,
+    TrackNotFoundError,
+    TrackType
+)
 
 try:
     from reaper_python import (
@@ -31,22 +46,6 @@ try:
     )
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
-
-import math
-import sys
-from ctypes import *
-from types import ModuleType
-from typing import Any, Callable, Dict, List
-
-from .types import (
-    ParameterHandle,
-    ParameterNotFoundError,
-    PluginHandle,
-    PluginNotFoundError,
-    TrackHandle,
-    TrackNotFoundError,
-    TrackType
-)
 
 RPR_defer = None
 _controller = None

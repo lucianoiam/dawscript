@@ -1,20 +1,13 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from .types import IncompatibleEnvironmentError
-
-try:
-    import Live
-    from _Framework.ControlSurface import ControlSurface
-except ModuleNotFoundError:
-    raise IncompatibleEnvironmentError
-
 import math
 import sys
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List
 
 from .types import (
+    IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
     PluginHandle,
@@ -23,6 +16,12 @@ from .types import (
     TrackNotFoundError,
     TrackType
 )
+
+try:
+    import Live
+    from _Framework.ControlSurface import ControlSurface
+except ModuleNotFoundError:
+    raise IncompatibleEnvironmentError
 
 _control_surface = None
 

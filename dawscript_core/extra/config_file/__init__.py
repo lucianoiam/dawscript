@@ -4,15 +4,11 @@
 from collections import namedtuple
 from typing import Callable, List
 
+import yaml
 from mido import Message
 
 from dawscript_core.extra.gadget import Footswitch
 from dawscript_core.host import Config
-from dawscript_core.util import add_site_packages
-
-add_site_packages("dawscript_core", "extra", "config_file")
-
-import yaml
 
 ParsedGadget = namedtuple("ParsedGadget", ["instance", "name", "midi_port"])
 

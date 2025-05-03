@@ -159,7 +159,7 @@ https://github.com/gluon/AbletonLive11_MIDIRemoteScripts
 
 Bitwig \
 https://mvnrepository.com/artifact/com.bitwig/extension-api/22 \
-https://www.py4j.org/contents.html
+https://www.py4j.org/
 
 Other \
 https://jackclient-python.readthedocs.io/en/0.5.5/ \

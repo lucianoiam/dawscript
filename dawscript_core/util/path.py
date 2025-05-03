@@ -5,16 +5,8 @@ import os
 import sys
 
 
-def add_site_packages(*args):
-    ds_path = dawscript_path()
-
-    if len(args) == 0:
-        pkg_path = os.path.join(ds_path, "site-packages")
-    elif len(args) == 1 and args[0].startswith(ds_path):
-        pkg_path = os.path.join(args[0], "site-packages")
-    else:
-        pkg_path = dawscript_path(*args, "site-packages")
-
+def add_site_packages(caller_path):
+    pkg_path = os.path.join(os.path.dirname(caller_path), "site-packages")
     sys.path.insert(0, pkg_path)
 
 
