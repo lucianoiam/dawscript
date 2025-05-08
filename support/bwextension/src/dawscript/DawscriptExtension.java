@@ -3,16 +3,25 @@
 
 package dawscript;
 
-import py4j.GatewayServer;
+import java.io.File;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extension.controller.ControllerExtension;
+import py4j.GatewayServer;
+
+import dawscript.BitwigExtensionLocator;
+import dawscript.PythonScript;
 
 public class DawscriptExtension extends ControllerExtension
 {
+   private static final String EXTENSION_FILENAME = "dawscript.bwextension";
+   private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
+
+   private PythonScript mPythonScript;
+
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
@@ -27,14 +36,28 @@ public class DawscriptExtension extends ControllerExtension
       host.getMidiInPort(0).setMidiCallback((ShortMidiMessageReceivedCallback)msg -> onMidi0(msg));
       host.getMidiInPort(0).setSysexCallback((String data) -> onSysex0(data));
 
-      // TODO: Perform your driver initialization here.
-      // For now just show a popup notification for verification that it is running.
-      host.showPopupNotification("dawscript Initialized");
+      try {
+         mPythonScript = new PythonScript();
+         File script = BitwigExtensionLocator.getPath(EXTENSION_FILENAME)
+            .toPath()
+            .toRealPath()
+            .getParent()
+            .resolve(PYTHON_SCRIPT_FILENAME)
+            .toFile();
+         mPythonScript.start(script);
+
+         host.showPopupNotification("dawscript Initialized");
+      } catch (Exception e) {
+         host.showPopupNotification(e.getMessage());
+      }
    }
 
    @Override
    public void exit()
    {
+      mPythonScript.stop();
+      mPythonScript = null;
+
       // TODO: Perform any cleanup once the driver exits
       // For now just show a popup notification for verification that it is no longer running.
       getHost().showPopupNotification("dawscript Exited");

@@ -12,7 +12,7 @@ Goals
 - Control mixer and plugin parameters
 - Create networked user interfaces
 - Run the same unmodified code on different DAWs. Currently, REAPER and Ableton
-Live 11+ are supported.
+Live 11+ are supported. An extension for Bitwig is under development.
 - Hide all the boilerplate
 
 Current Features
