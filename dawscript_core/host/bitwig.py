@@ -1,9 +1,11 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+import time
 from types import ModuleType
 from typing import Any, Callable, List
 
+from dawscript_core.host import Config
 from .types import (
     IncompatibleEnvironmentError,
     ParameterHandle,
@@ -15,11 +17,36 @@ from .types import (
     TrackType
 )
 
-from py4j.java_gateway import JavaGateway, GatewayParameters, Py4JNetworkError
+from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError
+
+
+class ControllerBridge:
+    def get_config(self) -> Config:
+        pass
+
+    def on_script_start(self):
+        pass
+
+    def on_script_stop(self):
+        pass
+
+    def on_project_load(self):
+        pass
+
+    def host_callback(midi: List[bytes]):
+        pass
+
+    class Java:
+        implements = ["dawscript.PythonController"]
+
 
 try:
-    java = JavaGateway(gateway_parameters=GatewayParameters(auto_convert=True))
-    java.jvm.java.lang.System.getProperty("java.version")
+    gateway = JavaGateway(
+        gateway_parameters=GatewayParameters(auto_convert=True),
+        callback_server_parameters=CallbackServerParameters()
+    )
+    bwextension = gateway.entry_point
+    bwextension.setController(ControllerBridge())
 except Py4JNetworkError:
     raise IncompatibleEnvironmentError
 
@@ -29,7 +56,11 @@ def name() -> str:
 
 
 def main(controller: ModuleType, context: Any):
-    pass
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
 
 
 def log(message: str):

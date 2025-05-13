@@ -37,8 +37,14 @@ if [ ! -f "lib/$py4j_jar" ]; then
 fi
 
 echo "Compiling Java sources..."
-javac --release 21 -d out -cp "lib/$bwapi_jar:lib/$py4j_jar" $src || {
+javac --release 21 -d out/ -cp "lib/$bwapi_jar:lib/$py4j_jar" $src || {
    echo "Compilation failed"
+   exit 1
+}
+
+echo "Copying libraries..."
+jar xf "lib/$py4j_jar" -C out py4j/ || {
+   echo "Copy libraries failed"
    exit 1
 }
 
@@ -47,7 +53,10 @@ if [ -f "$bwextension" ]; then
 fi
 
 cd out || exit 1
-zip -r "../$bwextension" . || exit 1
+zip -x "*.DS_Store" -r "../$bwextension" . || {
+   echo "Compress failed"
+   exit 1
+}
 cd ..
 
 echo "Build complete: $bwextension"

@@ -12,43 +12,43 @@ import java.util.concurrent.TimeoutException;
 
 public class PythonScript
 {
-   private Process mProcess;
+   private Process process;
 
    public void start(File path) throws IOException, InterruptedException, RuntimeException
    {
-      if (mProcess != null) {
+      if (process != null) {
          throw new RuntimeException("Python process already started");
       }
 
-      ProcessBuilder processBuilder = new ProcessBuilder(pythonPath(), path.toString());
+      final ProcessBuilder processBuilder = new ProcessBuilder(pythonPath(), path.toString());
       processBuilder.directory(path.getParentFile());
       processBuilder.redirectErrorStream(true);
 
-      mProcess = processBuilder.start();
+      process = processBuilder.start();
    }
 
    public void stop() throws RuntimeException
    {
-      if (mProcess == null) {
+      if (process == null) {
          throw new RuntimeException("Python process not started");
       }
 
-      mProcess.destroy();
+      process.destroy();
 
       try {
-         if (! mProcess.waitFor(1, TimeUnit.SECONDS)) {
-            mProcess.destroyForcibly();
+         if (! process.waitFor(1, TimeUnit.SECONDS)) {
+            process.destroyForcibly();
          }
       } catch (InterruptedException e) {
          e.printStackTrace();
       }
 
-      mProcess = null;
+      process = null;
    }
 
    private static String pythonPath() throws IOException, InterruptedException
    {
-      String[][] commands = System.getProperty("os.name").toLowerCase().contains("win")
+      final String[][] commands = System.getProperty("os.name").toLowerCase().contains("win")
          ? new String[][] {
             {"where", "python3"},
             {"where", "python"}
@@ -60,9 +60,9 @@ public class PythonScript
 
       for (String[] cmd : commands) {
          try {
-            Process process = new ProcessBuilder(cmd).start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String path = reader.readLine();
+            final Process process = new ProcessBuilder(cmd).start();
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            final String path = reader.readLine();
 
             process.waitFor();
 

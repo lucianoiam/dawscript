@@ -29,7 +29,7 @@ def create_instance(c_instance):
     return instance
 
 
-# Entry point for REAPER and CLI
+# Entry point for REAPER, Bitwig and CLI
 if __name__ == "__main__":
     from dawscript_core.host import main
 

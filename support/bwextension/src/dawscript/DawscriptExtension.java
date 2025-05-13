@@ -20,7 +20,9 @@ public class DawscriptExtension extends ControllerExtension
    private static final String EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
-   private PythonScript mPythonScript;
+   private Transport transport;
+   private GatewayServer gatewayServer;
+   private PythonScript pythonScript;
 
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
@@ -32,21 +34,24 @@ public class DawscriptExtension extends ControllerExtension
    {
       final ControllerHost host = getHost();      
 
-      mTransport = host.createTransport();
-      host.getMidiInPort(0).setMidiCallback((ShortMidiMessageReceivedCallback)msg -> onMidi0(msg));
-      host.getMidiInPort(0).setSysexCallback((String data) -> onSysex0(data));
+      transport = host.createTransport();
+      //host.getMidiInPort(0).setMidiCallback((ShortMidiMessageReceivedCallback)msg -> onMidi0(msg));
+      //host.getMidiInPort(0).setSysexCallback((String data) -> onSysex0(data));
 
       try {
-         mPythonScript = new PythonScript();
+         gatewayServer = new GatewayServer(this);
+         gatewayServer.start();
+
+         pythonScript = new PythonScript();
          File script = BitwigExtensionLocator.getPath(EXTENSION_FILENAME)
             .toPath()
             .toRealPath()
             .getParent()
             .resolve(PYTHON_SCRIPT_FILENAME)
             .toFile();
-         mPythonScript.start(script);
+         //pythonScript.start(script);
 
-         host.showPopupNotification("dawscript Initialized");
+         //host.showPopupNotification("dawscript Initialized");
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -55,8 +60,11 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void exit()
    {
-      mPythonScript.stop();
-      mPythonScript = null;
+      pythonScript.stop();
+      pythonScript = null;
+
+      gatewayServer.shutdown();
+      gatewayServer = null;
 
       // TODO: Perform any cleanup once the driver exits
       // For now just show a popup notification for verification that it is no longer running.
@@ -80,16 +88,14 @@ public class DawscriptExtension extends ControllerExtension
    {
       // MMC Transport Controls:
       if (data.equals("f07f7f0605f7"))
-            mTransport.rewind();
+            transport.rewind();
       else if (data.equals("f07f7f0604f7"))
-            mTransport.fastForward();
+            transport.fastForward();
       else if (data.equals("f07f7f0601f7"))
-            mTransport.stop();
+            transport.stop();
       else if (data.equals("f07f7f0602f7"))
-            mTransport.play();
+            transport.play();
       else if (data.equals("f07f7f0606f7"))
-            mTransport.record();
+            transport.record();
    }
-
-   private Transport mTransport;
 }

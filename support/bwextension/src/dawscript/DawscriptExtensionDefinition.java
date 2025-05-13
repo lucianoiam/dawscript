@@ -63,7 +63,7 @@ public class DawscriptExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public int getNumMidiInPorts()
    {
-      return 1;
+      return 0;
    }
 
    @Override
