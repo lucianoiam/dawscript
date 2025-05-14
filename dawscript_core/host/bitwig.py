@@ -20,33 +20,13 @@ from .types import (
 from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError
 
 
-class ControllerBridge:
-    def get_config(self) -> Config:
-        pass
-
-    def on_script_start(self):
-        pass
-
-    def on_script_stop(self):
-        pass
-
-    def on_project_load(self):
-        pass
-
-    def host_callback(midi: List[bytes]):
-        pass
-
-    class Java:
-        implements = ["dawscript.PythonController"]
-
-
 try:
     gateway = JavaGateway(
         gateway_parameters=GatewayParameters(auto_convert=True),
         callback_server_parameters=CallbackServerParameters()
     )
+    gateway.jvm.java.lang.System.getProperty("java.version")
     bwextension = gateway.entry_point
-    bwextension.setController(ControllerBridge())
 except Py4JNetworkError:
     raise IncompatibleEnvironmentError
 
@@ -56,6 +36,7 @@ def name() -> str:
 
 
 def main(controller: ModuleType, context: Any):
+    bwextension.setController(ControllerBridge(controller))
     try:
         while True:
             time.sleep(1)
@@ -68,7 +49,7 @@ def log(message: str):
 
 
 def display(message: str):
-    pass
+    _host().showPopupNotification(message)
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -181,3 +162,44 @@ def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[flo
 
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
     pass
+
+
+def _host():
+    return bwextension.getHost()
+
+
+class ControllerBridge:
+    def __init__(self, controller: ModuleType):
+        self.controller = controller
+
+    def get_config(self) -> Config:
+        return self.controller.get_config()
+
+    def on_script_start(self):
+        display("DBG: on_script_start()")
+        try:
+            self.controller.on_script_start()
+        except AttributeError:
+            pass
+
+    def on_script_stop(self):
+        display("DBG: on_script_stop()")
+        try:
+            self.controller.on_script_stop()
+        except AttributeError:
+            pass
+
+    def on_project_load(self):
+        try:
+            self.controller.on_project_load()
+        except AttributeError:
+            pass
+
+    def host_callback(self, midi: List[bytes]):
+        try:
+            self.controller.host_callback(midi)
+        except AttributeError:
+            pass
+
+    class Java:
+        implements = ["dawscript.ControllerBridge"]
