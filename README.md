@@ -4,16 +4,13 @@ This project provides an abstraction layer for a minimal subset of the scripting
 APIs found in some popular DAWs (Digital Audio Workstations), with a focus on
 mixer control.
 
-In its current form, it is useful as a programmable MIDI-learn-like tool that
-requires little to no coding skills.
-
 Goals
 -----
 - Control mixer and plugin parameters
 - Create networked user interfaces
-- Run the same unmodified code on different DAWs. Currently, REAPER and Ableton
-Live 11+ are supported. An extension for Bitwig is under development.
-- Hide all the boilerplate
+- Run the same unmodified Python code on multiple DAWs. Currently REAPER and
+ Ableton Live 11+ are supported
+- An extension for Bitwig is under active development
 
 Current Features
 ----------------
@@ -26,15 +23,15 @@ Current Features
 
 Requirements
 ------------
-- Python 3
-- REAPER users need to set it up manually
-- Live 11+ already comes with an embedded interpreter
+- Python 3 DLL for REAPER users
+- Python 3 executable for Bitwig users
+- Live 11+ already comes with an embedded Python 3 interpreter
 
 Quick Start
 -----------
 Copy or symlink one of the controller.py files in the `examples` directory to
 the project's root directory (where README.md resides). The script entry point
-is defined in \__init__.py . How to install the script depends on the DAW,
+is defined in dawscript.py . How to install the script depends on the DAW,
 detailed instructions coming soon.
 
 Examples
