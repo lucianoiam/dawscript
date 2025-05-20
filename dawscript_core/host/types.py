@@ -5,7 +5,7 @@ from collections import namedtuple
 from enum import Enum
 from typing import Any
 
-ALL_MIDI_INPUTS = []
+ALL_MIDI_INPUTS = None
 
 Config = namedtuple("Config", ["midi_inputs"])
 

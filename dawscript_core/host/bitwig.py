@@ -3,10 +3,10 @@
 
 import time
 from types import ModuleType
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List
 
-from dawscript_core.host import Config
 from .types import (
+    ALL_MIDI_INPUTS,
     IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
@@ -172,18 +172,22 @@ class ControllerBridge:
     def __init__(self, controller: ModuleType):
         self.controller = controller
 
-    def get_config(self) -> Config:
-        return self.controller.get_config()
+    def get_config(self):
+        jconfig = gateway.jvm.java.util.HashMap()
+        try:
+            config = self.controller.get_config()
+            jconfig.put("midi_inputs", config.midi_inputs)
+        except AttributeError:
+            jconfig.put("midi_inputs", ALL_MIDI_INPUTS)
+        return jconfig
 
     def on_script_start(self):
-        display("DBG: on_script_start()")
         try:
             self.controller.on_script_start()
         except AttributeError:
             pass
 
     def on_script_stop(self):
-        display("DBG: on_script_stop()")
         try:
             self.controller.on_script_stop()
         except AttributeError:

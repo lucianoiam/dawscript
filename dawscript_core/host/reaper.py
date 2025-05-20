@@ -305,7 +305,7 @@ def _read_midi_events():
         try:
             config = _controller.get_config()
 
-            if config.midi_inputs:
+            if isinstance(config.midi_inputs, list):
                 event_midi_in = RPR_GetMIDIInputName(event[5], None, 32)[2].lower()
                 midi_ins = [name.lower() for name in config.midi_inputs]
                 accept = any(map(lambda midi_in: midi_in in event_midi_in, midi_ins))

@@ -209,14 +209,13 @@ def _jack_proc(frames: int):
 
 def _connect_ports():
     try:
-        midi_inputs = _jack_client.get_ports(
-            name_pattern="|".join(_controller.get_config().midi_inputs),
-            is_midi=True,
-            is_output=True,
-        )
+        config = _controller.get_config()
     except AttributeError:
+        config = None
         print("config not available", file=sys.stderr)
-        return
+
+    np = "|".join(config.midi_inputs) if config and isinstance(config.midi_inputs, list) else ''
+    midi_inputs = _jack_client.get_ports(name_pattern=np, is_midi=True, is_output=True)
 
     for some_midi_input in midi_inputs:
         try:

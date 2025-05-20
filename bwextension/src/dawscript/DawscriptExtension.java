@@ -8,7 +8,6 @@ import java.io.File;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.ControllerHost;
-import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extension.controller.ControllerExtension;
 import py4j.GatewayServer;
 import py4j.reflection.ReflectionUtil;
@@ -18,12 +17,13 @@ import dawscript.BitwigExtensionLocator;
 import dawscript.ControllerBridge;
 import dawscript.PythonScript;
 
+// file:///Applications/Bitwig%20Studio.app/Contents/Resources/Documentation/control-surface/api/com/bitwig/extension/package-summary.html
+
 public class DawscriptExtension extends ControllerExtension
 {
    private static final String EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
-   private Transport transport;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
    private ControllerBridge controller;
@@ -36,12 +36,6 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void init()
    {
-      final ControllerHost host = getHost();      
-
-      transport = host.createTransport();
-      //host.getMidiInPort(0).setMidiCallback((ShortMidiMessageReceivedCallback)msg -> onMidi0(msg));
-      //host.getMidiInPort(0).setSysexCallback((String data) -> onSysex0(data));
-
       // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
       // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
       ReflectionUtil.setClassLoadingStrategy(new RootClassLoadingStrategy());
@@ -58,16 +52,18 @@ public class DawscriptExtension extends ControllerExtension
             .resolve(PYTHON_SCRIPT_FILENAME)
             .toFile();
          pythonScript.start(script);
+
+         // TODO : detect script exec error (eg: syntax error)
       } catch (Exception e) {
-         host.showPopupNotification(e.getMessage());
+         getHost().showPopupNotification(e.getMessage());
       }
    }
 
    @Override
    public void exit()
    {
-      if (this.controller != null) {
-         this.controller.on_script_stop();
+      if (controller != null) {
+         controller.on_script_stop();
       }
 
       pythonScript.stop();
@@ -80,34 +76,25 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void flush()
    {
-      // TODO Send any updates you need here.
+      // TODO : call controller.host_callback() with MIDI messages
    }
 
    public void setController(ControllerBridge controller)
    {
       this.controller = controller;
-      this.controller.on_script_start();
+
+      controller.on_script_start();
+
+      for (int i = 0; i < getExtensionDefinition().getNumMidiInPorts(); i++) {
+         final int portIndex = i;
+         getHost()
+            .getMidiInPort(portIndex)
+            .setMidiCallback((ShortMidiMessageReceivedCallback) msg -> onMidiCallback(portIndex, msg));
+      }
    }
 
-   /** Called when we receive short MIDI message on port 0. */
-   private void onMidi0(ShortMidiMessage msg) 
+   private void onMidiCallback(int portIndex, ShortMidiMessage msg) 
    {
-      // TODO: Implement your MIDI input handling code here.
-   }
-
-   /** Called when we receive sysex MIDI message on port 0. */
-   private void onSysex0(final String data) 
-   {
-      // MMC Transport Controls:
-      if (data.equals("f07f7f0605f7"))
-            transport.rewind();
-      else if (data.equals("f07f7f0604f7"))
-            transport.fastForward();
-      else if (data.equals("f07f7f0601f7"))
-            transport.stop();
-      else if (data.equals("f07f7f0602f7"))
-            transport.play();
-      else if (data.equals("f07f7f0606f7"))
-            transport.record();
+      // TODO : queue MIDI message
    }
 }

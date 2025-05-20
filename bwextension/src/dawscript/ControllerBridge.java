@@ -4,9 +4,10 @@
 package dawscript;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ControllerBridge {
-    Object get_config();
+    Map<String,Object> get_config();
 
     void on_script_start();
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-bwextension="../../dawscript.bwextension"
+bwextension="../dawscript.bwextension"
 
 bwapi_version="22"
 bwapi_jar="extension-api-$bwapi_version.jar"
@@ -42,9 +42,12 @@ javac --release 21 -d out/ -cp "lib/$bwapi_jar:lib/$py4j_jar" $src || {
    exit 1
 }
 
-echo "Copying libraries..."
+echo "Copying files..."
+mkdir -p out/META-INF/services
+echo "dawscript.DawscriptExtensionDefinition" > out/META-INF/services/com.bitwig.extension.ExtensionDefinition
+
 jar xf "lib/$py4j_jar" -C out py4j/ || {
-   echo "Copy libraries failed"
+   echo "Copy files failed"
    exit 1
 }
 
@@ -53,7 +56,7 @@ if [ -f "$bwextension" ]; then
 fi
 
 cd out || exit 1
-zip -x "*.DS_Store" -r "../$bwextension" . || {
+zip -q -x "*.DS_Store" -r "../$bwextension" . || {
    echo "Compress failed"
    exit 1
 }
