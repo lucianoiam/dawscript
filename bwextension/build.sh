@@ -1,6 +1,7 @@
 #!/bin/sh
 
 bwextension="../dawscript.bwextension"
+java_src="src/dawscript/*.java"
 
 bwapi_version="22"
 bwapi_jar="extension-api-$bwapi_version.jar"
@@ -10,7 +11,7 @@ py4j_version="0.10.9.9"
 py4j_jar="py4j-$py4j_version.jar"
 py4j_jar_url="https://repo1.maven.org/maven2/net/sf/py4j/py4j/$py4j_version/$py4j_jar"
 
-src="src/dawscript/*.java"
+cd $(dirname "${BASH_SOURCE[0]}")
 
 if ! command -v javac >/dev/null 2>&1; then
    echo "Error: 'javac' (Java compiler) not found."
@@ -37,7 +38,7 @@ if [ ! -f "lib/$py4j_jar" ]; then
 fi
 
 echo "Compiling Java sources..."
-javac --release 21 -d out/ -cp "lib/$bwapi_jar:lib/$py4j_jar" $src || {
+javac --release 21 -d out/ -cp "lib/$bwapi_jar:lib/$py4j_jar" $java_src || {
    echo "Compilation failed"
    exit 1
 }

@@ -5,6 +5,7 @@ package dawscript;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -13,11 +14,11 @@ import java.util.concurrent.TimeoutException;
 public class PythonScript
 {
    private Process process;
+   private Thread readerThread;
 
-   public void start(File path) throws IOException, InterruptedException, RuntimeException
-   {
+   public void start(File path) throws IOException {
       if (process != null) {
-         throw new RuntimeException("Python process already started");
+         throw new IOException("Python process already started");
       }
 
       final ProcessBuilder processBuilder = new ProcessBuilder(pythonPath(), path.toString());
@@ -25,28 +26,75 @@ public class PythonScript
       processBuilder.redirectErrorStream(true);
 
       process = processBuilder.start();
+      process.getOutputStream().close();
+
+      startReaderThread();
    }
 
-   public void stop() throws RuntimeException
+   public void stop()
    {
-      if (process == null) {
-         throw new RuntimeException("Python process not started");
-      }
+      if (process != null) {
+         process.destroy();
 
-      process.destroy();
-
-      try {
-         if (! process.waitFor(1, TimeUnit.SECONDS)) {
-            process.destroyForcibly();
+         try {
+            if (! process.waitFor(1, TimeUnit.SECONDS)) {
+               process.destroyForcibly();
+            }
+         } catch (InterruptedException e) {
+            e.printStackTrace();
          }
-      } catch (InterruptedException e) {
-         e.printStackTrace();
       }
 
       process = null;
+
+      stopReaderThread();
    }
 
-   private static String pythonPath() throws IOException, InterruptedException
+   // macOS: tail -f $HOME/Library/Logs/Bitwig/BitwigStudio.log
+   private void startReaderThread()
+   {
+      readerThread = new Thread(() -> {
+         try (
+            final BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            final BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+         ) {
+            while (process != null || stdout.ready() || stderr.ready()) {
+               while (stdout.ready()) {
+                  final String line = stdout.readLine();
+                  if (line != null) {
+                     System.out.println(line);
+                  }
+               }
+               while (stderr.ready()) {
+                  final String line = stderr.readLine();
+                  if (line != null) {
+                     System.err.println(line);
+                  }
+               }
+               Thread.sleep(10);
+            }
+         } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+         }
+      });
+
+      readerThread.start();
+   }
+
+   private void stopReaderThread()
+   {
+      if (readerThread != null) {
+         try {
+            readerThread.join();
+         } catch (InterruptedException e) {
+            e.printStackTrace();  
+         }
+      }
+
+      readerThread = null;
+   }
+
+   private static String pythonPath() throws IOException
    {
       final String[][] commands = System.getProperty("os.name").toLowerCase().contains("win")
          ? new String[][] {
@@ -77,4 +125,3 @@ public class PythonScript
       throw new IOException("Could not find python3 executable");
    }
 }
-

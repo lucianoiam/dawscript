@@ -6,7 +6,8 @@ package dawscript;
 import java.util.List;
 import java.util.Map;
 
-public interface ControllerBridge {
+public interface ControllerBridge
+{
     Map<String,Object> get_config();
 
     void on_script_start();

@@ -4,6 +4,10 @@
 package dawscript;
 
 import java.io.File;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
@@ -21,12 +25,20 @@ import dawscript.PythonScript;
 
 public class DawscriptExtension extends ControllerExtension
 {
-   private static final String EXTENSION_FILENAME = "dawscript.bwextension";
+   private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
+   private ScheduledFuture startupCheck; 
    private ControllerBridge controller;
+
+   // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
+   // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
+   static
+   {
+      ReflectionUtil.setClassLoadingStrategy(new RootClassLoadingStrategy());
+   }
 
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
@@ -36,16 +48,14 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void init()
    {
-      // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
-      // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
-      ReflectionUtil.setClassLoadingStrategy(new RootClassLoadingStrategy());
+      final ControllerHost host = getHost();
 
       try {
          gatewayServer = new GatewayServer(this);
          gatewayServer.start();
 
          pythonScript = new PythonScript();
-         File script = BitwigExtensionLocator.getPath(EXTENSION_FILENAME)
+         final File script = BitwigExtensionLocator.getPath(BW_EXTENSION_FILENAME)
             .toPath()
             .toRealPath()
             .getParent()
@@ -53,24 +63,40 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script);
 
-         // TODO : detect script exec error (eg: syntax error)
+         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+         startupCheck = scheduler.schedule(() -> {
+            if (controller == null) {
+               host.showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
+            }
+         }, 2, TimeUnit.SECONDS);
+         scheduler.shutdown();
       } catch (Exception e) {
-         getHost().showPopupNotification(e.getMessage());
+         host.showPopupNotification(e.getMessage());
       }
    }
 
    @Override
    public void exit()
    {
-      if (controller != null) {
-         controller.on_script_stop();
+      if (startupCheck != null) {
+         startupCheck.cancel(false);
+         startupCheck = null;
       }
 
-      pythonScript.stop();
-      pythonScript = null;
+      if (controller != null) {
+         controller.on_script_stop();
+         controller = null;
+      }
 
-      gatewayServer.shutdown();
-      gatewayServer = null;
+      if (pythonScript != null) {
+         pythonScript.stop();
+         pythonScript = null;
+      }
+
+      if (gatewayServer != null) {
+         gatewayServer.shutdown();
+         gatewayServer = null;
+      }
    }
 
    @Override
@@ -87,14 +113,9 @@ public class DawscriptExtension extends ControllerExtension
 
       for (int i = 0; i < getExtensionDefinition().getNumMidiInPorts(); i++) {
          final int portIndex = i;
-         getHost()
-            .getMidiInPort(portIndex)
-            .setMidiCallback((ShortMidiMessageReceivedCallback) msg -> onMidiCallback(portIndex, msg));
+         getMidiInPort(portIndex).setMidiCallback((ShortMidiMessageReceivedCallback) msg -> {
+             // TODO: queue MIDI message
+         });
       }
-   }
-
-   private void onMidiCallback(int portIndex, ShortMidiMessage msg) 
-   {
-      // TODO : queue MIDI message
    }
 }
