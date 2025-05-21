@@ -4,6 +4,9 @@
 package dawscript;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -28,6 +31,7 @@ public class DawscriptExtension extends ControllerExtension
    private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
+   private final Queue<ShortMidiMessage> midiQueue;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
    private ScheduledFuture startupCheck; 
@@ -43,6 +47,7 @@ public class DawscriptExtension extends ControllerExtension
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
+      midiQueue = new ConcurrentLinkedQueue<>();
    }
 
    @Override
@@ -102,7 +107,22 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void flush()
    {
-      // TODO : call controller.host_callback() with MIDI messages
+      if (midiQueue.isEmpty() || (controller == null)) {
+         return;
+      }
+
+      final ArrayList<byte[]> messages = new ArrayList<>();
+      ShortMidiMessage msg;
+
+      while ((msg = midiQueue.poll()) != null) {
+         messages.add(new byte[] {
+            (byte) msg.getStatusByte(),
+            (byte) msg.getData1(),
+            (byte) msg.getData2()
+         });
+      }
+
+      controller.host_callback(messages);
    }
 
    public void setController(ControllerBridge controller)
@@ -114,7 +134,7 @@ public class DawscriptExtension extends ControllerExtension
       for (int i = 0; i < getExtensionDefinition().getNumMidiInPorts(); i++) {
          final int portIndex = i;
          getMidiInPort(portIndex).setMidiCallback((ShortMidiMessageReceivedCallback) msg -> {
-             // TODO: queue MIDI message
+             midiQueue.add(msg);
          });
       }
    }
