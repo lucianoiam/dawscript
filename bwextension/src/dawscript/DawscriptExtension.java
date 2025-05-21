@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
+import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.ControllerExtension;
 import py4j.GatewayServer;
@@ -32,10 +33,12 @@ public class DawscriptExtension extends ControllerExtension
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
    private final Queue<ShortMidiMessage> midiQueue;
+   private Application application;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
-   private ScheduledFuture startupCheck; 
+   private ScheduledFuture startupCheck;
    private ControllerBridge controller;
+   private String projectName;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -55,6 +58,8 @@ public class DawscriptExtension extends ControllerExtension
    {
       final ControllerHost host = getHost();
 
+      application = host.createApplication();
+
       try {
          gatewayServer = new GatewayServer(this);
          gatewayServer.start();
@@ -67,6 +72,15 @@ public class DawscriptExtension extends ControllerExtension
             .resolve(PYTHON_SCRIPT_FILENAME)
             .toFile();
          pythonScript.start(script);
+
+         application.projectName().addValueObserver(projectName -> {
+            if (this.projectName != projectName) {
+               this.projectName = projectName;
+               if (controller != null) {
+                  controller.on_project_load();
+               }
+            }
+         });
 
          ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
          startupCheck = scheduler.schedule(() -> {
@@ -102,12 +116,14 @@ public class DawscriptExtension extends ControllerExtension
          gatewayServer.shutdown();
          gatewayServer = null;
       }
+
+      application = null;
    }
 
    @Override
    public void flush()
    {
-      if (midiQueue.isEmpty() || (controller == null)) {
+      if ((controller == null) || midiQueue.isEmpty()) {
          return;
       }
 
@@ -136,6 +152,11 @@ public class DawscriptExtension extends ControllerExtension
          getMidiInPort(portIndex).setMidiCallback((ShortMidiMessageReceivedCallback) msg -> {
              midiQueue.add(msg);
          });
+      }
+
+      projectName = application.projectName().get();
+      if (! projectName.isEmpty()) {
+         controller.on_project_load();
       }
    }
 }
