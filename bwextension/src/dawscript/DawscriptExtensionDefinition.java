@@ -27,7 +27,7 @@ public class DawscriptExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public String getAuthor()
    {
-      return "lucianoiam";
+      return "Luciano Iam";
    }
 
    @Override
@@ -45,13 +45,13 @@ public class DawscriptExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public String getHardwareVendor()
    {
-      return "lucianoiam";
+      return getAuthor();
    }
    
    @Override
    public String getHardwareModel()
    {
-      return "dawscript";
+      return getName();
    }
 
    @Override

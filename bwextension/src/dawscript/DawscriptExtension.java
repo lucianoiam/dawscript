@@ -54,7 +54,7 @@ public class DawscriptExtension extends ControllerExtension
          gatewayServer = new GatewayServer(this);
          gatewayServer.start();
 
-         pythonScript = new PythonScript();
+         pythonScript = new PythonScript(host::println, host::errorln);
          final File script = BitwigExtensionLocator.getPath(BW_EXTENSION_FILENAME)
             .toPath()
             .toRealPath()

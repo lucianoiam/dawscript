@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+import sys
 import time
 from types import ModuleType
 from typing import Any, Callable, Dict, List
@@ -45,7 +46,7 @@ def main(controller: ModuleType, context: Any):
 
 
 def log(message: str):
-    pass
+    _host().errorln(message)
 
 
 def display(message: str):

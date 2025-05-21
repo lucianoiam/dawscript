@@ -9,12 +9,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeoutException;;
 
 public class PythonScript
 {
+   private PrintLineFunction log, error;
    private Process process;
    private Thread readerThread;
+
+   public PythonScript(PrintLineFunction log, PrintLineFunction error) {
+      this.log = log;
+      this.error = error;
+   }
 
    public void start(File path) throws IOException {
       if (process != null) {
@@ -23,7 +29,6 @@ public class PythonScript
 
       final ProcessBuilder processBuilder = new ProcessBuilder(pythonPath(), path.toString());
       processBuilder.directory(path.getParentFile());
-      processBuilder.redirectErrorStream(true);
 
       process = processBuilder.start();
       process.getOutputStream().close();
@@ -62,13 +67,13 @@ public class PythonScript
                while (stdout.ready()) {
                   final String line = stdout.readLine();
                   if (line != null) {
-                     System.out.println(line);
+                     log.println(line);
                   }
                }
                while (stderr.ready()) {
                   final String line = stderr.readLine();
                   if (line != null) {
-                     System.err.println(line);
+                     error.println(line);
                   }
                }
                Thread.sleep(10);
@@ -123,5 +128,10 @@ public class PythonScript
       }
 
       throw new IOException("Could not find python3 executable");
+   }
+
+   @FunctionalInterface
+   interface PrintLineFunction {
+      void println(String s);
    }
 }
