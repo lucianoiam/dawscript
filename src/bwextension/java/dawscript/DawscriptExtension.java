@@ -40,12 +40,13 @@ public class DawscriptExtension extends ControllerExtension
    private static final long HOST_CALLBACK_MS = 16;
 
    private final HashMap<String,ArrayList<Listener>> listeners;
+   private final Queue<PythonRunnable> deferred;
    private final Queue<ShortMidiMessage> midiQueue;
    private Application application;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
-   private Timer hostCallbackTimer;
    private int hostCallbackCount;
+   private Timer hostCallbackTimer;
    private Controller controller;
    private String projectName;
    private TrackBank projectTrackBank;
@@ -61,6 +62,7 @@ public class DawscriptExtension extends ControllerExtension
    {
       super(definition, host);
       listeners = new HashMap<>();
+      deferred = new ConcurrentLinkedQueue<>();
       midiQueue = new ConcurrentLinkedQueue<>();
    }
 
@@ -95,6 +97,7 @@ public class DawscriptExtension extends ControllerExtension
 
          projectTrackBank = createProjectTrackBank();
 
+         hostCallbackCount = 0;
          hostCallbackTimer = new Timer();
          hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
              @Override
@@ -216,7 +219,7 @@ public class DawscriptExtension extends ControllerExtension
             final ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
             if (listenerList != null) {
                for (final Listener listener : listenerList) {
-                  listener.runnable.run();
+                  deferred.add(listener.runnable);
                }
             }
          });
@@ -235,6 +238,14 @@ public class DawscriptExtension extends ControllerExtension
          }
 
          return;
+      }
+
+      if (! deferred.isEmpty()) {
+         PythonRunnable runnable;
+
+         while ((runnable = deferred.poll()) != null) {
+            runnable.run();
+         }
       }
 
       final ArrayList<byte[]> messages = new ArrayList<>();
