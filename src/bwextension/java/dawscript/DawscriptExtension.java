@@ -5,6 +5,8 @@ package dawscript;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -16,6 +18,7 @@ import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extension.controller.ControllerExtension;
 import py4j.GatewayServer;
@@ -23,8 +26,9 @@ import py4j.reflection.ReflectionUtil;
 import py4j.reflection.RootClassLoadingStrategy;
 
 import dawscript.BitwigExtensionLocator;
-import dawscript.ControllerBridge;
+import dawscript.Controller;
 import dawscript.PythonScript;
+import dawscript.ValueListener;
 
 // file:///Applications/Bitwig%20Studio.app/Contents/Resources/Documentation/control-surface/api/com/bitwig/extension/package-summary.html
 
@@ -33,14 +37,15 @@ public class DawscriptExtension extends ControllerExtension
    private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
+   private final HashMap<String,ArrayList<ValueListener>> listeners;
    private final Queue<ShortMidiMessage> midiQueue;
    private Application application;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
    private ScheduledFuture startupCheck;
-   private ControllerBridge controller;
+   private Controller controller;
    private String projectName;
-   private TrackBank mainTrackBank;
+   private TrackBank projectTrackBank;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -52,6 +57,7 @@ public class DawscriptExtension extends ControllerExtension
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
+      listeners = new HashMap<>();
       midiQueue = new ConcurrentLinkedQueue<>();
    }
 
@@ -92,7 +98,7 @@ public class DawscriptExtension extends ControllerExtension
             }
          });
 
-         mainTrackBank = createMainTrackBank();
+         projectTrackBank = createProjectTrackBank();
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -121,7 +127,7 @@ public class DawscriptExtension extends ControllerExtension
          gatewayServer = null;
       }
 
-      mainTrackBank = null;
+      projectTrackBank = null;
       application = null;
    }
 
@@ -146,7 +152,7 @@ public class DawscriptExtension extends ControllerExtension
       controller.host_callback(messages);
    }
 
-   public void setController(ControllerBridge controller)
+   public void setController(Controller controller)
    {
       this.controller = controller;
 
@@ -161,12 +167,47 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
-   public TrackBank getMainTrackBank()
+   public void addListener(Object target, String prop, ValueListener listener)
    {
-      return mainTrackBank;
+      final String keyTargetProp = id(target) + "_" + prop;
+      ArrayList<ValueListener> propListeners = listeners.get(keyTargetProp);
+
+      if (propListeners == null) {
+         propListeners = new ArrayList<>();
+         listeners.put(keyTargetProp, propListeners);
+      }
+
+      propListeners.add(listener);
    }
 
-   private TrackBank createMainTrackBank()
+   public void removeListener(Object target, String prop, ValueListener listener)
+   {
+      final String keyTargetProp = id(target) + "_" + prop;
+      final ArrayList<ValueListener> propListeners = listeners.get(keyTargetProp);
+
+      if (propListeners == null) {
+         return;
+      }
+
+      final Iterator<ValueListener> iterator = propListeners.iterator();
+      while (iterator.hasNext()) {
+          final ValueListener someListener = iterator.next();
+          if (someListener.id() == listener.id()) {
+              iterator.remove();
+          }
+      }
+
+      if (propListeners.isEmpty()) {
+         listeners.remove(keyTargetProp);
+      }
+   }
+
+   public TrackBank getProjectTrackBank()
+   {
+      return projectTrackBank;
+   }
+
+   private TrackBank createProjectTrackBank()
    {
       final TrackBank bank = getHost().getProject().getRootTrackGroup()
          .createMainTrackBank(128, 128, 128, true);
@@ -178,9 +219,26 @@ public class DawscriptExtension extends ControllerExtension
       });
 
       for (int i = 0; i < 128; i++) {
-         bank.getItemAt(i).name().markInterested();
+         final Track track = bank.getItemAt(i);
+         
+         track.name().markInterested();
+
+         track.volume().value().addValueObserver(volume -> {
+            final String keyTargetProp = id(track) + "_volume";
+            final ArrayList<ValueListener> volumeListeners = listeners.get(keyTargetProp);
+            if (volumeListeners != null) {
+               for (final ValueListener listener : volumeListeners) {
+                  listener.onValue(volume);
+               }
+            }
+         });
       }
 
       return bank;
+   }
+
+   private static String id(Object obj) {
+      if (obj == null) return "null";
+      return obj.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(obj));
    }
 }

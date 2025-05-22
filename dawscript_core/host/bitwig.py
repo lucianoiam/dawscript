@@ -37,7 +37,7 @@ def name() -> str:
 
 
 def main(controller: ModuleType, context: Any):
-    bw_ext.setController(ControllerBridge(controller))
+    bw_ext.setController(Controller(controller))
     try:
         while True:
             time.sleep(1)
@@ -46,16 +46,16 @@ def main(controller: ModuleType, context: Any):
 
 
 def log(message: str):
-    bw_ext.getHost().errorln(message)
+    bw_ext.getHost().errorln(str(message))
 
 
 def display(message: str):
-    bw_ext.getHost().showPopupNotification(message)
+    bw_ext.getHost().showPopupNotification(str(message))
 
 
 def get_tracks() -> List[TrackHandle]:
     tracks = []
-    bank = bw_ext.getMainTrackBank()
+    bank = bw_ext.getProjectTrackBank()
     for i in range(0, bank.itemCount().get()):
         tracks.append(bank.getItemAt(i))
     return tracks
@@ -94,11 +94,11 @@ def set_track_volume(track: TrackHandle, volume_db: float):
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass
+    bw_ext.addListener(track, "volume", ValueListener(listener))
 
 
 def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass
+    bw_ext.removeListener(track, "volume", ValueListener(listener))
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -169,7 +169,7 @@ def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[
     pass
 
 
-class ControllerBridge:
+class Controller:
     def __init__(self, controller: ModuleType):
         self.controller = controller
 
@@ -207,4 +207,18 @@ class ControllerBridge:
             pass
 
     class Java:
-        implements = ["dawscript.ControllerBridge"]
+        implements = ["dawscript.Controller"]
+
+
+class ValueListener:
+    def __init__(self, listener: Callable[[object], None]):
+        self.listener = listener
+
+    def id(self) -> int:
+        return id(self.listener)
+
+    def onValue(self, value):
+        self.listener(value)
+
+    class Java:
+        implements = ["dawscript.ValueListener"]
