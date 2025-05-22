@@ -1,7 +1,7 @@
 #!/bin/sh
 
-bwextension="../dawscript.bwextension"
-java_src="src/dawscript/*.java"
+bwextension="../../dawscript.bwextension"
+java_src="java/dawscript/*.java"
 
 bwapi_version="22"
 bwapi_jar="extension-api-$bwapi_version.jar"

@@ -16,6 +16,7 @@ import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extension.controller.ControllerExtension;
 import py4j.GatewayServer;
 import py4j.reflection.ReflectionUtil;
@@ -39,6 +40,7 @@ public class DawscriptExtension extends ControllerExtension
    private ScheduledFuture startupCheck;
    private ControllerBridge controller;
    private String projectName;
+   private TrackBank mainTrackBank;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -73,6 +75,14 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script);
 
+         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+         startupCheck = scheduler.schedule(() -> {
+            if (controller == null) {
+               host.showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
+            }
+         }, 2, TimeUnit.SECONDS);
+         scheduler.shutdown();
+
          application.projectName().addValueObserver(projectName -> {
             if (this.projectName != projectName) {
                this.projectName = projectName;
@@ -82,13 +92,7 @@ public class DawscriptExtension extends ControllerExtension
             }
          });
 
-         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-         startupCheck = scheduler.schedule(() -> {
-            if (controller == null) {
-               host.showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
-            }
-         }, 2, TimeUnit.SECONDS);
-         scheduler.shutdown();
+         mainTrackBank = createMainTrackBank();
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -117,12 +121,13 @@ public class DawscriptExtension extends ControllerExtension
          gatewayServer = null;
       }
 
+      mainTrackBank = null;
       application = null;
    }
 
    @Override
    public void flush()
-   {
+   {      
       if ((controller == null) || midiQueue.isEmpty()) {
          return;
       }
@@ -146,6 +151,7 @@ public class DawscriptExtension extends ControllerExtension
       this.controller = controller;
 
       controller.on_script_start();
+      controller.on_project_load();
 
       for (int i = 0; i < getExtensionDefinition().getNumMidiInPorts(); i++) {
          final int portIndex = i;
@@ -153,10 +159,28 @@ public class DawscriptExtension extends ControllerExtension
              midiQueue.add(msg);
          });
       }
+   }
 
-      projectName = application.projectName().get();
-      if (! projectName.isEmpty()) {
-         controller.on_project_load();
+   public TrackBank getMainTrackBank()
+   {
+      return mainTrackBank;
+   }
+
+   private TrackBank createMainTrackBank()
+   {
+      final TrackBank bank = getHost().getProject().getRootTrackGroup()
+         .createMainTrackBank(128, 128, 128, true);
+
+      bank.itemCount().addValueObserver(itemCount -> {
+         if (controller != null) {
+            controller.on_project_load();
+         }
+      });
+
+      for (int i = 0; i < 128; i++) {
+         bank.getItemAt(i).name().markInterested();
       }
+
+      return bank;
    }
 }

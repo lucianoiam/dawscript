@@ -27,7 +27,7 @@ try:
         callback_server_parameters=CallbackServerParameters()
     )
     gateway.jvm.java.lang.System.getProperty("java.version")
-    bwextension = gateway.entry_point
+    bw_ext = gateway.entry_point
 except Py4JNetworkError:
     raise IncompatibleEnvironmentError
 
@@ -37,24 +37,28 @@ def name() -> str:
 
 
 def main(controller: ModuleType, context: Any):
-    bwextension.setController(ControllerBridge(controller))
+    bw_ext.setController(ControllerBridge(controller))
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        pass
+        gateway.shutdown()
 
 
 def log(message: str):
-    _host().errorln(message)
+    bw_ext.getHost().errorln(message)
 
 
 def display(message: str):
-    _host().showPopupNotification(message)
+    bw_ext.getHost().showPopupNotification(message)
 
 
 def get_tracks() -> List[TrackHandle]:
-    pass
+    tracks = []
+    bank = bw_ext.getMainTrackBank()
+    for i in range(0, bank.itemCount().get()):
+        tracks.append(bank.getItemAt(i))
+    return tracks
 
 
 def get_track_type(track: TrackHandle) -> TrackType:
@@ -62,7 +66,7 @@ def get_track_type(track: TrackHandle) -> TrackType:
 
 
 def get_track_name(track: TrackHandle) -> str:
-    pass
+    return track.name().get()
 
 
 def is_track_mute(track: TrackHandle) -> bool:
@@ -163,10 +167,6 @@ def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[flo
 
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
     pass
-
-
-def _host():
-    return bwextension.getHost()
 
 
 class ControllerBridge:
