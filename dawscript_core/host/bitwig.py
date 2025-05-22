@@ -63,7 +63,7 @@ def get_tracks() -> List[TrackHandle]:
 
 
 def get_track_type(track: TrackHandle) -> TrackType:
-    pass
+    return TrackType.OTHER # TODO
 
 
 def get_track_name(track: TrackHandle) -> str:
@@ -71,19 +71,19 @@ def get_track_name(track: TrackHandle) -> str:
 
 
 def is_track_mute(track: TrackHandle) -> bool:
-    pass
+    return False # TODO
 
 
 def set_track_mute(track: TrackHandle, mute: bool):
-    pass
+    pass # TODO
 
 
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-    pass
+    pass # TODO
 
 
 def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-    pass
+    pass # TODO
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -103,71 +103,71 @@ def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],
 
 
 def get_track_pan(track: TrackHandle) -> float:
-    pass
+    return 0.0 # TODO
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    pass
+    pass # TODO
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass
+    pass # TODO
 
 
 def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass
+    pass # TODO
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
-    pass
+    return [] # TODO
 
 
 def get_plugin_name(plugin: PluginHandle) -> str:
-    pass
+    return '' # TODO
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
-    pass
+    return False # TODO
 
 
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
-    pass
+    pass # TODO
 
 
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-    pass
+    pass # TODO
 
 
 def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-    pass
+    pass # TODO
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-    pass
+    return [] # TODO
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
-    pass
+    return '' # TODO
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
-    pass
+    return (0.0, 1.0) # TODO
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
-    pass
+    return 1.0 # TODO
 
 
 def set_parameter_value(param: ParameterHandle, value: float):
-    pass
+    pass # TODO
 
 
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-    pass
+    pass # TODO
 
 
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-    pass
+    pass # TODO
 
 
 def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
@@ -209,7 +209,7 @@ def _db_to_vol_value(v: float) -> float:
         + 0.8496356422
     )
 
-    return max(0, vol)
+    return float(max(0, vol))
 
 
 class Controller:

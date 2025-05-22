@@ -8,11 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
@@ -39,12 +37,15 @@ public class DawscriptExtension extends ControllerExtension
    private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
+   private static final long HOST_CALLBACK_MS = 16;
+
    private final HashMap<String,ArrayList<Listener>> listeners;
    private final Queue<ShortMidiMessage> midiQueue;
    private Application application;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
-   private ScheduledFuture startupCheck;
+   private Timer hostCallbackTimer;
+   private int hostCallbackCount;
    private Controller controller;
    private String projectName;
    private TrackBank projectTrackBank;
@@ -83,14 +84,6 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script);
 
-         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-         startupCheck = scheduler.schedule(() -> {
-            if (controller == null) {
-               host.showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
-            }
-         }, 2, TimeUnit.SECONDS);
-         scheduler.shutdown();
-
          application.projectName().addValueObserver(projectName -> {
             if (this.projectName != projectName) {
                this.projectName = projectName;
@@ -101,6 +94,14 @@ public class DawscriptExtension extends ControllerExtension
          });
 
          projectTrackBank = createProjectTrackBank();
+
+         hostCallbackTimer = new Timer();
+         hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
+             @Override
+             public void run() {
+                 hostCallback();
+             }
+         }, 0, HOST_CALLBACK_MS);
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -109,9 +110,9 @@ public class DawscriptExtension extends ControllerExtension
    @Override
    public void exit()
    {
-      if (startupCheck != null) {
-         startupCheck.cancel(false);
-         startupCheck = null;
+      if (hostCallbackTimer != null) {
+         hostCallbackTimer.cancel();
+         hostCallbackTimer = null;
       }
 
       if (controller != null) {
@@ -135,23 +136,8 @@ public class DawscriptExtension extends ControllerExtension
 
    @Override
    public void flush()
-   {      
-      if ((controller == null) || midiQueue.isEmpty()) {
-         return;
-      }
-
-      final ArrayList<byte[]> messages = new ArrayList<>();
-      ShortMidiMessage msg;
-
-      while ((msg = midiQueue.poll()) != null) {
-         messages.add(new byte[] {
-            (byte) msg.getStatusByte(),
-            (byte) msg.getData1(),
-            (byte) msg.getData2()
-         });
-      }
-
-      controller.host_callback(messages);
+   {
+      // no-op
    }
 
    public void setController(Controller controller)
@@ -237,6 +223,35 @@ public class DawscriptExtension extends ControllerExtension
       }
 
       return bank;
+   }
+
+   private void hostCallback()
+   {
+      hostCallbackCount++;
+
+      if (controller == null) {
+         if (hostCallbackCount == 100) {
+            getHost().showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
+         }
+
+         return;
+      }
+
+      final ArrayList<byte[]> messages = new ArrayList<>();
+
+      if (! midiQueue.isEmpty()) {
+         ShortMidiMessage msg;
+
+         while ((msg = midiQueue.poll()) != null) {
+            messages.add(new byte[] {
+               (byte) msg.getStatusByte(),
+               (byte) msg.getData1(),
+               (byte) msg.getData2()
+            });
+         }
+      }
+
+      controller.host_callback(messages);
    }
 
    private static String objectId(Object obj) {
