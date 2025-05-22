@@ -323,13 +323,13 @@ def _read_midi_events():
 def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
     key_tp = f"{target}_{prop}"
 
-    def target_getter():
+    def bound_getter():
         return getter(target)
 
     if key_tp not in _listeners:
         _listeners[key_tp] = []
-        _getters[key_tp] = target_getter
-        _state[key_tp] = target_getter()
+        _getters[key_tp] = bound_getter
+        _state[key_tp] = bound_getter()
 
     _listeners[key_tp].append(listener)
 

@@ -27,17 +27,19 @@ import py4j.reflection.RootClassLoadingStrategy;
 
 import dawscript.BitwigExtensionLocator;
 import dawscript.Controller;
+import dawscript.PythonRunnable;
 import dawscript.PythonScript;
-import dawscript.ValueListener;
 
 // file:///Applications/Bitwig%20Studio.app/Contents/Resources/Documentation/control-surface/api/com/bitwig/extension/package-summary.html
 
 public class DawscriptExtension extends ControllerExtension
 {
+   public record Listener(long identifier, PythonRunnable runnable) {}
+
    private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
 
-   private final HashMap<String,ArrayList<ValueListener>> listeners;
+   private final HashMap<String,ArrayList<Listener>> listeners;
    private final Queue<ShortMidiMessage> midiQueue;
    private Application application;
    private GatewayServer gatewayServer;
@@ -167,37 +169,37 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
-   public void addListener(Object target, String prop, ValueListener listener)
+   public void addListener(Object target, String prop, long identifier, PythonRunnable runnable)
    {
-      final String keyTargetProp = id(target) + "_" + prop;
-      ArrayList<ValueListener> propListeners = listeners.get(keyTargetProp);
+      final String keyTargetProp = objectId(target) + "_" + prop;
+      ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
 
-      if (propListeners == null) {
-         propListeners = new ArrayList<>();
-         listeners.put(keyTargetProp, propListeners);
+      if (listenerList == null) {
+         listenerList = new ArrayList<>();
+         listeners.put(keyTargetProp, listenerList);
       }
 
-      propListeners.add(listener);
+      listenerList.add(new Listener(identifier, runnable));
    }
 
-   public void removeListener(Object target, String prop, ValueListener listener)
+   public void removeListener(Object target, String prop, long identifier)
    {
-      final String keyTargetProp = id(target) + "_" + prop;
-      final ArrayList<ValueListener> propListeners = listeners.get(keyTargetProp);
+      final String keyTargetProp = objectId(target) + "_" + prop;
+      final ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
 
-      if (propListeners == null) {
+      if (listenerList == null) {
          return;
       }
 
-      final Iterator<ValueListener> iterator = propListeners.iterator();
+      final Iterator<Listener> iterator = listenerList.iterator();
       while (iterator.hasNext()) {
-          final ValueListener someListener = iterator.next();
-          if (someListener.id() == listener.id()) {
+          final Listener someListener = iterator.next();
+          if (someListener.identifier == identifier) {
               iterator.remove();
           }
       }
 
-      if (propListeners.isEmpty()) {
+      if (listenerList.isEmpty()) {
          listeners.remove(keyTargetProp);
       }
    }
@@ -223,12 +225,12 @@ public class DawscriptExtension extends ControllerExtension
          
          track.name().markInterested();
 
-         track.volume().value().addValueObserver(volume -> {
-            final String keyTargetProp = id(track) + "_volume";
-            final ArrayList<ValueListener> volumeListeners = listeners.get(keyTargetProp);
-            if (volumeListeners != null) {
-               for (final ValueListener listener : volumeListeners) {
-                  listener.onValue(volume);
+         track.volume().value().addValueObserver(_0 -> {
+            final String keyTargetProp = objectId(track) + "_volume";
+            final ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
+            if (listenerList != null) {
+               for (final Listener listener : listenerList) {
+                  listener.runnable.run();
                }
             }
          });
@@ -237,7 +239,7 @@ public class DawscriptExtension extends ControllerExtension
       return bank;
    }
 
-   private static String id(Object obj) {
+   private static String objectId(Object obj) {
       if (obj == null) return "null";
       return obj.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(obj));
    }

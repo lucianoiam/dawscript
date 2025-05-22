@@ -323,12 +323,12 @@ class DawscriptControlSurface(ControlSurface):
     def add_listener(self, target, prop, listener, getter, add_func, remove_func):
         key_tp = f"{target}_{prop}"
 
-        def target_getter():
+        def bound_getter():
             return getter(target)
 
         def def_listener():
             # Changes cannot be triggered by notifications. You will need to defer your response.
-            return self._deferred.append(lambda: listener(target_getter()))
+            return self._deferred.append(lambda: listener(bound_getter()))
 
         self._cleanup_cb[key_tp] = lambda: remove_func(def_listener)
         add_func(def_listener)

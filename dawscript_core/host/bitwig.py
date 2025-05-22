@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+import math
 import sys
 import time
 from types import ModuleType
@@ -86,19 +87,19 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],Non
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    pass
+    return _vol_value_to_db(track.volume().get())
 
 
 def set_track_volume(track: TrackHandle, volume_db: float):
-    pass
+    track.volume().setImmediately(_db_to_vol_value(volume_db))
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-    bw_ext.addListener(track, "volume", ValueListener(listener))
+    _add_listener(track, "volume", listener, get_track_volume)
 
 
 def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
-    bw_ext.removeListener(track, "volume", ValueListener(listener))
+    _remove_listener(track, "volume", listener)
 
 
 def get_track_pan(track: TrackHandle) -> float:
@@ -169,6 +170,48 @@ def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[
     pass
 
 
+def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
+    def bound_getter():
+        return getter(target)
+
+    runnable = PythonRunnable(lambda: listener(bound_getter()))
+    bw_ext.addListener(target, prop, id(listener), runnable)
+
+
+def _remove_listener(target: Any, prop: str, listener: Callable):
+    bw_ext.removeListener(target, prop, id(listener))
+
+
+def _vol_value_to_db(v: float) -> float:
+    if v == 0:
+        return -math.inf
+    if v >= 1.0:
+        return 6.0
+    return (
+        -127.9278287 * pow(v, 4)
+        + 390.2314102 * pow(v, 3)
+        + -432.1372651 * pow(v, 2)
+        + 244.6317808 * v
+        + -68.70003194
+    )
+
+
+def _db_to_vol_value(v: float) -> float:
+    if v == -math.inf:
+        return 0
+    if v >= 6.0:
+        return 1.0
+    vol = (
+        -9.867028203e-8 * pow(v, 4)
+        + -0.000009835475566 * pow(v, 3)
+        + -0.00001886034431 * pow(v, 2)
+        + 0.02632908703 * v
+        + 0.8496356422
+    )
+
+    return max(0, vol)
+
+
 class Controller:
     def __init__(self, controller: ModuleType):
         self.controller = controller
@@ -210,15 +253,12 @@ class Controller:
         implements = ["dawscript.Controller"]
 
 
-class ValueListener:
-    def __init__(self, listener: Callable[[object], None]):
-        self.listener = listener
+class PythonRunnable:
+    def __init__(self, callback: Callable):
+        self.callback = callback
 
-    def id(self) -> int:
-        return id(self.listener)
-
-    def onValue(self, value):
-        self.listener(value)
+    def run(self):
+        self.callback()
 
     class Java:
-        implements = ["dawscript.ValueListener"]
+        implements = ["dawscript.PythonRunnable"]

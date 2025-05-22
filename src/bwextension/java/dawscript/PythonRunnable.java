@@ -3,9 +3,7 @@
 
 package dawscript;
 
-interface ValueListener
+interface PythonRunnable
 {
-   long id();
-   
-   void onValue(Object value);
+   void run();
 }
