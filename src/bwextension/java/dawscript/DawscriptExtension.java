@@ -42,14 +42,13 @@ public class DawscriptExtension extends ControllerExtension
    private final HashMap<String,ArrayList<Listener>> listeners;
    private final Queue<PythonRunnable> deferred;
    private final Queue<ShortMidiMessage> midiQueue;
-   private Application application;
    private GatewayServer gatewayServer;
+   private int pythonScriptWait;
    private PythonScript pythonScript;
-   private int hostCallbackCount;
-   private Timer hostCallbackTimer;
-   private Controller controller;
-   private String projectName;
    private TrackBank projectTrackBank;
+   private Timer hostCallbackTimer;
+   private String projectName;
+   private Controller controller;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -70,13 +69,13 @@ public class DawscriptExtension extends ControllerExtension
    public void init()
    {
       final ControllerHost host = getHost();
-
-      application = host.createApplication();
+      final Application app = host.createApplication();
 
       try {
          gatewayServer = new GatewayServer(this);
          gatewayServer.start();
 
+         pythonScriptWait = 0;
          pythonScript = new PythonScript(host::println, host::errorln);
          final File script = BitwigExtensionLocator.getPath(BW_EXTENSION_FILENAME)
             .toPath()
@@ -86,18 +85,8 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script);
 
-         application.projectName().addValueObserver(projectName -> {
-            if (this.projectName != projectName) {
-               this.projectName = projectName;
-               if (controller != null) {
-                  controller.on_project_load();
-               }
-            }
-         });
-
          projectTrackBank = createProjectTrackBank();
 
-         hostCallbackCount = 0;
          hostCallbackTimer = new Timer();
          hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
              @Override
@@ -105,6 +94,19 @@ public class DawscriptExtension extends ControllerExtension
                  hostCallback();
              }
          }, 0, HOST_CALLBACK_MS);
+
+         app.projectName().addValueObserver(projectName -> {
+            if (this.projectName != projectName) {
+               this.projectName = projectName;
+               if (controller != null) {
+                  try {
+                     controller.on_project_load();
+                  } catch (Exception e) {
+                     e.printStackTrace();
+                  }
+               }
+            }
+         });
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -119,7 +121,11 @@ public class DawscriptExtension extends ControllerExtension
       }
 
       if (controller != null) {
-         controller.on_script_stop();
+         try {
+            controller.on_script_stop();
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
          controller = null;
       }
 
@@ -134,21 +140,29 @@ public class DawscriptExtension extends ControllerExtension
       }
 
       projectTrackBank = null;
-      application = null;
    }
 
    @Override
    public void flush()
    {
-      // no-op
+      // Empty
    }
 
    public void setController(Controller controller)
    {
       this.controller = controller;
 
-      controller.on_script_start();
-      controller.on_project_load();
+      try {
+         controller.on_script_start();
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+
+      try {
+         controller.on_project_load();
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
 
       for (int i = 0; i < getExtensionDefinition().getNumMidiInPorts(); i++) {
          final int portIndex = i;
@@ -205,7 +219,11 @@ public class DawscriptExtension extends ControllerExtension
 
       bank.itemCount().addValueObserver(itemCount -> {
          if (controller != null) {
-            controller.on_project_load();
+            try {
+               controller.on_project_load();
+            } catch (Exception e) {
+               e.printStackTrace();
+            }
          }
       });
 
@@ -223,6 +241,8 @@ public class DawscriptExtension extends ControllerExtension
                }
             }
          });
+
+         // TODO : call markInterested() on plugins and parameters
       }
 
       return bank;
@@ -230,11 +250,12 @@ public class DawscriptExtension extends ControllerExtension
 
    private void hostCallback()
    {
-      hostCallbackCount++;
-
       if (controller == null) {
-         if (hostCallbackCount == 100) {
+         if (pythonScriptWait == 100) {
+            pythonScriptWait = -1;
             getHost().showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
+         } else if (pythonScriptWait >= 0) {
+            pythonScriptWait++;
          }
 
          return;
@@ -262,7 +283,11 @@ public class DawscriptExtension extends ControllerExtension
          }
       }
 
-      controller.host_callback(messages);
+      try {
+         controller.host_callback(messages);
+      } catch (Exception e) {
+         // Empty
+      }
    }
 
    private static String objectId(Object obj) {

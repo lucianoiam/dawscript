@@ -182,6 +182,7 @@ def _remove_listener(target: Any, prop: str, listener: Callable):
     bw_ext.removeListener(target, prop, id(listener))
 
 
+# TODO - copied from live.py
 def _vol_value_to_db(v: float) -> float:
     if v == 0:
         return -math.inf
@@ -196,6 +197,7 @@ def _vol_value_to_db(v: float) -> float:
     )
 
 
+# TODO - copied from live.py
 def _db_to_vol_value(v: float) -> float:
     if v == -math.inf:
         return 0

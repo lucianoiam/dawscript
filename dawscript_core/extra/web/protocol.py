@@ -8,8 +8,13 @@ from typing import Any, Dict
 
 _host_obj: Dict[str, Any] = {}
 
+DEBUG = False
+if DEBUG:
+    REPR_PATTERN = r"^repr = .+$"
+else:
+    REPR_PATTERN = r"^handle_[0-9a-fA-F]{16}$"
+
 JS_NUMBER_MAX_VALUE = 1.7976931348623157e308
-REPR_PATTERN = r"^handle@[0-9a-fA-F]{16}$"
 
 
 def replace_inf(data):
@@ -51,15 +56,18 @@ class ReprJSONEncoder(json.JSONEncoder):
         try:
             return super().default(obj)
         except TypeError:
-            key = f"handle@{_d2b_hash_64(repr(obj)):0>16x}"
+            if DEBUG:
+                key = f"repr = {repr(obj)}"
+            else:
+                key = f"handle_{_d2b_hash(repr(obj)):0>8x}"
             _host_obj[key] = obj
-
             return key
 
 
-def _d2b_hash_64(string):
+def _d2b_hash(string):
     hash_value = 0
     for char in string:
-        hash_value = 31 * hash_value + ord(char)
-
-    return hash_value & 0xFFFFFFFFFFFFFFFF
+        hash_value = (31 * hash_value + ord(char)) & 0xFFFFFFFF
+        if hash_value >= 0x80000000:
+            hash_value -= 0x100000000
+    return hash_value
