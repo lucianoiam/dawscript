@@ -6,6 +6,8 @@ package dawscript;
 import java.io.File;
 import java.io.IOException;
 
+// TODO: support Linux
+
 public class BitwigExtensionLocator
 {
    private static final String[] PATH_MACOS = {

@@ -129,27 +129,27 @@ def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float],Non
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
-    return [] # TODO
+    return bw_ext.getTrackDevices(track)
 
 
 def get_plugin_name(plugin: PluginHandle) -> str:
-    return '' # TODO
+    return plugin.name().get()
 
 
 def is_plugin_enabled(plugin: PluginHandle) -> bool:
-    return False # TODO
+    return plugin.isEnabled().get()
 
 
 def set_plugin_enabled(plugin: PluginHandle, enabled: bool):
-    pass # TODO
+    plugin.isEnabled().set(enabled)
 
 
 def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-    pass # TODO
+    _add_listener(plugin, "enabled", listener, is_plugin_enabled)
 
 
 def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None]):
-    pass # TODO
+    _remove_listener(plugin, "enabled", listener)
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:

@@ -7,15 +7,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.Device;
+import com.bitwig.extension.controller.api.DeviceBank;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extension.controller.ControllerExtension;
@@ -40,6 +44,7 @@ public class DawscriptExtension extends ControllerExtension
    private static final long HOST_CALLBACK_MS = 16;
 
    private final HashMap<String,ArrayList<Listener>> listeners;
+   private final HashMap<Track,ArrayList<Device>> devices;
    private final Queue<PythonRunnable> deferred;
    private final Queue<ShortMidiMessage> midiQueue;
    private GatewayServer gatewayServer;
@@ -61,6 +66,7 @@ public class DawscriptExtension extends ControllerExtension
    {
       super(definition, host);
       listeners = new HashMap<>();
+      devices = new HashMap<>();
       deferred = new ConcurrentLinkedQueue<>();
       midiQueue = new ConcurrentLinkedQueue<>();
    }
@@ -172,6 +178,19 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
+   public TrackBank getProjectTrackBank()
+   {
+      return projectTrackBank;
+   }
+
+   public List<Device> getTrackDevices(Track track)
+   {
+      return devices.get(track)
+                    .stream()
+                    .filter(device -> device.isEnabled().get())
+                    .collect(Collectors.toList());
+   }
+
    public void addListener(Object target, String prop, long identifier, PythonRunnable runnable)
    {
       final String key = keyTargetProp(target, prop);
@@ -207,17 +226,12 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
-   public TrackBank getProjectTrackBank()
-   {
-      return projectTrackBank;
-   }
-
    private TrackBank createProjectTrackBank()
    {
-      final TrackBank bank = getHost().getProject().getRootTrackGroup()
-         .createMainTrackBank(128, 128, 128, true);
+      final TrackBank trackBank = getHost().getProject().getRootTrackGroup()
+         .createMainTrackBank(128, 0, 0, true);
 
-      bank.itemCount().addValueObserver(itemCount -> {
+      trackBank.itemCount().addValueObserver(itemCount -> {
          if (controller != null) {
             try {
                controller.on_project_load();
@@ -228,7 +242,7 @@ public class DawscriptExtension extends ControllerExtension
       });
 
       for (int i = 0; i < 128; i++) {
-         final Track track = bank.getItemAt(i);
+         final Track track = trackBank.getItemAt(i);
          
          track.trackType().markInterested();
          track.name().markInterested();
@@ -237,10 +251,21 @@ public class DawscriptExtension extends ControllerExtension
          track.volume().value().addValueObserver(_0 -> callListeners(track, "volume"));
          track.pan().value().addValueObserver(_0 -> callListeners(track, "pan"));
 
-         // TODO : call markInterested() on plugins and parameters
+         final DeviceBank deviceBank = track.createDeviceBank(128);
+         final ArrayList<Device> trackDevices = new ArrayList<>();
+
+         devices.put(track, trackDevices);
+
+         for (int j = 0; j < 128; j++) {
+            final Device device = deviceBank.getDevice(j);
+            device.isPlugin().markInterested();
+            device.name().markInterested();
+            device.isEnabled().addValueObserver(_0 -> callListeners(device, "enabled"));
+            trackDevices.add(device);
+         }
       }
 
-      return bank;
+      return trackBank;
    }
 
    private void callListeners(Object target, String prop)
