@@ -19,7 +19,11 @@ from .types import (
     TrackType
 )
 
-from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError
+try:
+    from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError
+except ModuleNotFoundError:
+    # fails to import on Live
+    raise IncompatibleEnvironmentError
 
 
 try:
@@ -46,6 +50,7 @@ def main(controller: ModuleType, context: Any):
         gateway.shutdown()
 
 
+# ~/Library/Logs/Bitwig/BitwigStudio.log 
 def log(message: str):
     bw_ext.getHost().errorln(str(message))
 
@@ -63,7 +68,12 @@ def get_tracks() -> List[TrackHandle]:
 
 
 def get_track_type(track: TrackHandle) -> TrackType:
-    return TrackType.OTHER # TODO
+    track_type = track.trackType().get()
+    if track_type == 'Audio':
+        return TrackType.AUDIO
+    elif track_type == 'Instrument':
+        return TrackType.MIDI
+    return TrackType.OTHER
 
 
 def get_track_name(track: TrackHandle) -> str:
@@ -71,19 +81,19 @@ def get_track_name(track: TrackHandle) -> str:
 
 
 def is_track_mute(track: TrackHandle) -> bool:
-    return False # TODO
+    return track.mute().get()
 
 
 def set_track_mute(track: TrackHandle, mute: bool):
-    pass # TODO
+    track.mute().set(mute)
 
 
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-    pass # TODO
+    _add_listener(track, "mute", listener, is_track_mute)
 
 
 def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None]):
-    pass # TODO
+    _remove_listener(track, "mute", listener)
 
 
 def get_track_volume(track: TrackHandle) -> float:
@@ -103,19 +113,19 @@ def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],
 
 
 def get_track_pan(track: TrackHandle) -> float:
-    return 0.0 # TODO
+    return 2.0 * track.pan().get() - 1.0
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    pass # TODO
+    track.pan().setImmediately((pan + 1.0) / 1.0)
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass # TODO
+    _add_listener(track, "pan", listener, get_track_pan)
 
 
 def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
-    pass # TODO
+    _remove_listener(track, "pan", listener)
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
@@ -182,7 +192,7 @@ def _remove_listener(target: Any, prop: str, listener: Callable):
     bw_ext.removeListener(target, prop, id(listener))
 
 
-# TODO - copied from live.py
+# FIXME - copied from live.py
 def _vol_value_to_db(v: float) -> float:
     if v == 0:
         return -math.inf
@@ -197,7 +207,7 @@ def _vol_value_to_db(v: float) -> float:
     )
 
 
-# TODO - copied from live.py
+# FIXME - copied from live.py
 def _db_to_vol_value(v: float) -> float:
     if v == -math.inf:
         return 0

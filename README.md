@@ -1,30 +1,27 @@
 dawscript
 =========
-This project provides an abstraction layer for a minimal subset of the scripting
-APIs found in some popular DAWs (Digital Audio Workstations), with a focus on
-mixer control.
+This project provides an abstraction layer for a small subset of the scripting
+APIs found in some popular DAWs (Digital Audio Workstations).
 
 Goals
 -----
 - Control mixer and plugin parameters
 - Create networked user interfaces
-- Run the same unmodified Python code on multiple DAWs. Currently REAPER and
- Ableton Live 11+ are supported
-- An extension for Bitwig is under active development
+- Run the same unmodified code across multiple DAWs
 
 Current Features
 ----------------
-- MIDI input
+- Compatibility with REAPER, Ableton Live 11+ and Bitwig Studio.
 - Track volume, panning, and mute control
 - Plugin bypass and parameter control
+- MIDI input
 - Listeners
-- Footswitch logic with gestures like press, double press, and long press
 - Network bridge to JavaScript running on a browser
 
 Requirements
 ------------
 - Python 3 DLL for REAPER users
-- Python 3 executable for Bitwig users
+- Standalone Python 3 executable for Bitwig users
 - Live 11+ already comes with an embedded Python 3 interpreter
 
 Quick Start
@@ -41,24 +38,24 @@ implementation. The mute state of a track named *Track 1* is toggled when a
 footswitch that sends MIDI control messages for *Sustain Pedal* (CC64)
 is pressed:
 
-[No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file/config.yml)
-```yaml
-- footswitch:
-    midi:
-      press: control_change 64 127
-      release: control_change 64 0
-    gestures:
-      pressed: host.toggle_track_mute_by_name, Track 1
-```
+[Calls to raw DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
 ```python
-config, gadgets = parse_config_file('config.yml', globals())
+footswitch = Footswitch()
 
 def get_config() -> Config:
-   return config
+   return Config(midi_inputs=ALL_MIDI_INPUTS)
 
 def host_callback(midi: List[bytes]):
-   for gadget in gadgets:
-      gadget.process(midi)
+   for msg in make_midi_messages(midi):
+      if msg.is_cc() and msg.control == 64:
+         if msg.value == 127:
+            footswitch.press()
+         elif msg.value == 0:
+            footswitch.release()
+
+   if footswitch.poll():
+      if footswitch.pressed():
+         host.toggle_track_mute(host.get_track_by_name('Track 1'))
 ```
 
 [Object-oriented API](https://github.com/lucianoiam/dawscript/blob/master/examples/objects/controller.py)
@@ -81,24 +78,24 @@ def host_callback(midi: List[bytes]):
    footswitch.process(midi)
 ```
 
-[Calls to raw DAW abstraction interface](https://github.com/lucianoiam/dawscript/blob/master/examples/raw/controller.py)
+[No-code setup using a configuration file](https://github.com/lucianoiam/dawscript/blob/master/examples/config_file/config.yml)
+```yaml
+- footswitch:
+    midi:
+      press: control_change 64 127
+      release: control_change 64 0
+    gestures:
+      pressed: host.toggle_track_mute_by_name, Track 1
+```
 ```python
-footswitch = Footswitch()
+config, gadgets = parse_config_file('config.yml', globals())
 
 def get_config() -> Config:
-   return Config(midi_inputs=ALL_MIDI_INPUTS)
+   return config
 
 def host_callback(midi: List[bytes]):
-   for msg in make_midi_messages(midi):
-      if msg.is_cc() and msg.control == 64:
-         if msg.value == 127:
-            footswitch.press()
-         elif msg.value == 0:
-            footswitch.release()
-
-   if footswitch.poll():
-      if footswitch.pressed():
-         host.toggle_track_mute(host.get_track_by_name('Track 1'))
+   for gadget in gadgets:
+      gadget.process(midi)
 ```
 
 [Control track volume from a web browser](https://github.com/lucianoiam/dawscript/blob/master/examples/web/htdocs/example.js)

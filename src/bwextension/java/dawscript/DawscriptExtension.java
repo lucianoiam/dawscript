@@ -174,12 +174,12 @@ public class DawscriptExtension extends ControllerExtension
 
    public void addListener(Object target, String prop, long identifier, PythonRunnable runnable)
    {
-      final String keyTargetProp = objectId(target) + "_" + prop;
-      ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
+      final String key = keyTargetProp(target, prop);
+      ArrayList<Listener> listenerList = listeners.get(key);
 
       if (listenerList == null) {
          listenerList = new ArrayList<>();
-         listeners.put(keyTargetProp, listenerList);
+         listeners.put(key, listenerList);
       }
 
       listenerList.add(new Listener(identifier, runnable));
@@ -187,8 +187,8 @@ public class DawscriptExtension extends ControllerExtension
 
    public void removeListener(Object target, String prop, long identifier)
    {
-      final String keyTargetProp = objectId(target) + "_" + prop;
-      final ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
+      final String key = keyTargetProp(target, prop);
+      final ArrayList<Listener> listenerList = listeners.get(key);
 
       if (listenerList == null) {
          return;
@@ -203,7 +203,7 @@ public class DawscriptExtension extends ControllerExtension
       }
 
       if (listenerList.isEmpty()) {
-         listeners.remove(keyTargetProp);
+         listeners.remove(key);
       }
    }
 
@@ -230,17 +230,12 @@ public class DawscriptExtension extends ControllerExtension
       for (int i = 0; i < 128; i++) {
          final Track track = bank.getItemAt(i);
          
+         track.trackType().markInterested();
          track.name().markInterested();
 
-         track.volume().value().addValueObserver(_0 -> {
-            final String keyTargetProp = objectId(track) + "_volume";
-            final ArrayList<Listener> listenerList = listeners.get(keyTargetProp);
-            if (listenerList != null) {
-               for (final Listener listener : listenerList) {
-                  deferred.add(listener.runnable);
-               }
-            }
-         });
+         track.mute().addValueObserver(_0 -> callListeners(track, "mute"));
+         track.volume().value().addValueObserver(_0 -> callListeners(track, "volume"));
+         track.pan().value().addValueObserver(_0 -> callListeners(track, "pan"));
 
          // TODO : call markInterested() on plugins and parameters
       }
@@ -248,12 +243,24 @@ public class DawscriptExtension extends ControllerExtension
       return bank;
    }
 
+   private void callListeners(Object target, String prop)
+   {
+      final String key = keyTargetProp(target, prop);
+      final ArrayList<Listener> listenerList = listeners.get(key);
+
+      if (listenerList != null) {
+         for (final Listener listener : listenerList) {
+            deferred.add(listener.runnable);
+         }
+      }
+   }
+
    private void hostCallback()
    {
       if (controller == null) {
          if (pythonScriptWait == 100) {
             pythonScriptWait = -1;
-            getHost().showPopupNotification("Python script timeout, check BitwigStudio.log for errors."); 
+            getHost().showPopupNotification("Python script timeout, check Bitwig log file for errors."); 
          } else if (pythonScriptWait >= 0) {
             pythonScriptWait++;
          }
@@ -290,8 +297,10 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
-   private static String objectId(Object obj) {
-      if (obj == null) return "null";
-      return obj.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(obj));
+   private static String keyTargetProp(Object target, String prop)
+   {
+      return target.getClass().getSimpleName()
+               + "@" + Integer.toHexString(System.identityHashCode(target))
+               + "_" + prop;
    }
 }

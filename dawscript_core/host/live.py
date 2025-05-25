@@ -36,7 +36,7 @@ def main(controller: ModuleType, context: Any):
     _control_surface.set_controller(controller)
 
 
-# tail -f ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
+# ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
 def log(message: str):
     if _control_surface is not None:
         _control_surface.log_message(str(message))
