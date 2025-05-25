@@ -61,7 +61,7 @@ def display(message: str):
 
 def get_tracks() -> List[TrackHandle]:
     tracks = []
-    bank = bw_ext.getProjectTrackBank()
+    bank = bw_ext.getTrackBank()
     for i in range(0, bank.itemCount().get()):
         tracks.append(bank.getItemAt(i))
     return tracks
@@ -117,7 +117,7 @@ def get_track_pan(track: TrackHandle) -> float:
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    track.pan().setImmediately((pan + 1.0) / 1.0)
+    track.pan().setImmediately((float(pan) + 1.0) / 1.0)
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
@@ -129,7 +129,13 @@ def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float],Non
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
-    return bw_ext.getTrackDevices(track)
+    plugins = []
+    bank = bw_ext.getTrackDeviceBank(track)
+    for i in range(0, bank.itemCount().get()):
+        device = bank.getItemAt(i)
+        #if device.isPlugin().get():
+        plugins.append(device)
+    return plugins
 
 
 def get_plugin_name(plugin: PluginHandle) -> str:
@@ -153,31 +159,37 @@ def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[boo
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-    return [] # TODO
+    parameters = []
+    bank = bw_ext.getPluginParameterBank(plugin)
+    for i in range(0, bank.getParameterCount()):
+        param = bank.getParameter(i)
+        if param.name().get():
+            parameters.append(param)
+    return parameters
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
-    return '' # TODO
+    return param.name().get()
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
-    return (0.0, 1.0) # TODO
+    return (0.0, 1.0) # n/a
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
-    return 1.0 # TODO
+    return param.value().getRaw()
 
 
 def set_parameter_value(param: ParameterHandle, value: float):
-    pass # TODO
+    param.value().setRaw(float(value))
 
 
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-    pass # TODO
+    _add_listener(param, "value", listener, get_parameter_value)
 
 
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):
-    pass # TODO
+    _remove_listener(param, "value", listener)
 
 
 def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):

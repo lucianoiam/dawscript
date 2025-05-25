@@ -12,7 +12,7 @@ DEBUG = False
 if DEBUG:
     REPR_PATTERN = r"^repr = .+$"
 else:
-    REPR_PATTERN = r"^handle_[0-9a-fA-F]{16}$"
+    REPR_PATTERN = r"^handle_[0-9a-fA-F]{8}$"
 
 JS_NUMBER_MAX_VALUE = 1.7976931348623157e308
 

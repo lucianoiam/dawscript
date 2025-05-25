@@ -12,17 +12,18 @@ import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
+import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
+import com.bitwig.extension.controller.api.Parameter;
+import com.bitwig.extension.controller.api.ParameterBank;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
-import com.bitwig.extension.controller.ControllerExtension;
 import py4j.GatewayServer;
 import py4j.reflection.ReflectionUtil;
 import py4j.reflection.RootClassLoadingStrategy;
@@ -43,14 +44,15 @@ public class DawscriptExtension extends ControllerExtension
 
    private static final long HOST_CALLBACK_MS = 16;
 
-   private final HashMap<String,ArrayList<Listener>> listeners;
-   private final HashMap<Track,ArrayList<Device>> devices;
    private final Queue<PythonRunnable> deferred;
    private final Queue<ShortMidiMessage> midiQueue;
+   private final HashMap<String,ArrayList<Listener>> listeners;
+   private final HashMap<Device,ParameterBank> parameterBanks;
+   private final HashMap<Track,DeviceBank> deviceBanks;
+   private TrackBank trackBank;
    private GatewayServer gatewayServer;
    private int pythonScriptWait;
    private PythonScript pythonScript;
-   private TrackBank projectTrackBank;
    private Timer hostCallbackTimer;
    private String projectName;
    private Controller controller;
@@ -65,19 +67,22 @@ public class DawscriptExtension extends ControllerExtension
    protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
-      listeners = new HashMap<>();
-      devices = new HashMap<>();
+
       deferred = new ConcurrentLinkedQueue<>();
       midiQueue = new ConcurrentLinkedQueue<>();
+      listeners = new HashMap<>();
+      parameterBanks = new HashMap<>();
+      deviceBanks = new HashMap<>();
    }
 
    @Override
    public void init()
    {
       final ControllerHost host = getHost();
-      final Application app = host.createApplication();
 
       try {
+         initBanks();
+
          gatewayServer = new GatewayServer(this);
          gatewayServer.start();
 
@@ -91,8 +96,6 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script);
 
-         projectTrackBank = createProjectTrackBank();
-
          hostCallbackTimer = new Timer();
          hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
              @Override
@@ -101,6 +104,7 @@ public class DawscriptExtension extends ControllerExtension
              }
          }, 0, HOST_CALLBACK_MS);
 
+         final Application app = host.createApplication();
          app.projectName().addValueObserver(projectName -> {
             if (this.projectName != projectName) {
                this.projectName = projectName;
@@ -144,8 +148,6 @@ public class DawscriptExtension extends ControllerExtension
          gatewayServer.shutdown();
          gatewayServer = null;
       }
-
-      projectTrackBank = null;
    }
 
    @Override
@@ -176,19 +178,6 @@ public class DawscriptExtension extends ControllerExtension
              midiQueue.add(msg);
          });
       }
-   }
-
-   public TrackBank getProjectTrackBank()
-   {
-      return projectTrackBank;
-   }
-
-   public List<Device> getTrackDevices(Track track)
-   {
-      return devices.get(track)
-                    .stream()
-                    .filter(device -> device.isEnabled().get())
-                    .collect(Collectors.toList());
    }
 
    public void addListener(Object target, String prop, long identifier, PythonRunnable runnable)
@@ -226,9 +215,24 @@ public class DawscriptExtension extends ControllerExtension
       }
    }
 
-   private TrackBank createProjectTrackBank()
+   public TrackBank getTrackBank()
    {
-      final TrackBank trackBank = getHost().getProject().getRootTrackGroup()
+      return trackBank;
+   }
+
+   public DeviceBank getTrackDeviceBank(Track track)
+   {
+      return deviceBanks.get(track);
+   }
+
+   public ParameterBank getPluginParameterBank(Device plugin)
+   {
+      return parameterBanks.get(plugin);
+   }
+
+   private void initBanks()
+   {
+      trackBank = getHost().getProject().getRootTrackGroup()
          .createMainTrackBank(128, 0, 0, true);
 
       trackBank.itemCount().addValueObserver(itemCount -> {
@@ -243,29 +247,35 @@ public class DawscriptExtension extends ControllerExtension
 
       for (int i = 0; i < 128; i++) {
          final Track track = trackBank.getItemAt(i);
-         
          track.trackType().markInterested();
          track.name().markInterested();
-
          track.mute().addValueObserver(_0 -> callListeners(track, "mute"));
          track.volume().value().addValueObserver(_0 -> callListeners(track, "volume"));
          track.pan().value().addValueObserver(_0 -> callListeners(track, "pan"));
 
          final DeviceBank deviceBank = track.createDeviceBank(128);
-         final ArrayList<Device> trackDevices = new ArrayList<>();
-
-         devices.put(track, trackDevices);
+         deviceBank.itemCount().markInterested();
+         deviceBanks.put(track, deviceBank);
 
          for (int j = 0; j < 128; j++) {
             final Device device = deviceBank.getDevice(j);
             device.isPlugin().markInterested();
             device.name().markInterested();
             device.isEnabled().addValueObserver(_0 -> callListeners(device, "enabled"));
-            trackDevices.add(device);
+
+            // device.createCursorRemoteControlsPage(128) makes Bitwig crash
+            // *** Terminating app due to uncaught exception 'JavaNativeException',
+            // reason: 'Internal JNF Error: failed calling Throwable.toString()'
+            final ParameterBank parameterBank = device.createCursorRemoteControlsPage(32);
+            parameterBanks.put(device, parameterBank);
+
+            for (int k = 0; k < 32; k++) {
+               final Parameter parameter = parameterBank.getParameter(k);
+               parameter.name().markInterested();
+               parameter.value().addRawValueObserver(_0 -> callListeners(parameter, "value"));
+            }
          }
       }
-
-      return trackBank;
    }
 
    private void callListeners(Object target, String prop)
