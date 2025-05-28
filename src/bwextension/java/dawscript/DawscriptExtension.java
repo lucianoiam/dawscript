@@ -39,23 +39,30 @@ public class DawscriptExtension extends ControllerExtension
 {
    public record Listener(long identifier, PythonRunnable runnable) {}
 
+   private static final boolean ENABLE_PARAMETER_RANGE_UGLY_HACK = true;
+
    private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
    private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
+
+   private static final int MAX_TRACKS = 64;
+   private static final int MAX_DEVICES = 16;
+   private static final int MAX_PARAMETERS = 32;
 
    private static final long HOST_CALLBACK_MS = 16;
 
    private final Queue<PythonRunnable> deferred;
    private final Queue<ShortMidiMessage> midiQueue;
    private final HashMap<String,ArrayList<Listener>> listeners;
-   private final HashMap<Device,ParameterBank> parameterBanks;
    private final HashMap<Track,DeviceBank> deviceBanks;
+   private final HashMap<Device,ParameterBank> parameterBanks;
    private TrackBank trackBank;
    private GatewayServer gatewayServer;
-   private int pythonScriptWait;
    private PythonScript pythonScript;
    private Timer hostCallbackTimer;
    private String projectName;
    private Controller controller;
+   private int pythonScriptWait;
+   private int parameterValueListenerPauseWait;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -71,8 +78,8 @@ public class DawscriptExtension extends ControllerExtension
       deferred = new ConcurrentLinkedQueue<>();
       midiQueue = new ConcurrentLinkedQueue<>();
       listeners = new HashMap<>();
-      parameterBanks = new HashMap<>();
       deviceBanks = new HashMap<>();
+      parameterBanks = new HashMap<>();
    }
 
    @Override
@@ -230,10 +237,37 @@ public class DawscriptExtension extends ControllerExtension
       return parameterBanks.get(plugin);
    }
 
+   public double[] getParameterRange(Parameter parameter)
+   {
+      if (! ENABLE_PARAMETER_RANGE_UGLY_HACK) {
+         return new double[] { 0.0, 1.0 };
+      }
+
+      parameterValueListenerPauseWait = 1;
+
+      final double value = parameter.get();
+
+      try {
+         parameter.setImmediately(0.0);
+         Thread.sleep(25);
+      } catch (Exception e) {}
+      final double lo = parameter.getRaw();
+
+      try {
+         parameter.setImmediately(1.0);
+         Thread.sleep(25);
+      } catch (Exception e) {}
+      final double hi = parameter.getRaw();
+
+      parameter.setImmediately(value);
+
+      return new double[] { lo, hi };
+   }
+
    private void initBanks()
    {
       trackBank = getHost().getProject().getRootTrackGroup()
-         .createMainTrackBank(128, 0, 0, true);
+         .createMainTrackBank(MAX_TRACKS, 0, 0, true);
 
       trackBank.itemCount().addValueObserver(itemCount -> {
          if (controller != null) {
@@ -245,7 +279,7 @@ public class DawscriptExtension extends ControllerExtension
          }
       });
 
-      for (int i = 0; i < 128; i++) {
+      for (int i = 0; i < MAX_TRACKS; i++) {
          final Track track = trackBank.getItemAt(i);
          track.trackType().markInterested();
          track.name().markInterested();
@@ -253,26 +287,27 @@ public class DawscriptExtension extends ControllerExtension
          track.volume().value().addValueObserver(_0 -> callListeners(track, "volume"));
          track.pan().value().addValueObserver(_0 -> callListeners(track, "pan"));
 
-         final DeviceBank deviceBank = track.createDeviceBank(128);
+         final DeviceBank deviceBank = track.createDeviceBank(MAX_DEVICES);
          deviceBank.itemCount().markInterested();
          deviceBanks.put(track, deviceBank);
 
-         for (int j = 0; j < 128; j++) {
+         for (int j = 0; j < MAX_DEVICES; j++) {
             final Device device = deviceBank.getDevice(j);
             device.isPlugin().markInterested();
             device.name().markInterested();
             device.isEnabled().addValueObserver(_0 -> callListeners(device, "enabled"));
 
-            // device.createCursorRemoteControlsPage(128) makes Bitwig crash
-            // *** Terminating app due to uncaught exception 'JavaNativeException',
-            // reason: 'Internal JNF Error: failed calling Throwable.toString()'
-            final ParameterBank parameterBank = device.createCursorRemoteControlsPage(32);
+            final ParameterBank parameterBank = device.createCursorRemoteControlsPage(MAX_PARAMETERS);
             parameterBanks.put(device, parameterBank);
 
-            for (int k = 0; k < 32; k++) {
+            for (int k = 0; k < MAX_PARAMETERS; k++) {
                final Parameter parameter = parameterBank.getParameter(k);
                parameter.name().markInterested();
-               parameter.value().addRawValueObserver(_0 -> callListeners(parameter, "value"));
+               parameter.value().addRawValueObserver(_0 -> {
+                  if (parameterValueListenerPauseWait == 0) {
+                     callListeners(parameter, "value");
+                  }
+               });
             }
          }
       }
@@ -322,6 +357,13 @@ public class DawscriptExtension extends ControllerExtension
                (byte) msg.getData1(),
                (byte) msg.getData2()
             });
+         }
+      }
+
+      if (parameterValueListenerPauseWait > 0) {
+         parameterValueListenerPauseWait++;
+         if (parameterValueListenerPauseWait == 10) {
+            parameterValueListenerPauseWait = 0;
          }
       }
 

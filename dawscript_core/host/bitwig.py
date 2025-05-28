@@ -132,9 +132,7 @@ def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:
     plugins = []
     bank = bw_ext.getTrackDeviceBank(track)
     for i in range(0, bank.itemCount().get()):
-        device = bank.getItemAt(i)
-        #if device.isPlugin().get():
-        plugins.append(device)
+        plugins.append(bank.getItemAt(i))
     return plugins
 
 
@@ -173,7 +171,7 @@ def get_parameter_name(param: ParameterHandle) -> str:
 
 
 def get_parameter_range(param: ParameterHandle) -> (float, float):
-    return (0.0, 1.0) # n/a
+    return tuple(bw_ext.getParameterRange(param))
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
