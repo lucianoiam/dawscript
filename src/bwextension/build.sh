@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 bwextension="../../dawscript.bwextension"
 java_src="java/dawscript/*.java"
 
-bwapi_version="22"
+bwapi_version="19"
 bwapi_jar="extension-api-$bwapi_version.jar"
 bwapi_jar_url="https://maven.bitwig.com/com/bitwig/extension-api/$bwapi_version/$bwapi_jar"
 
@@ -47,7 +47,7 @@ echo "Copying files..."
 mkdir -p out/META-INF/services
 echo "dawscript.DawscriptExtensionDefinition" > out/META-INF/services/com.bitwig.extension.ExtensionDefinition
 
-jar xf "lib/$py4j_jar" -C out py4j/ || {
+unzip -q -o "lib/$py4j_jar" "py4j/*" -d out || {
    echo "Copy files failed"
    exit 1
 }
