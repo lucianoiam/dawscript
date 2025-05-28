@@ -25,10 +25,15 @@ except ModuleNotFoundError:
     # fails to import on Live
     raise IncompatibleEnvironmentError
 
+if len(sys.argv) < 2:
+    raise IncompatibleEnvironmentError
 
 try:
     gateway = JavaGateway(
-        gateway_parameters=GatewayParameters(auto_convert=True),
+        gateway_parameters=GatewayParameters(
+            port=int(sys.argv[1]),
+            auto_convert=True
+        ),
         callback_server_parameters=CallbackServerParameters()
     )
     gateway.jvm.java.lang.System.getProperty("java.version")

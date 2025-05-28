@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;;
 
@@ -22,12 +24,17 @@ public class PythonScript
       this.error = error;
    }
 
-   public void start(File path) throws IOException {
+   public void start(File path, String... args) throws IOException {
       if (process != null) {
          throw new IOException("Python process already started");
       }
 
-      final ProcessBuilder processBuilder = new ProcessBuilder(pythonPath(), path.toString());
+      ArrayList<String> command = new ArrayList<>();
+      command.add(pythonPath());
+      command.add(path.toString());
+      command.addAll(Arrays.asList(args));
+
+      final ProcessBuilder processBuilder = new ProcessBuilder(command);
       processBuilder.directory(path.getParentFile());
 
       process = processBuilder.start();

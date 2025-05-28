@@ -4,6 +4,8 @@
 package dawscript;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.BindException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -88,10 +90,7 @@ public class DawscriptExtension extends ControllerExtension
       final ControllerHost host = getHost();
 
       try {
-         initBanks();
-
-         gatewayServer = new GatewayServer(this);
-         gatewayServer.start();
+         startGatewayServer();
 
          pythonScriptWait = 0;
          pythonScript = new PythonScript(host::println, host::errorln);
@@ -101,15 +100,9 @@ public class DawscriptExtension extends ControllerExtension
             .getParent()
             .resolve(PYTHON_SCRIPT_FILENAME)
             .toFile();
-         pythonScript.start(script);
+         pythonScript.start(script, Integer.toString(gatewayServer.getPort()));
 
-         hostCallbackTimer = new Timer();
-         hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
-             @Override
-             public void run() {
-                 hostCallback();
-             }
-         }, 0, HOST_CALLBACK_MS);
+         initBanks();
 
          final Application app = host.createApplication();
          app.projectName().addValueObserver(projectName -> {
@@ -124,6 +117,14 @@ public class DawscriptExtension extends ControllerExtension
                }
             }
          });
+
+         hostCallbackTimer = new Timer();
+         hostCallbackTimer.scheduleAtFixedRate(new TimerTask() {
+             @Override
+             public void run() {
+                 hostCallback();
+             }
+         }, 0, HOST_CALLBACK_MS);
       } catch (Exception e) {
          host.showPopupNotification(e.getMessage());
       }
@@ -262,6 +263,23 @@ public class DawscriptExtension extends ControllerExtension
       parameter.setImmediately(value);
 
       return new double[] { lo, hi };
+   }
+
+   private void startGatewayServer() throws Exception
+   {
+      int port = GatewayServer.DEFAULT_PORT;
+
+      while (gatewayServer == null) {
+         try {
+            gatewayServer = new GatewayServer(this, port);
+            gatewayServer.start();
+         } catch (Exception e) {
+            port++;
+            if ((port - GatewayServer.DEFAULT_PORT) == 10) {
+               throw e;
+            }
+         }
+      }
    }
 
    private void initBanks()
