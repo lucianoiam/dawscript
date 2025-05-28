@@ -207,36 +207,29 @@ def _remove_listener(target: Any, prop: str, listener: Callable):
     bw_ext.removeListener(target, prop, id(listener))
 
 
-# FIXME - copied from live.py
 def _vol_value_to_db(v: float) -> float:
-    if v == 0:
+    if v <= 0:
         return -math.inf
     if v >= 1.0:
         return 6.0
-    return (
-        -127.9278287 * pow(v, 4)
-        + 390.2314102 * pow(v, 3)
-        + -432.1372651 * pow(v, 2)
-        + 244.6317808 * v
-        + -68.70003194
-    )
+    a = -128.3272282
+    b = 25.53989661
+    c = 96.22932269
+    d = -0.05850250872
+    e = 10787.4341
+    return a + b * math.asinh(c * v + d * math.asinh(e * v))
 
 
-# FIXME - copied from live.py
 def _db_to_vol_value(v: float) -> float:
     if v == -math.inf:
         return 0
     if v >= 6.0:
         return 1.0
-    vol = (
-        -9.867028203e-8 * pow(v, 4)
-        + -0.000009835475566 * pow(v, 3)
-        + -0.00001886034431 * pow(v, 2)
-        + 0.02632908703 * v
-        + 0.8496356422
-    )
-
-    return float(max(0, vol))
+    a = 0.004374052017
+    b = 0.7891697633
+    c = 0.000054132527
+    d = 1.039281072
+    return a + b * (d ** v) + c * v
 
 
 class Controller:

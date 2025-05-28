@@ -218,7 +218,7 @@ def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
 
 
 def _vol_value_to_db(v: float) -> float:
-    if v == 0:
+    if v <= 0:
         return -math.inf
     if v >= 1.0:
         return 6.0
