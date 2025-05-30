@@ -44,9 +44,6 @@ public class DawscriptExtension extends ControllerExtension
 
    private static final boolean ENABLE_PARAMETER_RANGE_UGLY_HACK = true;
 
-   private static final String BW_EXTENSION_FILENAME = "dawscript.bwextension";
-   private static final String PYTHON_SCRIPT_FILENAME = "dawscript.py";
-
    private static final int MAX_TRACKS = 64;
    private static final int MAX_DEVICES = 16;
    private static final int MAX_PARAMETERS = 32;
@@ -89,17 +86,19 @@ public class DawscriptExtension extends ControllerExtension
    public void init()
    {
       final ControllerHost host = getHost();
+      final String filename = pascalToSnake(getExtensionDefinition()
+         .getClass().getSimpleName().replace("ExtensionDefinition", ""));
 
       try {
          startGatewayServer();
 
          pythonScriptWait = 0;
          pythonScript = new PythonScript(host::println, host::errorln);
-         final File script = BitwigExtensionLocator.getPath(BW_EXTENSION_FILENAME)
+         final File script = BitwigExtensionLocator.getPath(filename + ".bwextension")
             .toPath()
             .toRealPath()
             .getParent()
-            .resolve(PYTHON_SCRIPT_FILENAME)
+            .resolve(filename + ".py")
             .toFile();
          pythonScript.start(script, Integer.toString(gatewayServer.getPort()));
 
@@ -398,5 +397,28 @@ public class DawscriptExtension extends ControllerExtension
       return target.getClass().getSimpleName()
                + "@" + Integer.toHexString(System.identityHashCode(target))
                + "_" + prop;
+   }
+
+   private static String pascalToSnake(String input) {
+      if (input == null || input.isEmpty()) {
+         return input;
+      }
+
+      StringBuilder result = new StringBuilder();
+      char[] chars = input.toCharArray();
+
+      for (int i = 0; i < chars.length; i++) {
+         char c = chars[i];
+         if (Character.isUpperCase(c)) {
+            if (i != 0) {
+               result.append('_');
+            }
+            result.append(Character.toLowerCase(c));
+         } else {
+            result.append(c);
+         }
+      }
+
+      return result.toString();
    }
 }
