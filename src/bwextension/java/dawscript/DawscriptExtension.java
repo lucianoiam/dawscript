@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
+import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.Application;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Device;
@@ -73,7 +74,7 @@ public class DawscriptExtension extends ControllerExtension
       ReflectionUtil.setClassLoadingStrategy(new RootClassLoadingStrategy());
    }
 
-   protected DawscriptExtension(final DawscriptExtensionDefinition definition, final ControllerHost host)
+   public DawscriptExtension(final ControllerExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
 
