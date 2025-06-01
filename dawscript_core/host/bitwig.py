@@ -29,16 +29,17 @@ if len(sys.argv) < 2:
     raise IncompatibleEnvironmentError
 
 try:
+    port = int(sys.argv[1])
     gateway = JavaGateway(
         gateway_parameters=GatewayParameters(
-            port=int(sys.argv[1]),
+            port=port,
             auto_convert=True
         ),
-        callback_server_parameters=CallbackServerParameters()
+        callback_server_parameters=CallbackServerParameters(port=port + 1)
     )
     gateway.jvm.java.lang.System.getProperty("java.version")
     bw_ext = gateway.entry_point
-except Py4JNetworkError:
+except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
 
 

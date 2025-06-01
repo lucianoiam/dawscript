@@ -4,13 +4,13 @@
 package dawscript;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.BindException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,6 +27,7 @@ import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.ParameterBank;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
+import py4j.CallbackClient;
 import py4j.GatewayServer;
 import py4j.reflection.ReflectionUtil;
 import py4j.reflection.RootClassLoadingStrategy;
@@ -90,7 +91,16 @@ public class DawscriptExtension extends ControllerExtension
          .getClass().getSimpleName().replace("ExtensionDefinition", ""));
 
       try {
-         startGatewayServer();
+         final int def_port = GatewayServer.DEFAULT_PORT;
+         final int port = new Random().nextInt((65534 - def_port) + 1) + def_port;
+         final CallbackClient callbackClient = new CallbackClient(port + 1,
+            InetAddress.getByName("127.0.0.1"));
+         gatewayServer = new GatewayServer.GatewayServerBuilder()
+            .entryPoint(this)
+            .javaPort(port)
+            .callbackClient(callbackClient)
+            .build();
+         gatewayServer.start();
 
          pythonScriptWait = 0;
          pythonScript = new PythonScript(host::println, host::errorln);
@@ -263,23 +273,6 @@ public class DawscriptExtension extends ControllerExtension
       parameter.setImmediately(value);
 
       return new double[] { lo, hi };
-   }
-
-   private void startGatewayServer() throws Exception
-   {
-      int port = GatewayServer.DEFAULT_PORT;
-
-      while (gatewayServer == null) {
-         try {
-            gatewayServer = new GatewayServer(this, port);
-            gatewayServer.start();
-         } catch (Exception e) {
-            port++;
-            if ((port - GatewayServer.DEFAULT_PORT) == 10) {
-               throw e;
-            }
-         }
-      }
    }
 
    private void initBanks()
