@@ -130,10 +130,14 @@ How to Install
 Debug Environment
 -----------------
 Debugging while running on a DAW can be a tedious process, so dawscript can also
-run stand-alone when started from a terminal. In this case, a JACK server is
+run stand-alone when started from a terminal. In this case a JACK server is
 required to provide MIDI input, and calls to the DAW APIs target a mock
 implementation that prints to stdout. MIDI implementation is planned to be
 replaced by RtMidi so no additional software is required.
+
+The example `console` implements a [RPyC](https://github.com/tomerfiliba-org/rpyc)
+REPL console that connects to the host from a script running on a separate
+process, for example started from a terminal.
 
 Related Tools
 -------------
