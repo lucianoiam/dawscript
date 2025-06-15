@@ -211,7 +211,7 @@ def _mute_remote_listener(client, target, prop):
 def _unmute_remote_listeners():
     global _setter_call_src, _setter_call_t
 
-    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.01:
+    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.02:
         _setter_call_src = {}
         _setter_call_t = 0
 
