@@ -3,7 +3,8 @@
 
 window.dawscript = (() => {
 
-const connect = (callback = (status) => true)            => _connect(callback);
+const enableDebugMessages = () => _enableDebugMessages();
+const connect = (callback = (status) => true) => _connect(callback);
 
 // host/public.py
 const host = Object.freeze({
@@ -56,13 +57,19 @@ const TrackType = Object.freeze({
 
 const DEFAULT_WEBSOCKET_PORT = 49152;
 const RECONNECT_WAIT_SEC = 3;
+const CONSOLE_TAG = 'dawscript';
 
+let _debug_msg = false;
 let _socket = null;
 let _seq = 0;
 let _init_queue = [];
 let _promise_cb = {};
 let _listeners = {};
 let _tp_to_listener_seq = {};
+
+function _enableDebugMessages() {
+   _debug_msg = true;
+}
 
 function _connect(callback) {
    const port =
@@ -74,7 +81,7 @@ function _connect(callback) {
       _socket = new WebSocket(url);
 
       _socket.onopen = () => {
-         console.info("dawscript: connected");
+         _info("connected");
 
          if (callback) {
             callback(true);
@@ -93,8 +100,7 @@ function _connect(callback) {
       };
 
       _socket.onclose = (event) => {
-         const s = `dawscript: disconnected (${event.code}) ${event.reason}`;
-         console.warn(s);
+         _warn(`disconnected (${event.code}) ${event.reason}`);
 
          if (! callback || callback(false)) {
             setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
@@ -150,8 +156,10 @@ async function _call(func_name, ...args) {
       }
 
       if (_socket && _socket.readyState == WebSocket.OPEN) {
+         _debug(`↑ ${message}`);
          _send(message);
       } else {
+         _debug(`↑ Q ${message}`);
          _init_queue.push(message);
       }
    });
@@ -174,6 +182,8 @@ function _handle(message) {
    const [seq, result] = JSON.parse(message);
 
    if (seq in _listeners && typeof result !== "undefined") {
+      _debug(`↓ L ${seq},${result}`);
+
       for (listener of _listeners[seq]) {
          listener(result);
       }
@@ -182,6 +192,8 @@ function _handle(message) {
    }
 
    const [resolve, reject] = _pop_promise_cb(seq);
+
+   _debug(`↓ ${seq},${result}`);
 
    if (typeof result === "string" && result.startsWith("error:")) {
       reject(new HostError(result.slice(6)));
@@ -230,12 +242,25 @@ function _pop_promise_cb(seq) {
 }
 
 function _cleanup() {
+   _debug_msg = false;
    _socket = null;
    _seq = 0;
    _init_queue = [];
    _promise_cb = {};
    _listeners = {};
    _tp_to_listener_seq = {};
+}  
+
+function _debug(message) {
+   if (_debug_msg) console.debug(`[${CONSOLE_TAG}] ${message}`);
+}
+
+function _info(message) {
+   console.info(`[${CONSOLE_TAG}] ${message}`);
+}
+
+function _warn(message) {
+   console.warn(`[${CONSOLE_TAG}] ${message}`);
 }
 
 class HostError extends Error {
@@ -245,6 +270,11 @@ class HostError extends Error {
    }
 }
 
-return Object.freeze({ connect, host, TrackType });
+return Object.freeze({
+   enableDebugMessages,
+   connect,
+   host,
+   TrackType
+});
 
 })(); // dawscript
