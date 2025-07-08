@@ -121,7 +121,9 @@ host.addTrackVolumeListener(track, (vol) => {
 connect();
 ```
 
-The web service is advertised using DNS-SD (Bonjour) under the name «dawscript»
+The web UI is advertised using DNS-SD (Bonjour) under the name «dawscript»,
+for easy access using discovery apps like these on [iOS](https://apps.apple.com/app/abc-bonjour/id1172137819)
+or [Android](https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser).
 
 How to Install
 --------------
