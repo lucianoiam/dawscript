@@ -59,7 +59,8 @@ class ReprJSONEncoder(json.JSONEncoder):
             if DEBUG:
                 key = f"repr = {repr(obj)}"
             else:
-                key = f"handle_{_d2b_hash(repr(obj)):0>8x}"
+                repr_hash = _d2b_hash(repr(obj))
+                key = f"handle_{(repr_hash & 0xFFFFFFFF):08x}"
             _host_obj[key] = obj
             return key
 
