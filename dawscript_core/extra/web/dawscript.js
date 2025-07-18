@@ -3,7 +3,7 @@
 
 window.dawscript = (() => {
 
-const enableDebugMessages = () => _enableDebugMessages();
+const enableDebugMessages = () => _debug_msg = true;
 const connect = (callback = (status) => true) => _connect(callback);
 
 // host/public.py
@@ -66,10 +66,6 @@ let _init_queue = [];
 let _promise_cb = {};
 let _listeners = {};
 let _tp_to_listener_seq = {};
-
-function _enableDebugMessages() {
-   _debug_msg = true;
-}
 
 function _connect(callback) {
    const port =

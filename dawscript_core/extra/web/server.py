@@ -21,6 +21,7 @@ from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join("dawscript_core", "extra", "web")
 LOG_TAG = "server.py"
+LISTENER_MUTE_MS = 100
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _htdocs_path: str = None
@@ -213,7 +214,7 @@ def _mute_remote_listener(client, target, prop):
 def _unmute_remote_listeners():
     global _setter_call_src, _setter_call_t
 
-    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.02:
+    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.001*LISTENER_MUTE_MS:
         _setter_call_src = {}
         _setter_call_t = 0
 
