@@ -140,7 +140,7 @@ async function _call(func_name, ...args) {
                return;
             }
 
-            args.push(listener_seq);
+            args = [listener_seq];
          } else {
             reject(new Error("Invalid argument"));
             return;
