@@ -191,7 +191,9 @@ async def _remove_listener(ws, seq, client, listener_seq):
         client not in _listener_remover
         or listener_seq not in _listener_remover[client]
     ):
-        raise Exception("Listener not registered")
+        #raise Exception("Listener not registered")
+        host.log(f"{LOG_TAG} listener not registered - {listener_seq}")
+        return
 
     bound_remover = _listener_remover[client][listener_seq]
     bound_remover()
