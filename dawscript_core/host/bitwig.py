@@ -67,7 +67,7 @@ def display(message: str):
 
 
 def get_object_id(handle: AnyHandle) -> str:
-    return repr(handle) # TODO
+    return f"{handle.hashCode() & 0xFFFFFFFF:08x}"
 
 
 def get_tracks() -> List[TrackHandle]:
