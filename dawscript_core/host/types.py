@@ -9,6 +9,7 @@ ALL_MIDI_INPUTS = None
 
 Config = namedtuple("Config", ["midi_inputs"])
 
+AnyHandle = Any
 TrackHandle = Any
 PluginHandle = Any
 ParameterHandle = Any

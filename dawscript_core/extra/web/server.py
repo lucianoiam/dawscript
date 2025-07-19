@@ -17,7 +17,7 @@ from dawscript_core import host
 from dawscript_core.util import dawscript_path
 
 from . import dnssd
-from .protocol import replace_inf, ReprJSONDecoder, ReprJSONEncoder
+from .protocol import replace_inf, JSONDecoder, JSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join("dawscript_core", "extra", "web")
 LOG_TAG = "server.py"
@@ -29,6 +29,8 @@ _cleanup: List[Callable] = []
 _listener_remover: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
 _setter_call_t: float = 0
+
+JSONEncoder.get_object_id = host.get_object_id
 
 
 def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List[str]:
@@ -94,7 +96,7 @@ async def _ws_handle(ws, path):
     client = str(ws.id)
 
     async for message in ws:
-        (seq, func_name, *args) = json.loads(message, cls=ReprJSONDecoder)
+        (seq, func_name, *args) = json.loads(message, cls=JSONDecoder)
 
         m = re.match(r"^(add|remove)_([a-z_]+)_listener$", func_name)
 
@@ -164,7 +166,7 @@ async def _send_message(ws, seq, payload):
     if payload is not None:
         message.append(replace_inf(payload))
 
-    await ws.send(json.dumps(message, cls=ReprJSONEncoder))
+    await ws.send(json.dumps(message, cls=JSONEncoder))
 
 
 async def _send_ack(ws, seq):

@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List
 
 from .types import (
     ALL_MIDI_INPUTS,
+    AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
@@ -63,6 +64,10 @@ def log(message: str):
 
 def display(message: str):
     bw_ext.getHost().showPopupNotification(str(message))
+
+
+def get_object_id(handle: AnyHandle) -> str:
+    return repr(handle) # TODO
 
 
 def get_tracks() -> List[TrackHandle]:

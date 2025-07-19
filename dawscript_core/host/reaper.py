@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, List
 
 from .types import (
+    AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
@@ -98,6 +99,10 @@ def log(message: str):
 
 def display(message: str):
     RPR_ShowConsoleMsg(f"{message}\n")
+
+
+def get_object_id(handle: AnyHandle) -> str:
+    raise Exception('get_object_id() not implemented for REAPER')
 
 
 def get_tracks() -> List[TrackHandle]:

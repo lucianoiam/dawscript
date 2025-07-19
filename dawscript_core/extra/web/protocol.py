@@ -6,15 +6,10 @@ import re
 from enum import Enum
 from typing import Any, Dict
 
-_host_obj: Dict[str, Any] = {}
-
-DEBUG = False
-if DEBUG:
-    REPR_PATTERN = r"^repr = .+$"
-else:
-    REPR_PATTERN = r"^handle_[0-9a-fA-F]{8}$"
-
+HANDLE_PREFIX = '@h:'
 JS_NUMBER_MAX_VALUE = 1.7976931348623157e308
+
+_host_obj: Dict[str, Any] = {}
 
 
 def replace_inf(data):
@@ -31,7 +26,7 @@ def replace_inf(data):
     return data
 
 
-class ReprJSONDecoder(json.JSONDecoder):
+class JSONDecoder(json.JSONDecoder):
     def decode(self, s, **kwargs):
         value = super().decode(s, **kwargs)
 
@@ -42,13 +37,15 @@ class ReprJSONDecoder(json.JSONDecoder):
             return [self._transform(val) for val in value]
         elif isinstance(value, dict):
             return {key: self._transform(val) for key, val in value.items()}
-        elif isinstance(value, str) and re.match(REPR_PATTERN, value):
+        elif isinstance(value, str) and value.startswith(HANDLE_PREFIX):
             return _host_obj[value]
 
         return value
 
 
-class ReprJSONEncoder(json.JSONEncoder):
+class JSONEncoder(json.JSONEncoder):
+    get_object_id = repr
+
     def default(self, obj):
         if isinstance(obj, Enum):
             return obj.value
@@ -56,19 +53,6 @@ class ReprJSONEncoder(json.JSONEncoder):
         try:
             return super().default(obj)
         except TypeError:
-            if DEBUG:
-                key = f"repr = {repr(obj)}"
-            else:
-                repr_hash = _d2b_hash(repr(obj))
-                key = f"handle_{(repr_hash & 0xFFFFFFFF):08x}"
+            key = HANDLE_PREFIX + JSONEncoder.get_object_id(obj)
             _host_obj[key] = obj
             return key
-
-
-def _d2b_hash(string):
-    hash_value = 0
-    for char in string:
-        hash_value = (31 * hash_value + ord(char)) & 0xFFFFFFFF
-        if hash_value >= 0x80000000:
-            hash_value -= 0x100000000
-    return hash_value

@@ -7,6 +7,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, List
 
 from .types import (
+    AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
     ParameterNotFoundError,
@@ -49,6 +50,28 @@ def display(message: str):
         _control_surface.show_message(str(message))
     else:
         print(message, file=sys.stderr)
+
+
+def get_object_id(handle: AnyHandle) -> str:
+    if isinstance(handle, Live.Track.Track):
+        # Combine name and color_index to reduce collision risk
+        return f"{_d2b_hash(handle.name + str(handle.color_index)):08x}"
+    elif isinstance(handle, Live.Device.Device):
+        # Use parent track's name hash, device name, and index for uniqueness
+        track = handle.canonical_parent
+        track_id = _d2b_hash(track.name + str(track.color_index))
+        device_n = list(track.devices).index(handle)
+        return f"{track_id:08x}/{_d2b_hash(handle.name):08x}_{device_n}"
+    elif isinstance(handle, Live.DeviceParameter.DeviceParameter):
+        # Use parent device's ID and parameter name for uniqueness
+        device = handle.canonical_parent
+        track = device.canonical_parent
+        track_id = _d2b_hash(track.name + str(track.color_index))
+        device_n = list(track.devices).index(device)
+        device_id = f"{track_id:08x}/{_d2b_hash(device.name):08x}/{device_n}"
+        return f"{device_id}/{_d2b_hash(handle.name):08x}"
+
+    return None
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -215,6 +238,13 @@ def _get_document():
 
 def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
     return get_plugin_parameter_by_name(plugin, "Device On")
+
+
+def _d2b_hash(string):
+    hash_value = 0
+    for char in string:
+        hash_value = (31 * hash_value + ord(char)) & 0xFFFFFFFF
+    return hash_value
 
 
 def _vol_value_to_db(v: float) -> float:
