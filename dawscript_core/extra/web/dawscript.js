@@ -244,7 +244,6 @@ function _pop_promise_cb(seq) {
 }
 
 function _cleanup() {
-   _debug_msg = false;
    _socket = null;
    _seq = 0;
    _init_queue = [];
