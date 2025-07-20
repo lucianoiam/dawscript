@@ -6,7 +6,10 @@ import re
 from enum import Enum
 from typing import Any, Dict
 
-HANDLE_PREFIX = '@h:'
+from dawscript_core import host
+
+LOG_TAG = "protocol.py"
+HANDLE_PREFIX = '@H:'
 JS_NUMBER_MAX_VALUE = 1.7976931348623157e308
 
 _host_obj: Dict[str, Any] = {}
@@ -38,7 +41,10 @@ class JSONDecoder(json.JSONDecoder):
         elif isinstance(value, dict):
             return {key: self._transform(val) for key, val in value.items()}
         elif isinstance(value, str) and value.startswith(HANDLE_PREFIX):
-            return _host_obj[value]
+            try:
+                return _host_obj[value]
+            except KeyError:
+                host.log(f"{LOG_TAG} JSONDecoder._transform(): key '{value}' does not exist")
 
         return value
 

@@ -222,11 +222,13 @@ function _remove_listener(target, prop, listener) {
    const key_tp = `${target}_${prop}`;
    const listener_seq = _tp_to_listener_seq[key_tp];
 
-   _listeners[listener_seq] = _listeners[listener_seq]
-      .filter((l) => l != listener);
+   if (listener_seq in _listeners) {
+      _listeners[listener_seq] = _listeners[listener_seq]
+         .filter((l) => l != listener);
 
-   if (_listeners[listener_seq].length > 0) {
-      return null;  // do not unregister from server yet
+      if (_listeners[listener_seq].length > 0) {
+         return null;  // do not unregister from server yet
+      }
    }
 
    delete _listeners[key_tp];
