@@ -189,7 +189,11 @@ function _handle(message) {
 
    const [resolve, reject] = _pop_promise_cb(seq);
 
-   _debug(`↓ ${seq},${result}`);
+   if (typeof result !== "undefined") {
+      _debug(`↓ ${seq},${result}`);
+   } else {
+      _debug(`↓ ${seq}`);
+   }
 
    if (typeof result === "string" && result.startsWith("error:")) {
       reject(new HostError(result.slice(6)));
