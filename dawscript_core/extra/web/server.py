@@ -21,7 +21,7 @@ from .protocol import replace_inf, JSONDecoder, JSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join("dawscript_core", "extra", "web")
 LOG_TAG = "server.py"
-LISTENER_MUTE_MS = 100
+LISTENER_MUTE_MS = 200
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _htdocs_path: str = None
