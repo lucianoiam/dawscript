@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import math
 import sys
 from types import ModuleType
 from typing import Any, Callable, Dict, List
@@ -24,6 +23,8 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
+from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+
 _control_surface = None
 
 
@@ -35,6 +36,7 @@ def main(controller: ModuleType, context: Any):
     global _control_surface
     _control_surface = context
     _control_surface.set_controller(controller)
+    build_vol_lookup(_db_to_norm, -68.0, 6.0)
 
 
 # ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
@@ -115,11 +117,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return _vol_value_to_db(track.mixer_device.volume.value)
+    return nearest_norm_to_db(track.mixer_device.volume.value)
 
 
 def set_track_volume(track: TrackHandle, volume_db: float):
-    track.mixer_device.volume.value = _db_to_vol_value(volume_db)
+    track.mixer_device.volume.value = nearest_db_to_norm(volume_db)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
@@ -247,34 +249,14 @@ def _d2b_hash(string):
     return hash_value
 
 
-def _vol_value_to_db(v: float) -> float:
-    if v <= 0:
-        return -math.inf
-    if v >= 1.0:
-        return 6.0
+def _db_to_norm(v: float) -> float:
     return (
-        -127.9278287 * pow(v, 4)
-        + 390.2314102 * pow(v, 3)
-        + -432.1372651 * pow(v, 2)
-        + 244.6317808 * v
-        + -68.70003194
-    )
-
-
-def _db_to_vol_value(v: float) -> float:
-    if v == -math.inf:
-        return 0
-    if v >= 6.0:
-        return 1.0
-    vol = (
         -9.867028203e-8 * pow(v, 4)
         + -0.000009835475566 * pow(v, 3)
         + -0.00001886034431 * pow(v, 2)
         + 0.02632908703 * v
         + 0.8496356422
     )
-
-    return max(0, vol)
 
 
 class DawscriptControlSurface(ControlSurface):

@@ -48,6 +48,8 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
+from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+
 RPR_defer = None
 _controller = None
 _proj_path = None
@@ -66,6 +68,8 @@ def main(controller: ModuleType, context: Any):
     _controller = controller
     RPR_defer = context["RPR_defer"]
     RPR_atexit = context["RPR_atexit"]
+
+    build_vol_lookup(_db_to_norm, -90.0, 12.0)
 
     RPR_atexit("from dawscript_core.host import reaper; reaper.cleanup()")
 
@@ -153,11 +157,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return _vol_value_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
+    return nearest_norm_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
 
 
 def set_track_volume(track: TrackHandle, volume_db: float):
-    RPR_SetTrackUIVolume(track, _db_to_vol_value(volume_db), False, False, 0)
+    RPR_SetTrackUIVolume(track, nearest_db_to_norm(volume_db), False, False, 0)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
@@ -250,21 +254,9 @@ def remove_parameter_value_listener(
     _remove_listener(param, "value", listener)
 
 
-TWENTY_OVER_LN10 = 8.6858896380650365530225783783321
 LN10_OVER_TWENTY = 0.11512925464970228420089957273422
 
-
-def _vol_value_to_db(v: float) -> float:
-    if v < 0.0000000298023223876953125:
-        return -math.inf
-    v = TWENTY_OVER_LN10 * math.log(v)
-    if v <= -150.0:
-        return -math.inf
-    else:
-        return v
-
-
-def _db_to_vol_value(v: float) -> float:
+def _db_to_norm(v: float) -> float:
     return math.exp(LN10_OVER_TWENTY * v)
 
 

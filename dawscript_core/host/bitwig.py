@@ -43,12 +43,15 @@ try:
 except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
 
+from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+
 
 def name() -> str:
     return "bitwig"
 
 
 def main(controller: ModuleType, context: Any):
+    build_vol_lookup(_db_to_norm, -126.0, 6.0)
     bw_ext.setController(Controller(controller))
     try:
         while True:
@@ -108,11 +111,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],Non
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return _vol_value_to_db(track.volume().get())
+    return nearest_norm_to_db(track.volume().get())
 
 
 def set_track_volume(track: TrackHandle, volume_db: float):
-    track.volume().setImmediately(_db_to_vol_value(volume_db))
+    track.volume().setImmediately(nearest_db_to_norm(volume_db))
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
@@ -213,24 +216,7 @@ def _remove_listener(target: Any, prop: str, listener: Callable):
     bw_ext.removeListener(target, prop, id(listener))
 
 
-def _vol_value_to_db(v: float) -> float:
-    if v <= 0:
-        return -math.inf
-    if v >= 1.0:
-        return 6.0
-    a = -128.3272282
-    b = 25.53989661
-    c = 96.22932269
-    d = -0.05850250872
-    e = 10787.4341
-    return a + b * math.asinh(c * v + d * math.asinh(e * v))
-
-
-def _db_to_vol_value(v: float) -> float:
-    if v == -math.inf:
-        return 0
-    if v >= 6.0:
-        return 1.0
+def _db_to_norm(v: float) -> float:
     a = 0.004374052017
     b = 0.7891697633
     c = 0.000054132527
