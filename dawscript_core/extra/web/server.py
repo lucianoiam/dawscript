@@ -7,7 +7,6 @@ import math
 import os
 import re
 import socket
-import time
 from typing import Any, Callable, Dict, List
 
 import websockets
@@ -21,14 +20,12 @@ from .protocol import replace_inf, JSONDecoder, JSONEncoder
 
 BUILTIN_HTDOCS_PATH = os.path.join("dawscript_core", "extra", "web")
 LOG_TAG = "server.py"
-LISTENER_MUTE_MS = 200
 
 _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 _htdocs_path: str = None
 _cleanup: List[Callable] = []
 _listener_remover: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
-_setter_call_t: float = 0
 
 JSONEncoder.get_object_id = host.get_object_id
 
@@ -69,7 +66,7 @@ def stop():
 
 
 def tick():
-    _unmute_remote_listeners()
+    #_unmute_remote_listeners()
     _loop.run_until_complete(_noop())
 
 
@@ -174,7 +171,9 @@ async def _send_ack(ws, seq):
 
 
 def _add_listener(ws, seq, client, target, prop):
-    def listener(v, c_ws=ws, c_seq=seq, c_tp=f"{target}_{prop}"):
+    key_tp = f"{target}_{prop}"
+
+    def listener(v, c_ws=ws, c_seq=seq, c_tp=key_tp):
         return _call_remote_listener(c_ws, c_seq, c_tp, v)
 
     setter = getattr(host, f"add_{prop}_listener")
@@ -208,24 +207,17 @@ def _remove_listener(ws, seq, client, listener_seq):
 
 
 def _mute_remote_listener(client, target, prop):
-    global _setter_call_t
-    _setter_call_t = time.time()
-    _setter_call_src[f"{target}_{prop}"] = client
-
-
-def _unmute_remote_listeners():
-    global _setter_call_src, _setter_call_t
-
-    if _setter_call_t > 0 and (time.time() - _setter_call_t) > 0.001*LISTENER_MUTE_MS:
-        _setter_call_src = {}
-        _setter_call_t = 0
+    key_tp = f"{target}_{prop}"
+    _setter_call_src[key_tp] = client
 
 
 def _call_remote_listener(ws, seq, key_tp, value):
     client = str(ws.id)
 
     try:
-        if _setter_call_src.get(key_tp) != client:
+        if _setter_call_src.get(key_tp) == client:
+            del _setter_call_src[key_tp]
+        else:
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)
