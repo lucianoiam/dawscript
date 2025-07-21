@@ -104,10 +104,10 @@ async def _ws_handle(ws, path):
             action, prop = m.groups()
 
             if action == "add":
-                await _add_listener(ws, seq, client, args[0], prop)
+                _add_listener(ws, seq, client, args[0], prop)
                 await _send_ack(ws, seq)
             elif action == "remove":
-                await _remove_listener(ws, seq, client, args[0])
+                _remove_listener(ws, seq, client, args[0])
                 await _send_ack(ws, seq)
 
             continue
@@ -143,7 +143,7 @@ async def _http_serve(addrs, port):
         await site.start()
 
 
-async def _http_handle(request):
+def _http_handle(request):
     filename = request.match_info.get("filename")
 
     if filename.startswith(BUILTIN_HTDOCS_PATH):
@@ -173,7 +173,7 @@ async def _send_ack(ws, seq):
     await _send_message(ws, seq, None)
 
 
-async def _add_listener(ws, seq, client, target, prop):
+def _add_listener(ws, seq, client, target, prop):
     def listener(v, c_ws=ws, c_seq=seq, c_tp=f"{target}_{prop}"):
         return _call_remote_listener(c_ws, c_seq, c_tp, v)
 
@@ -189,7 +189,7 @@ async def _add_listener(ws, seq, client, target, prop):
     _listener_remover[client][seq] = bound_remover
 
 
-async def _remove_listener(ws, seq, client, listener_seq):
+def _remove_listener(ws, seq, client, listener_seq):
     if (
         client not in _listener_remover
         or listener_seq not in _listener_remover[client]
