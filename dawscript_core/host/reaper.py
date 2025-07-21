@@ -102,7 +102,7 @@ def display(message: str):
 
 
 def get_object_id(handle: AnyHandle) -> str:
-    raise Exception('get_object_id() not implemented for REAPER')
+    return str(handle)
 
 
 def get_tracks() -> List[TrackHandle]:
