@@ -11,7 +11,7 @@ import threading
 from types import ModuleType
 from typing import Any, Callable, List
 
-from .types import ParameterHandle, PluginHandle, TrackHandle, TrackType
+from ..types import AnyHandle, ParameterHandle, PluginHandle, TrackHandle, TrackType
 
 _controller = None
 _jack_client: jack.Client = None
@@ -35,6 +35,10 @@ def log(message: str):
 
 def display(message: str):
     print(message)
+
+
+def get_object_id(handle: AnyHandle) -> str:
+    return handle
 
 
 def get_tracks() -> List[TrackHandle]:

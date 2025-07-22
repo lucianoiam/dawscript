@@ -1,9 +1,26 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import Dict
+import importlib
+from ..types import IncompatibleEnvironmentError
 
-from .types import AnyHandle, TrackHandle, PluginHandle, ParameterHandle
+
+try:
+    from .reaper import *
+except IncompatibleEnvironmentError:
+    pass
+try:
+    from .live import *
+except IncompatibleEnvironmentError:
+    pass
+try:
+    from .bitwig import *
+except IncompatibleEnvironmentError:
+    pass
+try:
+    name()
+except NameError:
+    from .cli import *
 
 
 """
@@ -12,7 +29,6 @@ def main(controller: ModuleType, context: Any)
 def log(message: str)
 def display(message: str)
 def get_object_id(handle: AnyHandle) -> str
-def get_fader_label_positions() -> Dict[int,float]
 def get_tracks() -> List[TrackHandle]
 def get_track_type(track: TrackHandle) -> TrackType
 def get_track_name(track: TrackHandle) -> str
@@ -42,49 +58,3 @@ def set_parameter_value(param: ParameterHandle, value: float)
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 """
-
-
-def get_fader_label_positions() -> Dict[int,float]:
-    return {} # TODO
-
-
-def get_track_by_name(name: str) -> TrackHandle:
-    name_lower = name.lower()
-
-    for track in get_tracks():
-        if get_track_name(name).lower() == name_lower:
-            return track
-
-    raise TrackNotFoundError(name)
-
-
-def toggle_track_mute(track: TrackHandle):
-    set_track_mute(track, not is_track_mute(track))
-
-
-def toggle_track_mute_by_name(name: str):
-    toggle_track_mute(get_track_by_name(name))
-
-
-def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
-    name_lower = name.lower()
-
-    for plugin in get_track_plugins(track):
-        if get_plugin_name(plugin).lower() == name_lower:
-            return device
-
-    raise PluginNotFoundError(name)
-
-
-def get_plugin_parameter_by_name(plugin: PluginHandle, name: str) -> ParameterHandle:
-    name_lower = name.lower()
-
-    for param in get_plugin_parameters(plugin):
-        if get_parameter_name(param).lower() == name_lower:
-            return param
-
-    raise ParameterNotFoundError(name)
-
-
-def toggle_plugin_enabled(plugin: PluginHandle):
-    set_plugin_enabled(plugin, not is_plugin_enabled(plugin))

@@ -7,7 +7,8 @@ from ctypes import *
 from types import ModuleType
 from typing import Any, Callable, Dict, List
 
-from .types import (
+from .util import map_interp
+from ..types import (
     AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
@@ -47,8 +48,6 @@ try:
     )
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
-
-from .private import map_interp
 
 N_INF = float('-inf')
 HOST_VOL_DB = [N_INF,   -36,   -24,   -18,   -12,    -6,     0,     6,    12]

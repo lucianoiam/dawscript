@@ -19,7 +19,7 @@ def replace_inf(data):
     if isinstance(data, float):
         if data == float("inf"):
             return JS_NUMBER_MAX_VALUE
-        elif data == -float("inf"):
+        elif data == float("-inf"):
             return -JS_NUMBER_MAX_VALUE
     elif isinstance(data, list):
         return [replace_inf(item) for item in data]

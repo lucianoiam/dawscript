@@ -8,7 +8,7 @@ const connect = (callback = (status) => true) => _connect(callback);
 
 // host/public.py
 const host = Object.freeze({
-   getFaderLabelPositions: async ()                      => _call("get_fader_label_positions"),
+   getFaderLabels: async ()                              => _call("get_fader_labels"),
    getTracks: async ()                                   => _call("get_tracks"),
    getTrackType: async (track)                           => _call("get_track_type", track),
    getTrackName: async (track)                           => _call("get_track_name", track),
@@ -164,7 +164,11 @@ async function _call(func_name, ...args) {
 
 function _send(message, wait) {
    try {
-      _socket.send(JSON.stringify(message));
+      _socket.send(JSON.stringify(message, (_, value) => {
+         if (value === Infinity) return Number.MAX_VALUE;
+         if (value === -Infinity) return -Number.MAX_VALUE;
+         return value;
+      }));
    } catch (error) {
       const callbacks = _pop_promise_cb(message[0]);
 
@@ -176,7 +180,11 @@ function _send(message, wait) {
 }
 
 function _handle(message) {
-   const [seq, result] = JSON.parse(message);
+   const [seq, result] = JSON.parse(message, (_, value) => {
+      if (value === Number.MAX_VALUE) return Infinity;
+      if (value === -Number.MAX_VALUE) return -Infinity;
+      return value;
+   });
 
    if (seq in _listeners && typeof result !== "undefined") {
       _debug(`↓ L ${seq},${result}`);

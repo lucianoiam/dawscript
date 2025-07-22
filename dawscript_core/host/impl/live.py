@@ -5,7 +5,8 @@ import sys
 from types import ModuleType
 from typing import Any, Callable, Dict, List
 
-from .types import (
+from .util import map_interp
+from ..types import (
     AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
@@ -22,8 +23,6 @@ try:
     from _Framework.ControlSurface import ControlSurface
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
-
-from .private import map_interp
 
 N_INF = float('-inf')
 HOST_VOL_DB = [N_INF,   -60,   -54,   -48,   -42,   -36,   -30,   -24,   -18,   -12,    -6,     0,     6]
