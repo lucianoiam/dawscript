@@ -8,6 +8,7 @@ const connect = (callback = (status) => true) => _connect(callback);
 
 // host/public.py
 const host = Object.freeze({
+   getFaderLabelPositions: async ()                      => _call("get_fader_label_positions"),
    getTracks: async ()                                   => _call("get_tracks"),
    getTrackType: async (track)                           => _call("get_track_type", track),
    getTrackName: async (track)                           => _call("get_track_name", track),

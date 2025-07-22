@@ -48,7 +48,7 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
-from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+from .private import host_to_client_vol, client_to_host_vol
 
 RPR_defer = None
 _controller = None
@@ -68,8 +68,6 @@ def main(controller: ModuleType, context: Any):
     _controller = controller
     RPR_defer = context["RPR_defer"]
     RPR_atexit = context["RPR_atexit"]
-
-    build_vol_lookup(_db_to_norm, -90.0, 12.0)
 
     RPR_atexit("from dawscript_core.host import reaper; reaper.cleanup()")
 
@@ -107,6 +105,14 @@ def display(message: str):
 
 def get_object_id(handle: AnyHandle) -> str:
     return str(handle)
+
+
+# TODO
+def get_fader_label_positions() -> Dict[int,float]:
+    return {
+        -72 : 0,
+         12 : 1
+    }
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -157,11 +163,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return nearest_norm_to_db(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
+    return host_to_client_vol(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
 
 
-def set_track_volume(track: TrackHandle, volume_db: float):
-    RPR_SetTrackUIVolume(track, nearest_db_to_norm(volume_db), False, False, 0)
+def set_track_volume(track: TrackHandle, volume: float):
+    RPR_SetTrackUIVolume(track, client_to_host_vol(volume), False, False, 0)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
@@ -252,12 +258,6 @@ def remove_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
     _remove_listener(param, "value", listener)
-
-
-LN10_OVER_TWENTY = 0.11512925464970228420089957273422
-
-def _db_to_norm(v: float) -> float:
-    return math.exp(LN10_OVER_TWENTY * v)
 
 
 def _tick():

@@ -74,8 +74,8 @@ def get_track_volume(track: TrackHandle) -> float:
     return 0.0
 
 
-def set_track_volume(track: TrackHandle, volume_db: float):
-    log(f"stub: set_track_volume( {track}, {volume_db} )")
+def set_track_volume(track: TrackHandle, volume: float):
+    log(f"stub: set_track_volume( {track}, {volume} )")
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):

@@ -106,8 +106,9 @@ const track = await host.getTrack('Track 1');
 
 const slider = document.createElement('input');
 slider.type = 'range';
-slider.min = -68;
-slider.max = 6;
+slider.min = 0;
+slider.max = 1.0;
+slider.step = 0.001;
 slider.value = await host.getTrackVolume(track);
 
 slider.addEventListener('input', (ev) => {

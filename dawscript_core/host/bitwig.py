@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import math
 import sys
 import time
 from types import ModuleType
@@ -43,7 +42,7 @@ try:
 except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
 
-from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+from .private import host_to_client_vol, client_to_host_vol
 
 
 def name() -> str:
@@ -51,7 +50,6 @@ def name() -> str:
 
 
 def main(controller: ModuleType, context: Any):
-    build_vol_lookup(_db_to_norm, -126.0, 6.0)
     bw_ext.setController(Controller(controller))
     try:
         while True:
@@ -71,6 +69,14 @@ def display(message: str):
 
 def get_object_id(handle: AnyHandle) -> str:
     return f"{handle.hashCode() & 0xFFFFFFFF:08x}"
+
+
+# TODO
+def get_fader_label_positions() -> Dict[int,float]:
+    return {
+        -132 : 0,
+           6 : 1
+    }
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -111,11 +117,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],Non
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return nearest_norm_to_db(track.volume().get())
+    return host_to_client_vol(track.volume().get())
 
 
-def set_track_volume(track: TrackHandle, volume_db: float):
-    track.volume().setImmediately(nearest_db_to_norm(volume_db))
+def set_track_volume(track: TrackHandle, volume: float):
+    track.volume().setImmediately(client_to_host_vol(volume))
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
@@ -214,14 +220,6 @@ def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
 
 def _remove_listener(target: Any, prop: str, listener: Callable):
     bw_ext.removeListener(target, prop, id(listener))
-
-
-def _db_to_norm(v: float) -> float:
-    a = 0.004374052017
-    b = 0.7891697633
-    c = 0.000054132527
-    d = 1.039281072
-    return a + b * (d ** v) + c * v
 
 
 class Controller:

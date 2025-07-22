@@ -23,7 +23,7 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
-from .private import build_vol_lookup, nearest_norm_to_db, nearest_db_to_norm
+from .private import host_to_client_vol, client_to_host_vol
 
 _control_surface = None
 
@@ -36,7 +36,6 @@ def main(controller: ModuleType, context: Any):
     global _control_surface
     _control_surface = context
     _control_surface.set_controller(controller)
-    build_vol_lookup(_db_to_norm, -68.0, 6.0)
 
 
 # ~/Library/Preferences/Ableton/Live\ x.x.x/Log.txt
@@ -74,6 +73,14 @@ def get_object_id(handle: AnyHandle) -> str:
         return f"{device_id}/{_d2b_hash(handle.name):08x}"
 
     return None
+
+
+# TODO
+def get_fader_label_positions() -> Dict[int,float]:
+    return {
+        -68 : 0,
+          6 : 1
+    }
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -117,11 +124,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return nearest_norm_to_db(track.mixer_device.volume.value)
+    return host_to_client_vol(track.mixer_device.volume.value)
 
 
-def set_track_volume(track: TrackHandle, volume_db: float):
-    track.mixer_device.volume.value = nearest_db_to_norm(volume_db)
+def set_track_volume(track: TrackHandle, volume: float):
+    track.mixer_device.volume.value = client_to_host_vol(volume)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
@@ -247,16 +254,6 @@ def _d2b_hash(string):
     for char in string:
         hash_value = (31 * hash_value + ord(char)) & 0xFFFFFFFF
     return hash_value
-
-
-def _db_to_norm(v: float) -> float:
-    return (
-        -9.867028203e-8 * pow(v, 4)
-        + -0.000009835475566 * pow(v, 3)
-        + -0.00001886034431 * pow(v, 2)
-        + 0.02632908703 * v
-        + 0.8496356422
-    )
 
 
 class DawscriptControlSurface(ControlSurface):

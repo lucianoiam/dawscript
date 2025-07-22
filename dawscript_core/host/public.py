@@ -10,6 +10,7 @@ def main(controller: ModuleType, context: Any)
 def log(message: str)
 def display(message: str)
 def get_object_id(handle: AnyHandle) -> str
+def get_fader_label_positions() -> Dict[int,float]
 def get_tracks() -> List[TrackHandle]
 def get_track_type(track: TrackHandle) -> TrackType
 def get_track_name(track: TrackHandle) -> str
@@ -18,7 +19,7 @@ def set_track_mute(track: TrackHandle, mute: bool)
 def add_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
 def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],None])
 def get_track_volume(track: TrackHandle) -> float
-def set_track_volume(track: TrackHandle, volume_db: float)
+def set_track_volume(track: TrackHandle, volume: float)
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None])
 def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],None])
 def get_track_pan(track: TrackHandle) -> float

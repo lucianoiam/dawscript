@@ -27,8 +27,9 @@ document.body.appendChild(getTracks);
 const trackVolume = document.createElement("input");
 trackVolume.style.display = "block";
 trackVolume.type = "range";
-trackVolume.min = -68;
-trackVolume.max = 6;
+trackVolume.min = 0;
+trackVolume.max = 1.0;
+trackVolume.step = 0.001;
 trackVolume.addEventListener("input", onTrackVolumeInput);
 
 connect(connectCallback);
