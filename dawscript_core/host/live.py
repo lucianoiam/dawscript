@@ -23,7 +23,12 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
-from .private import host_to_client_vol, client_to_host_vol
+from .private import map_interp
+
+N_INF = float('-inf')
+HOST_VOL_DB = [N_INF,   -60,   -54,   -48,   -42,   -36,   -30,   -24,   -18,   -12,    -6,     0,     6]
+HOST_VOL    = [0.000, 0.035, 0.070, 0.103, 0.142, 0.186, 0.239, 0.302, 0.401, 0.551, 0.700, 0.850, 1.000]
+CLIENT_VOL  = [0.000, 0.058, 0.112, 0.172, 0.236, 0.310, 0.399, 0.498, 0.601, 0.703, 0.799, 0.898, 1.000]
 
 _control_surface = None
 
@@ -75,14 +80,6 @@ def get_object_id(handle: AnyHandle) -> str:
     return None
 
 
-# TODO
-def get_fader_label_positions() -> Dict[int,float]:
-    return {
-        -68 : 0,
-          6 : 1
-    }
-
-
 def get_tracks() -> List[TrackHandle]:
     return list(_get_document().tracks)
 
@@ -124,11 +121,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return host_to_client_vol(track.mixer_device.volume.value)
+    return map_interp(track.mixer_device.volume.value, HOST_VOL, CLIENT_VOL)
 
 
 def set_track_volume(track: TrackHandle, volume: float):
-    track.mixer_device.volume.value = client_to_host_vol(volume)
+    track.mixer_device.volume.value = map_interp(volume, CLIENT_VOL, HOST_VOL)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):

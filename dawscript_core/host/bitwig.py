@@ -42,8 +42,6 @@ try:
 except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
 
-from .private import host_to_client_vol, client_to_host_vol
-
 
 def name() -> str:
     return "bitwig"
@@ -69,14 +67,6 @@ def display(message: str):
 
 def get_object_id(handle: AnyHandle) -> str:
     return f"{handle.hashCode() & 0xFFFFFFFF:08x}"
-
-
-# TODO
-def get_fader_label_positions() -> Dict[int,float]:
-    return {
-        -132 : 0,
-           6 : 1
-    }
 
 
 def get_tracks() -> List[TrackHandle]:
@@ -117,11 +107,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],Non
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return host_to_client_vol(track.volume().get())
+    return track.volume().get()
 
 
 def set_track_volume(track: TrackHandle, volume: float):
-    track.volume().setImmediately(client_to_host_vol(volume))
+    track.volume().setImmediately(volume)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):

@@ -48,7 +48,7 @@ try:
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
-from .private import host_to_client_vol, client_to_host_vol
+from .private import map_interp
 
 RPR_defer = None
 _controller = None
@@ -107,14 +107,6 @@ def get_object_id(handle: AnyHandle) -> str:
     return str(handle)
 
 
-# TODO
-def get_fader_label_positions() -> Dict[int,float]:
-    return {
-        -72 : 0,
-         12 : 1
-    }
-
-
 def get_tracks() -> List[TrackHandle]:
     tracks = list()
     i = 0
@@ -163,11 +155,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return host_to_client_vol(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2])
+    return RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2]
 
 
 def set_track_volume(track: TrackHandle, volume: float):
-    RPR_SetTrackUIVolume(track, client_to_host_vol(volume), False, False, 0)
+    RPR_SetTrackUIVolume(track, volume, False, False, 0)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):

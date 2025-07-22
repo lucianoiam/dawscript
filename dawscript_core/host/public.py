@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
+from typing import Dict
+
 from .types import AnyHandle, TrackHandle, PluginHandle, ParameterHandle
 
 
@@ -40,6 +42,10 @@ def set_parameter_value(param: ParameterHandle, value: float)
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 """
+
+
+def get_fader_label_positions() -> Dict[int,float]:
+    return {} # TODO
 
 
 def get_track_by_name(name: str) -> TrackHandle:
