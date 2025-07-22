@@ -42,6 +42,13 @@ try:
 except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
 
+from .private import map_interp
+
+N_INF = float('-inf')
+HOST_VOL_DB = [N_INF,   -36,   -24,   -18,   -12,    -6,     0,     6]
+HOST_VOL    = [0.000, 0.200, 0.316, 0.398, 0.500, 0.630, 0.793, 1.000]
+CLIENT_VOL  = [0.000, 0.226, 0.396, 0.491, 0.623, 0.755, 0.887, 1.000]
+
 
 def name() -> str:
     return "bitwig"
@@ -107,11 +114,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool],Non
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return track.volume().get()
+    return map_interp(track.volume().get(), HOST_VOL, CLIENT_VOL)
 
 
 def set_track_volume(track: TrackHandle, volume: float):
-    track.volume().setImmediately(volume)
+    track.volume().setImmediately(map_interp(volume, CLIENT_VOL, HOST_VOL))
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float],None]):
