@@ -15,7 +15,7 @@ def map_interp(n, x_val, y_val):
         None: If n is out of range (< 0 or > 1) or if interpolation fails.
     """
     # Validate input
-    if not isinstance(n, (int, float)) or n < 0 or n > 1:
+    if not isinstance(n, (int, float)):
         return None
 
     # Check for exact match in x_val

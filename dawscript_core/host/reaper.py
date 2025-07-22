@@ -50,6 +50,11 @@ except ModuleNotFoundError:
 
 from .private import map_interp
 
+N_INF = float('-inf')
+HOST_VOL_DB = [N_INF,   -36,   -24,   -18,   -12,    -6,     0,     6,    12]
+HOST_VOL    = [0.000, 0.015, 0.063, 0.126, 0.251, 0.501, 1.000, 2.000, 4.000]
+CLIENT_VOL  = [0.000, 0.202, 0.316, 0.388, 0.480, 0.593, 0.720, 0.854, 1.000]
+
 RPR_defer = None
 _controller = None
 _proj_path = None
@@ -155,11 +160,11 @@ def remove_track_mute_listener(track: TrackHandle, listener: Callable[[bool], No
 
 
 def get_track_volume(track: TrackHandle) -> float:
-    return RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2]
+    return map_interp(RPR_GetTrackUIVolPan(track, 0.0, 0.0)[2], HOST_VOL, CLIENT_VOL)
 
 
 def set_track_volume(track: TrackHandle, volume: float):
-    RPR_SetTrackUIVolume(track, volume, False, False, 0)
+    RPR_SetTrackUIVolume(track, map_interp(volume, CLIENT_VOL, HOST_VOL), False, False, 0)
 
 
 def add_track_volume_listener(track: TrackHandle, listener: Callable[[float], None]):
