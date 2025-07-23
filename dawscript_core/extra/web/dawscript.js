@@ -97,7 +97,7 @@ function _connect(callback) {
       };
 
       _socket.onclose = (event) => {
-         _warn(`disconnected (${event.code}) ${event.reason}`);
+         _warn("disconnected", event.code, event.reason);
 
          if (! callback || callback(false)) {
             setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
@@ -153,10 +153,10 @@ async function _call(func_name, ...args) {
       }
 
       if (_socket && _socket.readyState == WebSocket.OPEN) {
-         _debug(`↑ ${message}`);
+         _debug(`→ ${seq}`, message);
          _send(message);
       } else {
-         _debug(`↑ Q ${message}`);
+         _debug(`↛ ${seq}`, message);
          _init_queue.push(message);
       }
    });
@@ -187,7 +187,7 @@ function _handle(message) {
    });
 
    if (seq in _listeners && typeof result !== "undefined") {
-      _debug(`↓ L ${seq},${result}`);
+      _debug(`⬿ ${seq}`, result);
 
       for (listener of _listeners[seq]) {
          listener(result);
@@ -198,11 +198,7 @@ function _handle(message) {
 
    const [resolve, reject] = _pop_promise_cb(seq);
 
-   if (typeof result !== "undefined") {
-      _debug(`↓ ${seq},${result}`);
-   } else {
-      _debug(`↓ ${seq}`);
-   }
+   _debug(`← ${seq}`, typeof result !== 'undefined' ? result : '<ack>');
 
    if (typeof result === "string" && result.startsWith("error:")) {
       reject(new HostError(result.slice(6)));
@@ -261,16 +257,16 @@ function _cleanup() {
    _tp_to_listener_seq = {};
 }  
 
-function _debug(message) {
-   if (_debug_msg) console.debug(`[${CONSOLE_TAG}] ${message}`);
+function _debug(...message) {
+   if (_debug_msg) console.debug(`[${CONSOLE_TAG}]`, ...message);
 }
 
-function _info(message) {
-   console.info(`[${CONSOLE_TAG}] ${message}`);
+function _info(...message) {
+   console.info(`[${CONSOLE_TAG}]`, ...message);
 }
 
-function _warn(message) {
-   console.warn(`[${CONSOLE_TAG}] ${message}`);
+function _warn(...message) {
+   console.warn(`[${CONSOLE_TAG}]`, ...message);
 }
 
 class HostError extends Error {
