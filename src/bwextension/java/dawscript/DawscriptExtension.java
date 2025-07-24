@@ -43,7 +43,7 @@ public class DawscriptExtension extends ControllerExtension
 {
    public record Listener(long identifier, PythonRunnable runnable) {}
 
-   private static final boolean ENABLE_PARAMETER_RANGE_UGLY_HACK = true;
+   private static final boolean ENABLE_GET_PARAMETER_RANGE_UGLY_HACK = true;
 
    private static final int MAX_TRACKS = 64;
    private static final int MAX_DEVICES = 16;
@@ -62,8 +62,7 @@ public class DawscriptExtension extends ControllerExtension
    private Timer hostCallbackTimer;
    private String projectName;
    private Controller controller;
-   private int pythonScriptWait;
-   private int parameterValueListenerPauseWait;
+   private int pythonScriptWaitTime;
 
    // https://stackoverflow.com/questions/53288375/py4j-callback-interface-throws-invalid-interface-name-when-the-packaged-jar-i
    // https://github.com/py4j/py4j/issues/339#issuecomment-473655738
@@ -102,7 +101,7 @@ public class DawscriptExtension extends ControllerExtension
             .build();
          gatewayServer.start();
 
-         pythonScriptWait = 0;
+         pythonScriptWaitTime = 0;
          pythonScript = new PythonScript(host::println, host::errorln);
          final File script = BitwigExtensionLocator.getPath(filename + ".bwextension")
             .toPath()
@@ -250,11 +249,9 @@ public class DawscriptExtension extends ControllerExtension
 
    public double[] getParameterRange(Parameter parameter)
    {
-      if (! ENABLE_PARAMETER_RANGE_UGLY_HACK) {
+      if (! ENABLE_GET_PARAMETER_RANGE_UGLY_HACK) {
          return new double[] { 0.0, 1.0 };
       }
-
-      parameterValueListenerPauseWait = 1;
 
       final double value = parameter.get();
 
@@ -270,7 +267,11 @@ public class DawscriptExtension extends ControllerExtension
       } catch (Exception e) {}
       final double hi = parameter.getRaw();
 
-      parameter.setImmediately(value);
+      try {
+         parameter.setImmediately(value);
+         Thread.sleep(25);
+      } catch (Exception e) {}
+      callListeners(parameter, "value");
 
       return new double[] { lo, hi };
    }
@@ -315,9 +316,7 @@ public class DawscriptExtension extends ControllerExtension
                final Parameter parameter = parameterBank.getParameter(k);
                parameter.name().markInterested();
                parameter.value().addRawValueObserver(_0 -> {
-                  if (parameterValueListenerPauseWait == 0) {
-                     callListeners(parameter, "value");
-                  }
+                  callListeners(parameter, "value");
                });
             }
          }
@@ -339,11 +338,11 @@ public class DawscriptExtension extends ControllerExtension
    private void hostCallback()
    {
       if (controller == null) {
-         if (pythonScriptWait == 100) {
-            pythonScriptWait = -1;
+         if (pythonScriptWaitTime == 100) {
+            pythonScriptWaitTime = -1;
             getHost().showPopupNotification("Python script timeout, check Bitwig log file for errors."); 
-         } else if (pythonScriptWait >= 0) {
-            pythonScriptWait++;
+         } else if (pythonScriptWaitTime >= 0) {
+            pythonScriptWaitTime++;
          }
 
          return;
@@ -368,13 +367,6 @@ public class DawscriptExtension extends ControllerExtension
                (byte) msg.getData1(),
                (byte) msg.getData2()
             });
-         }
-      }
-
-      if (parameterValueListenerPauseWait > 0) {
-         parameterValueListenerPauseWait++;
-         if (parameterValueListenerPauseWait == 10) {
-            parameterValueListenerPauseWait = 0;
          }
       }
 
