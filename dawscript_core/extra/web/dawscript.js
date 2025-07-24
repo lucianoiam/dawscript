@@ -8,6 +8,7 @@ const connect = (callback = (status) => true) => _connect(callback);
 
 // host/public.py
 const host = Object.freeze({
+   name: async ()                                        => _call("name"),
    getFaderLabels: async ()                              => _call("get_fader_labels"),
    getTracks: async ()                                   => _call("get_tracks"),
    getTrackType: async (track)                           => _call("get_track_type", track),
@@ -29,8 +30,8 @@ const host = Object.freeze({
    getPluginName: async (plugin)                         => _call("get_plugin_name", plugin),
    isPluginEnabled: async (plugin)                       => _call("is_plugin_enabled", plugin),
    setPluginEnabled: async (plugin, enabled)             => _call("set_plugin_enabled", plugin, enabled),
-   addPluginEnabledListener: async (plugin, listener)    => _call("add_plugin_enabled_listener", track, listener),
-   removePluginEnabledListener: async (plugin, listener) => _call("remove_plugin_enabled_listener", track, listener),
+   addPluginEnabledListener: async (plugin, listener)    => _call("add_plugin_enabled_listener", plugin, listener),
+   removePluginEnabledListener: async (plugin, listener) => _call("remove_plugin_enabled_listener", plugin, listener),
    getPluginParameters: async (plugin)                   => _call("get_plugin_parameters", plugin),
    getPluginParameter: async (plugin, name)              => _call("get_plugin_parameter", plugin, name),
    getParameterName: async (param)                       => _call("get_parameter_name", param),
