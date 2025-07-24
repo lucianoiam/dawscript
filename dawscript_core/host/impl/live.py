@@ -326,7 +326,7 @@ class DawscriptControlSurface(ControlSurface):
             pass
 
     def add_listener(self, target, prop, listener, getter, add_func, remove_func):
-        key_tp = f"{target}_{prop}"
+        key_tp = f"{repr(target)}_{prop}"
 
         def bound_getter():
             return getter(target)
@@ -339,7 +339,10 @@ class DawscriptControlSurface(ControlSurface):
         add_func(def_listener)
 
     def remove_listener(self, target, prop, listener):
-        key_tp = f"{target}_{prop}"
+        key_tp = f"{repr(target)}_{prop}"
+        try:
+            self._cleanup_cb[key_tp]()
+            del self._cleanup_cb[key_tp]
+        except KeyError:
+            log(f'remove_listener(): key not found - {key_tp}')
 
-        self._cleanup_cb[key_tp]()
-        del self._cleanup_cb[key_tp]

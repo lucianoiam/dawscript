@@ -66,7 +66,6 @@ def stop():
 
 
 def tick():
-    #_unmute_remote_listeners()
     _loop.run_until_complete(_noop())
 
 
