@@ -37,8 +37,8 @@ const host = Object.freeze({
    getParameterRange: async (param)                      => _call("get_parameter_range", param),
    getParameterValue: async (param)                      => _call("get_parameter_value", param),
    setParameterValue: async (param, value)               => _call("set_parameter_value", param, value),
-   addParameterValueListener: async (param, listener)    => _call("add_parameter_value_listener", track, listener),
-   removeParameterValueListener: async (param, listener) => _call("remove_parameter_value_listener", track, listener),
+   addParameterValueListener: async (param, listener)    => _call("add_parameter_value_listener", param, listener),
+   removeParameterValueListener: async (param, listener) => _call("remove_parameter_value_listener", param, listener),
    getTrackByName: async (name)                          => _call("get_track_by_name", name),
    toggleTrackMute: async (track)                        => _call("toggle_track_mute", track),
    toggleTrackMuteByName: async (name)                   => _call("toggle_track_mute_by_name", name),
@@ -115,7 +115,6 @@ async function _call(func_name, ...args) {
       if (
          m &&
          args.length == 2 &&
-         typeof args[0] === "string" &&
          typeof args[1] === "function"
       ) {
          const [_, action, prop] = m;
@@ -193,6 +192,11 @@ function _handle(message) {
          listener(result);
       }
 
+      return;
+   }
+
+   if (! (seq in _promise_cb)) {
+      _warn(`⬿ ${seq}`, result);
       return;
    }
 
