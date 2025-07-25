@@ -107,7 +107,7 @@ def display(message: str):
     RPR_ShowConsoleMsg(f"{message}\n")
 
 
-def get_object_id(handle: AnyHandle) -> str:
+def get_stable_object_id(handle: AnyHandle) -> str:
     return str(handle)
 
 

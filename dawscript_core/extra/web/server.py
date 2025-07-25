@@ -27,7 +27,7 @@ _cleanup: List[Callable] = []
 _listener_remover: Dict[str, Dict[int, Callable]] = {}
 _setter_call_src: Dict[str, str] = {}
 
-JSONEncoder.get_object_id = host.get_object_id
+JSONEncoder.get_object_id = host.get_stable_object_id
 
 
 def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List[str]:
@@ -118,8 +118,7 @@ async def _ws_handle(ws, path):
 
         if m:
             _mute_remote_listener(client, args[0], m.groups()[0])
-            # skip ack
-            continue
+            continue # skip ack
 
         await _send_message(ws, seq, result)
 
@@ -170,7 +169,7 @@ async def _send_ack(ws, seq):
 
 
 def _add_listener(ws, seq, client, target, prop):
-    key_tp = f"{target}_{prop}"
+    key_tp = _make_key_tp(target, prop)
 
     def listener(v, c_ws=ws, c_seq=seq, c_tp=key_tp):
         return _call_remote_listener(c_ws, c_seq, c_tp, v)
@@ -193,7 +192,7 @@ def _remove_listener(ws, seq, client, listener_seq):
         or listener_seq not in _listener_remover[client]
     ):
         #raise Exception("Listener not registered")
-        host.log(f"{LOG_TAG} listener not registered - {listener_seq}")
+        #host.log(f"{LOG_TAG} listener not registered - {listener_seq}")
         return
 
     bound_remover = _listener_remover[client][listener_seq]
@@ -206,8 +205,9 @@ def _remove_listener(ws, seq, client, listener_seq):
 
 
 def _mute_remote_listener(client, target, prop):
-    key_tp = f"{target}_{prop}"
+    key_tp = _make_key_tp(target, prop)
     _setter_call_src[key_tp] = client
+    #host.log(f'MUTE +++ [client={client}] [key_tp={key_tp}] {_setter_call_src}')
 
 
 def _call_remote_listener(ws, seq, key_tp, value):
@@ -215,12 +215,18 @@ def _call_remote_listener(ws, seq, key_tp, value):
 
     try:
         if _setter_call_src.get(key_tp) == client:
+            #host.log(f'SKIP xxx [client={client}] [key_tp={key_tp}] {_setter_call_src}')
             del _setter_call_src[key_tp]
         else:
+            #host.log(f'PASS === [client={client}] [key_tp={key_tp}] {_setter_call_src}')
             _loop.run_until_complete(_send_message(ws, seq, value))
     except Exception as e:
         host.log(e)
         _cleanup_client(client)
+
+
+def _make_key_tp(target, prop):
+    return f"{host.get_stable_object_id(target)}_{prop}"
 
 
 def _cleanup_client(client):

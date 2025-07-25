@@ -71,7 +71,7 @@ def display(message: str):
     bw_ext.getHost().showPopupNotification(str(message))
 
 
-def get_object_id(handle: AnyHandle) -> str:
+def get_stable_object_id(handle: AnyHandle) -> str:
     return f"{handle.hashCode() & 0xFFFFFFFF:08x}"
 
 

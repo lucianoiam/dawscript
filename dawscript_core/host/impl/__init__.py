@@ -28,7 +28,7 @@ def name() -> str
 def main(controller: ModuleType, context: Any)
 def log(message: str)
 def display(message: str)
-def get_object_id(handle: AnyHandle) -> str
+def get_stable_object_id(handle: AnyHandle) -> str
 def get_tracks() -> List[TrackHandle]
 def get_track_type(track: TrackHandle) -> TrackType
 def get_track_name(track: TrackHandle) -> str

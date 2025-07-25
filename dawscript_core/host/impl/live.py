@@ -57,7 +57,7 @@ def display(message: str):
         print(message, file=sys.stderr)
 
 
-def get_object_id(handle: AnyHandle) -> str:
+def get_stable_object_id(handle: AnyHandle) -> str:
     if isinstance(handle, Live.Track.Track):
         # Combine name and color_index to reduce collision risk
         return f"{_d2b_hash(handle.name + str(handle.color_index)):08x}"

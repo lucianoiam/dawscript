@@ -9,6 +9,9 @@ ALL_MIDI_INPUTS = None
 
 Config = namedtuple("Config", ["midi_inputs"])
 
+# Handles are not guaranteed to be stable, use host.get_stable_object_id(handle)
+# to identify objects instead.
+
 AnyHandle = Any
 TrackHandle = Any
 PluginHandle = Any

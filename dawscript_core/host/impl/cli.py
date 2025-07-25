@@ -37,7 +37,7 @@ def display(message: str):
     print(message)
 
 
-def get_object_id(handle: AnyHandle) -> str:
+def get_stable_object_id(handle: AnyHandle) -> str:
     return handle
 
 
