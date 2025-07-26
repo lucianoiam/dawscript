@@ -7,24 +7,17 @@ from dawscript_core import host
 from dawscript_core.extra.web import server
 
 
-_htdocs_path = None
-_ws_port = None
-_http_port = None
-_service_name = None
-_no_cache = None
 _display_messages = None
+_args = []
+_kwargs = {}
 
 
-def set_server_config(htdocs_path, ws_port=49152, http_port=8080,
-	service_name=None, no_cache=True, display_messages=True):
 
-	global _htdocs_path, _ws_port, _http_port, _service_name, _no_cache, _display_messages
-	_htdocs_path = htdocs_path
-	_ws_port = ws_port
-	_http_port = http_port
-	_service_name = service_name
-	_no_cache = no_cache
+def set_server_config(*args, display_messages=True, **kwargs):
+	global _display_messages, _args, _kwargs
 	_display_messages = display_messages
+	_args = args
+	_kwargs = kwargs
 
 
 def display(message):
@@ -33,14 +26,13 @@ def display(message):
 
 
 def on_script_start():
+    service_name = _kwargs.get("service_name", "dawscript");
     try:
-        urls = server.start(_htdocs_path, _ws_port, _http_port,
-        	service_name=_service_name, no_cache=_no_cache)
-
+        urls = server.start(*_args, **_kwargs)
         for url in urls:
-            display(f"{_service_name} @ {url}")
+            display(f"{service_name} @ {url}")
     except Exception as e:
-        display(f"{_service_name} error: {e}")
+        display(f"{service_name} error: {e}")
 
 
 def on_script_stop():

@@ -29,7 +29,8 @@ _setter_call_src: Dict[str, str] = {}
 JSONEncoder.get_object_id = host.get_stable_object_id
 
 
-def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None, no_cache=True) -> List[str]:
+def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None,
+          no_cache=True, inject_js=True) -> List[str]:
     global _htdocs_path
     _htdocs_path = htdocs_path
 
@@ -44,7 +45,7 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None, no_cach
 
     try:
         _loop.run_until_complete(_ws_serve(addrs, ws_port))
-        _loop.run_until_complete(_http_serve(addrs, http_port, no_cache))
+        _loop.run_until_complete(_http_serve(addrs, http_port, no_cache, inject_js))
 
         if lan_addr is not None and service_name is not None:
             dnssd.register_service(service_name, "_http._tcp", http_port, lan_addr)
@@ -124,9 +125,12 @@ async def _ws_handle(ws, path):
     _cleanup_client(client)
 
 
-async def _http_serve(addrs, port, no_cache):
-    middlewares = [no_cache_middleware] if no_cache else []
-    middlewares += [inject_dawscript_tag]
+async def _http_serve(addrs, port, no_cache, inject_js):
+    middlewares = []
+    if no_cache:
+        middlewares.append(add_no_cache_headers)
+    if inject_js:
+        middlewares.append(inject_dawscript_js)
     app = web.Application(middlewares=middlewares)
     app.router.add_get("/{filename:.*}", _http_handle)
 
@@ -249,7 +253,7 @@ def _get_bind_address():
     return socket.inet_ntoa(naddr)
 
 @web.middleware
-async def no_cache_middleware(request, handler):
+async def add_no_cache_headers(request, handler):
     response = await handler(request)
     if isinstance(response, web.StreamResponse):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -258,7 +262,7 @@ async def no_cache_middleware(request, handler):
     return response
 
 @web.middleware
-async def inject_dawscript_tag(request, handler):
+async def inject_dawscript_js(request, handler):
     response = await handler(request)
     
     if isinstance(response, web.FileResponse):
