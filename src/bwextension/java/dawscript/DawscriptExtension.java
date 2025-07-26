@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Timer;
@@ -25,6 +24,7 @@ import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
 import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.ParameterBank;
+import com.bitwig.extension.controller.api.SettableBooleanValue;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 import py4j.CallbackClient;
@@ -56,6 +56,8 @@ public class DawscriptExtension extends ControllerExtension
    private final HashMap<String,ArrayList<Listener>> listeners;
    private final HashMap<Track,DeviceBank> deviceBanks;
    private final HashMap<Device,ParameterBank> parameterBanks;
+   private HashMap<Parameter, double[]> parameterRangeCache;
+   private SettableBooleanValue masterTrackMute;
    private TrackBank trackBank;
    private GatewayServer gatewayServer;
    private PythonScript pythonScript;
@@ -71,6 +73,23 @@ public class DawscriptExtension extends ControllerExtension
       ReflectionUtil.setClassLoadingStrategy(new RootClassLoadingStrategy());
    }
 
+   public static int getStableObjectId(Object handle)
+   {
+      return System.identityHashCode(handle);
+   }
+
+   // TODO: The Bitwig Java API appears to be asynchronous, so rapid, repeated
+   // changes to the same parameter may not be reflected. The delay value below
+   // works in most cases but should not be hardcoded. Consider tying it to a
+   // dynamic value, such as the audio buffer size or some UI update interval.
+   public static void callEngineAndWait(Runnable r)
+   {
+      try {
+         r.run();
+         Thread.sleep(25);
+      } catch (Exception e) {}
+   }
+
    public DawscriptExtension(final ControllerExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
@@ -80,6 +99,7 @@ public class DawscriptExtension extends ControllerExtension
       listeners = new HashMap<>();
       deviceBanks = new HashMap<>();
       parameterBanks = new HashMap<>();
+      parameterRangeCache = new HashMap<>();
    }
 
    @Override
@@ -111,7 +131,7 @@ public class DawscriptExtension extends ControllerExtension
             .toFile();
          pythonScript.start(script, Integer.toString(gatewayServer.getPort()));
 
-         initBanks();
+         markInterested();
 
          final Application app = host.createApplication();
          app.projectName().addValueObserver(projectName -> {
@@ -247,37 +267,44 @@ public class DawscriptExtension extends ControllerExtension
       return parameterBanks.get(plugin);
    }
 
-   public double[] getParameterRange(Parameter parameter)
+   public double[] getParameterRange(Parameter param)
    {
       if (! ENABLE_GET_PARAMETER_RANGE_UGLY_HACK) {
          return new double[] { 0.0, 1.0 };
       }
 
-      final double value = parameter.get();
+      if (parameterRangeCache.containsKey(param)) {
+         return parameterRangeCache.get(param);
+      }
 
-      try {
-         parameter.setImmediately(0.0);
-         Thread.sleep(25);
-      } catch (Exception e) {}
-      final double lo = parameter.getRaw();
+      final double initValue = param.get();
+      final boolean initMasterTrackMute = masterTrackMute.get();
+      final double[] range = new double[2];
 
-      try {
-         parameter.setImmediately(1.0);
-         Thread.sleep(25);
-      } catch (Exception e) {}
-      final double hi = parameter.getRaw();
+      masterTrackMute.set(true);
 
-      try {
-         parameter.setImmediately(value);
-         Thread.sleep(25);
-      } catch (Exception e) {}
-      callListeners(parameter, "value");
+      callEngineAndWait(() -> param.setImmediately(0.0));
+      range[0] = param.getRaw();
+      callEngineAndWait(() -> param.setImmediately(1.0));
+      range[1] = param.getRaw();
 
-      return new double[] { lo, hi };
+      callEngineAndWait(() -> {
+         param.setImmediately(initValue);
+         masterTrackMute.set(initMasterTrackMute);
+      });
+   
+      callListeners(param, "value");
+
+      parameterRangeCache.put(param, range);
+
+      return range;
    }
 
-   private void initBanks()
+   private void markInterested()
    {
+      masterTrackMute = getHost().createMasterTrack(0).mute();
+      masterTrackMute.markInterested();
+
       trackBank = getHost().getProject().getRootTrackGroup()
          .createMainTrackBank(MAX_TRACKS, 0, 0, true);
 
@@ -380,7 +407,7 @@ public class DawscriptExtension extends ControllerExtension
    private static String keyTargetProp(Object target, String prop)
    {
       return target.getClass().getSimpleName()
-               + "@" + Integer.toHexString(System.identityHashCode(target))
+               + "@" + Integer.toHexString(getStableObjectId(target))
                + "_" + prop;
    }
 

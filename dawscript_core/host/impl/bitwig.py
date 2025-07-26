@@ -39,6 +39,7 @@ try:
         callback_server_parameters=CallbackServerParameters(port=port + 1)
     )
     gateway.jvm.java.lang.System.getProperty("java.version")
+    bw_ext_class = gateway.jvm.dawscript.DawscriptExtension;
     bw_ext = gateway.entry_point
 except Py4JNetworkError as e:
     raise IncompatibleEnvironmentError
@@ -72,7 +73,7 @@ def display(message: str):
 
 
 def get_stable_object_id(handle: AnyHandle) -> str:
-    return f"{handle.hashCode() & 0xFFFFFFFF:08x}"
+    return f"{bw_ext_class.getStableObjectId(handle) & 0xFFFFFFFF:08x}"
 
 
 def get_tracks() -> List[TrackHandle]:
