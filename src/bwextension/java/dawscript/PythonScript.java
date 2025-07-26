@@ -38,6 +38,19 @@ public class PythonScript
       process = processBuilder.start();
       process.getOutputStream().close();
 
+      // Add shutdown hook to ensure child process is killed if JVM is killed (e.g., macOS Force Quit)
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+         try {
+            if (process != null && process.isAlive()) {
+               process.destroy();
+               process.waitFor(1, java.util.concurrent.TimeUnit.SECONDS);
+               if (process.isAlive()) {
+                  process.destroyForcibly();
+               }
+            }
+         } catch (Exception ignored) {}
+      }));
+
       startReaderThread();
    }
 

@@ -4,7 +4,7 @@
 import sys
 import time
 from types import ModuleType
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, List
 
 from .util import map_interp
 from ..types import (
@@ -12,11 +12,8 @@ from ..types import (
     AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
-    ParameterNotFoundError,
     PluginHandle,
-    PluginNotFoundError,
     TrackHandle,
-    TrackNotFoundError,
     TrackType
 )
 
