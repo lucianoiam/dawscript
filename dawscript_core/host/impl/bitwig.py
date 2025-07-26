@@ -134,7 +134,7 @@ def get_track_pan(track: TrackHandle) -> float:
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    track.pan().setImmediately((float(pan) + 1.0) / 1.0)
+    track.pan().setImmediately((float(pan) + 1.0) / 2.0)
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
