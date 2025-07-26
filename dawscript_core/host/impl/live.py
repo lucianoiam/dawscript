@@ -199,7 +199,7 @@ def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[boo
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-    return list(plugin.parameters)
+    return [param for param in plugin.parameters if param.name != 'Device On']
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
@@ -242,7 +242,10 @@ def _get_document():
 
 
 def _get_parameter_device_on(plugin: PluginHandle) -> ParameterHandle:
-    return get_plugin_parameter_by_name(plugin, "Device On")
+    for param in plugin.parameters:
+        if param.name == 'Device On':
+            return param
+    return None
 
 
 def _d2b_hash(string):
