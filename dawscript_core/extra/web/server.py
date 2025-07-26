@@ -30,7 +30,7 @@ _setter_call_src: Dict[str, str] = {}
 JSONEncoder.get_object_id = host.get_stable_object_id
 
 
-def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List[str]:
+def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None, no_cache=True) -> List[str]:
     global _htdocs_path
     _htdocs_path = htdocs_path
 
@@ -45,7 +45,7 @@ def start(htdocs_path, ws_port=49152, http_port=8080, service_name=None) -> List
 
     try:
         _loop.run_until_complete(_ws_serve(addrs, ws_port))
-        _loop.run_until_complete(_http_serve(addrs, http_port))
+        _loop.run_until_complete(_http_serve(addrs, http_port, no_cache))
 
         if lan_addr is not None and service_name is not None:
             dnssd.register_service(service_name, "_http._tcp", http_port, lan_addr)
@@ -125,8 +125,10 @@ async def _ws_handle(ws, path):
     _cleanup_client(client)
 
 
-async def _http_serve(addrs, port):
-    app = web.Application(middlewares=[inject_dawscript_tag])
+async def _http_serve(addrs, port, no_cache):
+    middlewares = [no_cache_middleware] if no_cache else []
+    middlewares += [inject_dawscript_tag]
+    app = web.Application(middlewares=middlewares)
     app.router.add_get("/{filename:.*}", _http_handle)
 
     runner = web.AppRunner(app)
@@ -246,6 +248,15 @@ def _get_bind_address():
     s.close()
 
     return socket.inet_ntoa(naddr)
+
+@web.middleware
+async def no_cache_middleware(request, handler):
+    response = await handler(request)
+    if isinstance(response, web.StreamResponse):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 @web.middleware
 async def inject_dawscript_tag(request, handler):

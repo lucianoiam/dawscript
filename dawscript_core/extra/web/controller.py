@@ -11,29 +11,31 @@ _htdocs_path = None
 _ws_port = None
 _http_port = None
 _service_name = None
-_display_messges = None
+_no_cache = None
+_display_messages = None
 
 
 def set_server_config(htdocs_path, ws_port=49152, http_port=8080,
-	service_name=None, display_messges=True):
+	service_name=None, no_cache=True, display_messages=True):
 
-	global _htdocs_path, _ws_port, _http_port, _service_name, _display_messges
+	global _htdocs_path, _ws_port, _http_port, _service_name, _no_cache, _display_messages
 	_htdocs_path = htdocs_path
 	_ws_port = ws_port
 	_http_port = http_port
 	_service_name = service_name
-	_display_messges = display_messges
+	_no_cache = no_cache
+	_display_messages = display_messages
 
 
 def display(message):
-	if _display_messges:
+	if _display_messages:
 		host.display(message)
 
 
 def on_script_start():
     try:
         urls = server.start(_htdocs_path, _ws_port, _http_port,
-        	service_name=_service_name)
+        	service_name=_service_name, no_cache=_no_cache)
 
         for url in urls:
             display(f"{_service_name} @ {url}")
