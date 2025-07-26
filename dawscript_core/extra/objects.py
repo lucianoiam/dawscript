@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import Any, Callable, List
+from typing import Callable, List, Tuple
 
 from dawscript_core import host
-from dawscript_core.host.types import ParameterHandle, PluginHandle, TrackHandle
+from dawscript_core.host.types import PluginHandle, TrackHandle
 
 
 class Host:
@@ -32,13 +32,12 @@ class Parameter:
         else:
             self._handle = host.get_plugin_parameter_by_name(plugin, name)
 
-    @staticmethod
     @property
-    def name() -> str:
+    def name(self) -> str:
         return host.get_parameter_name(self._handle)
 
     @property
-    def range(self) -> (float, float):
+    def range(self) -> Tuple[float, float]:
         return host.get_parameter_range(self._handle)
 
     @property
@@ -63,9 +62,8 @@ class Plugin:
         else:
             self._handle = host.get_track_plugin_by_name(track, name)
 
-    @staticmethod
     @property
-    def name() -> str:
+    def name(self) -> str:
         return host.get_plugin_name(self._handle)
 
     @property
@@ -110,9 +108,8 @@ class Track:
 
         return tracks
 
-    @staticmethod
     @property
-    def name() -> str:
+    def name(self) -> str:
         return host.get_track_name(self._handle)
 
     @property

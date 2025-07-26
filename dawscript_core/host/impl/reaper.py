@@ -1,27 +1,24 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import math
 import sys
 from ctypes import *
 from types import ModuleType
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 from .util import map_interp
 from ..types import (
     AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
-    ParameterNotFoundError,
     PluginHandle,
     PluginNotFoundError,
     TrackHandle,
-    TrackNotFoundError,
     TrackType
 )
 
 try:
-    from reaper_python import (
+    from reaper_python import ( # type: ignore
         RPR_GetMediaTrackInfo_Value,
         RPR_GetMIDIInputName,
         RPR_GetTrack,
@@ -231,7 +228,7 @@ def get_parameter_name(param: ParameterHandle) -> str:
     return RPR_TrackFX_GetParamName(*param, "", 32)[4]
 
 
-def get_parameter_range(param: ParameterHandle) -> (float, float):
+def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
     result = RPR_TrackFX_GetParam(*param, 0.0, 0.0)
     return (result[4], result[5])
 

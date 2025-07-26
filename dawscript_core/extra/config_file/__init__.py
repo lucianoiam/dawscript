@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from collections import namedtuple
-from typing import Callable, List
+from typing import List
 
 import yaml
 from mido import Message
@@ -13,7 +13,7 @@ from dawscript_core.host import Config
 ParsedGadget = namedtuple("ParsedGadget", ["instance", "name", "midi_port"])
 
 
-def parse_config_file(yml_file: str, ctrl_globals: dict) -> (Config, list):
+def parse_config_file(yml_file: str, ctrl_globals: dict) -> tuple[Config, list]:
     gadgets = _make_gadgets(yml_file, ctrl_globals)
 
     return (_make_config(gadgets), [g.instance for g in gadgets])

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import json
-import re
 from enum import Enum
 from typing import Any, Dict
 

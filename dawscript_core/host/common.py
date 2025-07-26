@@ -39,7 +39,7 @@ def get_track_plugin_by_name(track: TrackHandle, name: str) -> PluginHandle:
 
     for plugin in get_track_plugins(track):
         if get_plugin_name(plugin).lower() == name_lower:
-            return device
+            return plugin
 
     raise PluginNotFoundError(name)
 

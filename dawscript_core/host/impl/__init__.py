@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import importlib
 from ..types import IncompatibleEnvironmentError
 
 
@@ -52,7 +51,7 @@ def add_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],
 def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[bool],None])
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]
 def get_parameter_name(param: ParameterHandle) -> str
-def get_parameter_range(param: ParameterHandle) -> (float, float)
+def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]
 def get_parameter_value(param: ParameterHandle) -> float
 def set_parameter_value(param: ParameterHandle, value: float)
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])

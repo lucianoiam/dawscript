@@ -3,24 +3,21 @@
 
 import sys
 from types import ModuleType
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 from .util import map_interp
 from ..types import (
     AnyHandle,
     IncompatibleEnvironmentError,
     ParameterHandle,
-    ParameterNotFoundError,
     PluginHandle,
-    PluginNotFoundError,
     TrackHandle,
-    TrackNotFoundError,
     TrackType
 )
 
 try:
-    import Live
-    from _Framework.ControlSurface import ControlSurface
+    import Live # type: ignore
+    from _Framework.ControlSurface import ControlSurface # type: ignore
 except ModuleNotFoundError:
     raise IncompatibleEnvironmentError
 
@@ -206,7 +203,7 @@ def get_parameter_name(param: ParameterHandle) -> str:
     return param.name
 
 
-def get_parameter_range(param: ParameterHandle) -> (float, float):
+def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
     return (param.min, param.max)
 
 

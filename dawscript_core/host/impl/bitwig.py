@@ -4,7 +4,7 @@
 import sys
 import time
 from types import ModuleType
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Tuple
 
 from .util import map_interp
 from ..types import (
@@ -18,7 +18,7 @@ from ..types import (
 )
 
 try:
-    from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError
+    from py4j.java_gateway import JavaGateway, CallbackServerParameters, GatewayParameters, Py4JNetworkError # type: ignore
 except ModuleNotFoundError:
     # fails to import on Live
     raise IncompatibleEnvironmentError
@@ -184,7 +184,7 @@ def get_parameter_name(param: ParameterHandle) -> str:
     return param.name().get()
 
 
-def get_parameter_range(param: ParameterHandle) -> (float, float):
+def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
     return tuple(bw_ext.getParameterRange(param))
 
 

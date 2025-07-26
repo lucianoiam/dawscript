@@ -3,14 +3,13 @@
 
 import asyncio
 import json
-import math
 import os
 import re
 import socket
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List
 
-import websockets
-from aiohttp import web, web_runner
+import websockets # type: ignore
+from aiohttp import web # type: ignore
 
 from dawscript_core import host
 from dawscript_core.util import dawscript_path

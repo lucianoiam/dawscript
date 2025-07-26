@@ -9,7 +9,7 @@ import sys
 import time
 import threading
 from types import ModuleType
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Tuple
 
 from ..types import AnyHandle, ParameterHandle, PluginHandle, TrackHandle, TrackType
 
@@ -144,7 +144,7 @@ def get_parameter_name(param: ParameterHandle) -> str:
     return ''
 
 
-def get_parameter_range(param: ParameterHandle) -> (float, float):
+def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
     log(f"stub: get_parameter_range( {param} )")
     return (0, 1.0)
 
