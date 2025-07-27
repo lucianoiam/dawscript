@@ -18,7 +18,7 @@ const host = Object.freeze({
    addTrackMuteListener: async (track, listener)         => _call("add_track_mute_listener", track, listener),
    removeTrackMuteListener: async (track, listener)      => _call("remove_track_mute_listener", track, listener),
    getTrackVolume: async (track)                         => _call("get_track_volume", track),
-   setTrackVolume: async (track, volumeDb)               => _call("set_track_volume", track, volumeDb),
+   setTrackVolume: async (track, volume)                 => _call("set_track_volume", track, volume),
    addTrackVolumeListener: async (track, listener)       => _call("add_track_volume_listener", track, listener),
    removeTrackVolumeListener: async (track, listener)    => _call("remove_track_volume_listener", track, listener),
    getTrackPan: async (track)                            => _call("get_track_pan", track),
@@ -150,6 +150,8 @@ async function _call(func_name, ...args) {
 
       if (wait_reply) {
          _promise_cb[seq] = [resolve, reject];
+      } else {
+         resolve();
       }
 
       if (_socket && _socket.readyState == WebSocket.OPEN) {
@@ -186,18 +188,18 @@ function _handle(message) {
       return value;
    });
 
-   if (seq in _listeners && typeof result !== "undefined") {
-      _debug(`⬿ ${seq}`, result);
-
-      for (listener of _listeners[seq]) {
-         listener(result);
+   if (seq in _listeners) {
+      _debug(`⬿ ${seq}`, result ? result : '<ack>');
+      if (typeof result !== "undefined") {
+         for (const listener of _listeners[seq]) {
+            listener(result);
+         }
       }
-
       return;
    }
 
    if (! (seq in _promise_cb)) {
-      _warn(`⬿ ${seq}`, result);
+      _warn(`⬿ ${seq}`, result ? result : '<ack>');
       return;
    }
 
