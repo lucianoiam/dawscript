@@ -1,27 +1,15 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-from typing import List
-
-from dawscript_core import host
-from dawscript_core.extra.web import server
 from dawscript_core.util import dawscript_path
+from dawscript_core.extra.web import controller
 
 
-def on_script_start():
-    try:
-        htdocs_path = dawscript_path("examples", "web", "htdocs")
-        urls = server.start(htdocs_path, service_name="dawscript")
+HTDOCS = ["examples", "web", "htdocs"]
+SERVICE_NAME = "dawscript"
 
-        for url in urls:
-            host.display(f"dawscript @ {url}")
-    except Exception as e:
-        host.display(f"error: {e}")
+controller.set_server_config(dawscript_path(*HTDOCS), service_name=SERVICE_NAME)
 
-
-def on_script_stop():
-    server.stop()
-
-
-def host_callback(midi: List[bytes]):
-    server.tick()
+on_script_start = controller.on_script_start
+on_script_stop = controller.on_script_stop
+host_callback = controller.host_callback
