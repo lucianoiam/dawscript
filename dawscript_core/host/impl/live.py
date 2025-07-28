@@ -140,11 +140,11 @@ def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],
 
 
 def get_track_pan(track: TrackHandle) -> float:
-    return track.mixer_device.panning.value
+    return (track.mixer_device.panning.value + 1.0) / 2.0
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    track.mixer_device.panning.value = pan
+    track.mixer_device.panning.value = (pan * 2.0) - 1.0
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):

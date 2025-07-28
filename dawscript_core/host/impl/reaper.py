@@ -174,7 +174,7 @@ def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],
 
 
 def get_track_pan(track: TrackHandle) -> float:
-    return RPR_GetTrackUIVolPan(track, 0.0, 0.0)[3]
+    return (RPR_GetTrackUIVolPan(track, 0.0, 0.0)[3] + 1.0) / 2.0
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float], None]):
@@ -186,7 +186,7 @@ def remove_track_pan_listener(track: TrackHandle, listener: Callable[[float], No
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    RPR_SetTrackUIPan(track, pan, False, False, 0)
+    RPR_SetTrackUIPan(track, (pan * 2.0) - 1.0, False, False, 0)
 
 
 def get_track_plugins(track: TrackHandle) -> List[PluginHandle]:

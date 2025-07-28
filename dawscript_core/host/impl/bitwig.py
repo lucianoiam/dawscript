@@ -127,11 +127,11 @@ def remove_track_volume_listener(track: TrackHandle, listener: Callable[[float],
 
 
 def get_track_pan(track: TrackHandle) -> float:
-    return 2.0 * track.pan().get() - 1.0
+    return track.pan().get()
 
 
 def set_track_pan(track: TrackHandle, pan: float):
-    track.pan().setImmediately((float(pan) + 1.0) / 2.0)
+    track.pan().setImmediately(float(pan))
 
 
 def add_track_pan_listener(track: TrackHandle, listener: Callable[[float],None]):
