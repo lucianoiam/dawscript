@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 // SPDX-License-Identifier: MIT
 
-const { host, connect } = dawscript;
+const { connect, disconnect, host } = dawscript;
 
 window.addEventListener('DOMContentLoaded', () => {
    window.onerror = log;
    window.onunhandledrejection = ev => log(ev.reason);
 
    const editor = window.ace.edit(document.getElementById('editor'));
-   const functions = Object.values(host).map(fn => ' * host.' + fn.name + '()');
+   const functions = Object.values(host).map(fn => ' * async host.' + fn.name + '()');
    const defaultText = get_function_body(default_code) + '\n\n\n'
            + `/**\n * ${functions.length} functions available in dawscript.js\n *\n`
            + functions.join('\n')
@@ -27,6 +27,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
    document.getElementById('run').addEventListener('click', () => {
       try {
+         const controls = document.getElementById('controls');
+         if (controls.children.length >= 4) {
+            controls.children[3].remove();
+         }
+         disconnect();
          eval(editor.getValue());
       } catch (e) {
          log('Error: ' + e.message);
@@ -43,13 +48,8 @@ function get_function_body(fn) {
 }
 
 function default_code() {
-   connect(async (success) => {
-      if (success) {
-         const name = await host.name();
-         log(name);
-      }
-      return true;
-   });
+   host.name().then(log);
+   connect();
 }
 
 function demo_code() {

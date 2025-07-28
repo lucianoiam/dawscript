@@ -94,10 +94,10 @@ async def _ws_handle(ws, path):
     async for message in ws:
         (seq, func_name, *args) = json.loads(message, cls=JSONDecoder)
 
-        m = re.match(r"^(add|remove)_([a-z_]+)_listener$", func_name)
+        match = re.match(r"^(add|remove)_([a-z_]+)_listener$", func_name)
 
-        if m:
-            action, prop = m.groups()
+        if match:
+            action, prop = match.groups()
 
             if action == "add":
                 _add_listener(ws, seq, client, args[0], prop)
@@ -114,10 +114,10 @@ async def _ws_handle(ws, path):
             result = f"error:{e}"
             host.log(e)
 
-        m = re.match(r"^set_([a-z_]+)$", func_name)
+        match = re.match(r"^set_([a-z_]+)$", func_name)
 
-        if m:
-            _mute_remote_listener(client, args[0], m.groups()[0])
+        if match:
+            _mute_remote_listener(client, args[0], match.groups()[0])
             continue # skip ack
 
         await _send_message(ws, seq, result)

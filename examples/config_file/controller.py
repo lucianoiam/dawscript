@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Luciano Iam <oss@lucianoiam.com>
 # SPDX-License-Identifier: MIT
 
-import os
-import sys
 from typing import List
 
 from dawscript_core.host import Config

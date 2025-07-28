@@ -3,10 +3,16 @@
 
 window.dawscript = (() => {
 
-const enableDebugMessages = () => _debug_msg = true;
-const connect = (callback = (status) => true) => _connect(callback);
+const DEFAULT_WEBSOCKET_PORT = 49152;
+const RECONNECT_WAIT_SEC = 3;
+const CONSOLE_TAG = 'dawscript';
 
-// host/public.py
+const TrackType = Object.freeze({
+   AUDIO : 0,
+   MIDI  : 1,
+   OTHER : 2
+});
+
 const host = Object.freeze({
    name: async ()                                        => _call("name"),
    getFaderLabels: async ()                              => _call("get_fader_labels"),
@@ -48,20 +54,8 @@ const host = Object.freeze({
    togglePluginEnabled: async (plugin)                   => _call("toggle_plugin_enabled", plugin),
 });
 
-const TrackType = Object.freeze({
-   AUDIO : 0,
-   MIDI  : 1,
-   OTHER : 2
-});
-
-
-// Private
-
-const DEFAULT_WEBSOCKET_PORT = 49152;
-const RECONNECT_WAIT_SEC = 3;
-const CONSOLE_TAG = 'dawscript';
-
 let _debug_msg = false;
+let _skip_reconn = false;
 let _socket = null;
 let _seq = 0;
 let _init_queue = [];
@@ -69,7 +63,21 @@ let _promise_cb = {};
 let _listeners = {};
 let _tp_to_listener_seq = {};
 
-function _connect(callback) {
+function enableDebugMessages() {
+   _debug_msg = true;
+}
+
+function connected() {
+   return _socket && _socket.readyState === WebSocket.OPEN;
+}
+
+function connect(callback = (_status) => true) {
+   if (connected()) {
+      throw new Error("Already connected");
+   }
+
+   _skip_reconn = false;
+
    const port =
       new URLSearchParams(window.location.search).get("port") ||
       DEFAULT_WEBSOCKET_PORT;
@@ -81,9 +89,7 @@ function _connect(callback) {
       _socket.onopen = () => {
          _info("connected");
 
-         if (callback) {
-            callback(true);
-         }
+         callback(true);
 
          while (_init_queue.length > 0) {
             _send(_init_queue.shift());
@@ -92,7 +98,7 @@ function _connect(callback) {
 
       _socket.onmessage = (event) => _handle(event.data);
 
-      _socket.onerror = (error) => {
+      _socket.onerror = (_error) => {
          _socket.close();
          _cleanup();
       };
@@ -100,7 +106,7 @@ function _connect(callback) {
       _socket.onclose = (event) => {
          _warn("disconnected", event.code, event.reason);
 
-         if (! callback || callback(false)) {
+         if (! _skip_reconn && ! callback(false)) {
             setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
          }
       };
@@ -109,16 +115,23 @@ function _connect(callback) {
    create_socket();
 }
 
+function disconnect() {
+   _skip_reconn = true;
+   _socket && _socket.close();
+}
+
+// Private
+
 async function _call(func_name, ...args) {
    return new Promise((resolve, reject) => {
-      const m = func_name.match(/^(add|remove)_([a-z_]+)_listener$/);
+      const match = func_name.match(/^(add|remove)_([a-z_]+)_listener$/);
 
       if (
-         m &&
+         match &&
          args.length == 2 &&
          typeof args[1] === "function"
       ) {
-         const [_, action, prop] = m;
+         const [_, action, prop] = match;
          const target = args[0];
          const listener = args.pop();
 
@@ -257,6 +270,7 @@ function _pop_promise_cb(seq) {
 
 function _cleanup() {
    _socket = null;
+   _skip_reconn = false;
    _seq = 0;
    _init_queue = [];
    _promise_cb = {};
@@ -284,10 +298,12 @@ class HostError extends Error {
 }
 
 return Object.freeze({
-   enableDebugMessages,
-   connect,
+   TrackType,
    host,
-   TrackType
+   enableDebugMessages,
+   connected,
+   connect,
+   disconnect
 });
 
 })(); // dawscript
