@@ -189,11 +189,11 @@ def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
-    return param.value().getRaw()
+    return param.value().get()
 
 
 def set_parameter_value(param: ParameterHandle, value: float):
-    param.value().setRaw(float(value))
+    param.value().setImmediately(float(value))
 
 
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None]):

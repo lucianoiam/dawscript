@@ -36,7 +36,9 @@ try:
         RPR_TrackFX_GetNumParams,
         RPR_TrackFX_GetParamName,
         RPR_TrackFX_GetParam,
+        RPR_TrackFX_GetParamNormalized,
         RPR_TrackFX_SetParam,
+        RPR_TrackFX_SetParamNormalized,
         RPR_GetProjectPath,
         RPR_ShowConsoleMsg,
         rpr_getfp,
@@ -234,11 +236,11 @@ def get_parameter_range(param: ParameterHandle) -> Tuple[float, float]:
 
 
 def get_parameter_value(param: ParameterHandle) -> float:
-    return RPR_TrackFX_GetParam(*param, 0.0, 0.0)[0]
+    return RPR_TrackFX_GetParamNormalized(*param)
 
 
 def set_parameter_value(param: ParameterHandle, value: float):
-    RPR_TrackFX_SetParam(*param, value)
+    RPR_TrackFX_SetParamNormalized(*param, value)
 
 
 def add_parameter_value_listener(
