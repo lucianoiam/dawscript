@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dawscript</title>
-    <style>
-    body {
-        background-color: #1D2630;
-        color: #D2DAE7;
-        font-family: sans-serif;
-    }
-    input[type=text] {
-        background-color: transparent;
-        color: #D2DAE7;
-        border: solid 1px #D2DAE720;
-        font-family: monospace;
-        padding: 0.5rem;
-        width: 50%;
-    }
-    pre {
-        background-color: transparent;
-    }
-    </style>
+    <title>Web example</title>
 </head>
-<body>
+<body class="ace-monokai" style="margin:0;">
+    <div style="display:flex; flex-direction:column; height:100vh;">
+        <div style="display:flex; flex-direction:column; gap:10px; padding:10px;">
+            <div id="controls" style="display:flex; flex-direction:row; gap:20px; align-items:center; height:20px;">
+                <button id="run">Run</button>
+                <button id="load-demo">Load demo</button>
+                <a href="/dawscript_core/extra/web/dawscript.js" target="_blank" style="color:#fff; font-family:sans-serif; font-size:0.9rem">
+                    Open dawscript.js in new tab
+                </a>
+            </div>
+            <pre id="log" style="min-height:1rem">Ready</pre>
+        </div>
+        <div id="editor" style="flex-grow:1;"></div>
+    </div>
+    <script src="vendor/ace.js"></script>
     <script src="example.js"></script>
 </body>
 </html>

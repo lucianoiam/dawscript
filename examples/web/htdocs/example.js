@@ -3,91 +3,91 @@
 
 const { host, connect } = dawscript;
 
-const code = document.createElement("input");
-code.type = "text";
-code.placeholder = "Available functions in dawscript.js";
-code.addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter") onRunClick();
+window.addEventListener('DOMContentLoaded', () => {
+   window.onerror = log;
+   window.onunhandledrejection = ev => log(ev.reason);
+
+   const editor = window.ace.edit(document.getElementById('editor'));
+   const functions = Object.values(host).map(fn => ' * host.' + fn.name + '()');
+   const defaultText = get_function_body(default_code) + '\n\n\n'
+           + `/**\n * ${functions.length} functions available in dawscript.js\n *\n`
+           + functions.join('\n')
+           + '\n */\n';
+
+   editor.setValue(defaultText);
+   editor.gotoLine(1);
+   editor.focus();
+   editor.setTheme('ace/theme/monokai');
+   editor.session.setMode('ace/mode/javascript');
+
+   document.getElementById('load-demo').addEventListener('click', () => {
+      editor.setValue(get_function_body(demo_code));
+      editor.gotoLine(1);
+   });
+
+   document.getElementById('run').addEventListener('click', () => {
+      try {
+         eval(editor.getValue());
+      } catch (e) {
+         log('Error: ' + e.message);
+      }
+   });
 });
-document.body.appendChild(code);
 
-const run = document.createElement("button");
-run.textContent = "Run";
-run.addEventListener("click", onRunClick);
-document.body.appendChild(run);
-
-const output = document.createElement("pre");
-document.body.appendChild(output);
-
-const getTracks = document.createElement("button");
-getTracks.textContent = "getTracks()";
-getTracks.addEventListener("click", onGetTracksClick);
-document.body.appendChild(getTracks);
-
-const trackVolume = document.createElement("input");
-trackVolume.style.display = "block";
-trackVolume.type = "range";
-trackVolume.min = 0;
-trackVolume.max = 1.0;
-trackVolume.step = 0.001;
-trackVolume.addEventListener("input", onTrackVolumeInput);
-
-connect(connectCallback);
-
-
-
-let lastTrack = null;
-
-
-function connectCallback(connected) {
-  if (connected) {
-    addHostListeners();
-  }
-
-  return true;
+function get_function_body(fn) {
+   return fn.toString()
+      .split('\n')
+      .slice(1, -1)
+      .map(line => line.startsWith('   ') ? line.slice(3) : line)
+      .join('\n');
 }
 
-
-function addHostListeners() {
-  if (lastTrack) {
-    host.addTrackVolumeListener(lastTrack, (vol) => {
-      trackVolume.value = vol;
-    });
-  }
+function default_code() {
+   connect(async (success) => {
+      if (success) {
+         const name = await host.name();
+         log(name);
+      }
+      return true;
+   });
 }
 
+function demo_code() {
+   connect(async (success) => {
+      if (success) {
+         const tracks = await host.getTracks();
+         if (tracks.length > 0) {
+            const track = tracks[tracks.length - 1];
+            const vol = await host.getTrackVolume(track);
+            log('Volume of last track: ' + vol);
+            const slider = document.createElement('input');
+            document.getElementById('controls').appendChild(slider);
+            slider.style.width = '200px';
+            slider.type = 'range';
+            slider.min = 0;
+            slider.max = 1;
+            slider.step = 0.01;
+            slider.value = vol;
+            slider.addEventListener('input', async () => {
+               const vol = parseFloat(slider.value);
+               host.setTrackVolume(track, vol);
+               log('Volume of last track set to: ' + vol);
+            });
+            host.addTrackVolumeListener(track, (vol) => {
+               slider.value = vol;
+               log('Volume of last track changed: ' + vol);
+            });
+         } else {
+            log('No tracks found');
+         }
+      } else {
+         log('Lost connection to DAW');
+      }
+      return true;
+   });
 
-async function onRunClick() {
-  try {
-    output.textContent = await eval("host." + code.value);
-  } catch (error) {
-    output.textContent = error.message;
-  }
-}
+};
 
-
-async function onGetTracksClick() {
-  if (lastTrack != null) {
-    return;
-  }
-
-  const tracks = await host.getTracks();
-
-  if (tracks.length == 0) {
-    output.textContent = "No tracks found";
-    return;
-  }
-
-  output.textContent = tracks;
-  lastTrack = tracks[tracks.length - 1];
-
-  trackVolume.value = await host.getTrackVolume(lastTrack);
-  document.body.appendChild(trackVolume);
-
-  addHostListeners();
-}
-
-
-function onTrackVolumeInput() {
-  host.setTrackVolume(lastTrack, parseFloat(trackVolume.value));
+function log(message) {
+   document.getElementById('log').textContent = message;
 }
