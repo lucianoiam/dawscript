@@ -223,7 +223,13 @@ def remove_plugin_enabled_listener(plugin: PluginHandle, listener: Callable[[boo
 
 
 def get_plugin_parameters(plugin: PluginHandle) -> List[ParameterHandle]:
-    return [(*plugin, param_i) for param_i in list(range(0, RPR_TrackFX_GetNumParams(*plugin)))]
+    num_params = RPR_TrackFX_GetNumParams(*plugin)
+    params = [(*plugin, param_i) for param_i in range(num_params)]
+    if num_params >= 3:
+        last_three = [get_parameter_name(p) for p in params[-3:]]
+        if last_three == ["Bypass", "Wet", "Delta"]:
+            return params[:-3]
+    return params
 
 
 def get_parameter_name(param: ParameterHandle) -> str:
