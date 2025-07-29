@@ -204,6 +204,18 @@ def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[
     _remove_listener(param, "value", listener)
 
 
+def get_parameter_display_value(param: ParameterHandle) -> str:
+    return param.displayedValue().get()
+
+
+def add_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None]):
+    _add_listener(param, "dpy_value", listener, get_parameter_display_value)
+
+
+def remove_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None]):
+    _remove_listener(param, "dpy_value", listener)
+
+
 def _add_listener(target: Any, prop: str, listener: Callable, getter: Callable):
     def bound_getter():
         return getter(target)

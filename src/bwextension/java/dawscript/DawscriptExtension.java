@@ -38,7 +38,7 @@ public class DawscriptExtension extends ControllerExtension
 {
    public record Listener(long identifier, PythonRunnable runnable) {}
 
-   private static final boolean ENABLE_PARAMETER_RANGES_HACK = true;
+   private static final boolean ENABLE_PARAMETER_RANGES_HACK = false;
 
    private static final int MAX_TRACKS = 64;
    private static final int MAX_DEVICES = 16;
@@ -335,8 +335,11 @@ public class DawscriptExtension extends ControllerExtension
             for (int k = 0; k < MAX_PARAMETERS; k++) {
                final Parameter parameter = parameterBank.getParameter(k);
                parameter.name().markInterested();
-               parameter.value().addRawValueObserver(arg -> {
+               parameter.value().addValueObserver(arg -> {
                   callListeners(parameter, "value");
+               });
+               parameter.displayedValue().addValueObserver(arg -> {
+                  callListeners(parameter, "dpy_value");
                });
                if (ENABLE_PARAMETER_RANGES_HACK) {
                   parameter.exists().addValueObserver(arg -> {

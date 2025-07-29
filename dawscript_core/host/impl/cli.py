@@ -170,6 +170,19 @@ def remove_parameter_value_listener(
     log(f"stub: remove_parameter_value_listener( {param}, {listener} )")
 
 
+def get_parameter_display_value(param: ParameterHandle) -> str:
+    log(f"stub: get_parameter_display_value( {param} )")
+    return ''
+
+
+def add_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None]):
+    log(f"stub: add_parameter_display_value_listener( {param}, {listener} )")
+
+
+def remove_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None]):
+    log(f"stub: remove_parameter_display_value_listener( {param}, {listener} )")
+
+
 def _run_loop():
     global _jack_client, _jack_midi_in
 

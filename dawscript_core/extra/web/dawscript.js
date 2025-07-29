@@ -14,44 +14,47 @@ const TrackType = Object.freeze({
 });
 
 const host = Object.freeze({
-   name: async ()                                        => _call("name"),
-   getFaderLabels: async ()                              => _call("get_fader_labels"),
-   getTracks: async ()                                   => _call("get_tracks"),
-   getTrackType: async (track)                           => _call("get_track_type", track),
-   getTrackName: async (track)                           => _call("get_track_name", track),
-   isTrackMute: async (track)                            => _call("is_track_mute", track),
-   setTrackMute: async (track, mute)                     => _call("set_track_mute", track, mute),
-   addTrackMuteListener: async (track, listener)         => _call("add_track_mute_listener", track, listener),
-   removeTrackMuteListener: async (track, listener)      => _call("remove_track_mute_listener", track, listener),
-   getTrackVolume: async (track)                         => _call("get_track_volume", track),
-   setTrackVolume: async (track, volume)                 => _call("set_track_volume", track, volume),
-   addTrackVolumeListener: async (track, listener)       => _call("add_track_volume_listener", track, listener),
-   removeTrackVolumeListener: async (track, listener)    => _call("remove_track_volume_listener", track, listener),
-   getTrackPan: async (track)                            => _call("get_track_pan", track),
-   setTrackPan: async (track, pan)                       => _call("set_track_pan", track, pan),
-   addTrackPanListener: async (track, listener)          => _call("add_track_pan_listener", track, listener),
-   removeTrackPanListener: async (track, listener)       => _call("remove_track_pan_listener", track, listener),
-   getTrackPlugins: async (track)                        => _call("get_track_plugins", track),
-   getTrackPlugin: async (track, name)                   => _call("get_track_plugin", track, name),
-   getPluginName: async (plugin)                         => _call("get_plugin_name", plugin),
-   isPluginEnabled: async (plugin)                       => _call("is_plugin_enabled", plugin),
-   setPluginEnabled: async (plugin, enabled)             => _call("set_plugin_enabled", plugin, enabled),
-   addPluginEnabledListener: async (plugin, listener)    => _call("add_plugin_enabled_listener", plugin, listener),
-   removePluginEnabledListener: async (plugin, listener) => _call("remove_plugin_enabled_listener", plugin, listener),
-   getPluginParameters: async (plugin)                   => _call("get_plugin_parameters", plugin),
-   getPluginParameter: async (plugin, name)              => _call("get_plugin_parameter", plugin, name),
-   getParameterName: async (param)                       => _call("get_parameter_name", param),
-   getParameterRange: async (param)                      => _call("get_parameter_range", param),
-   getParameterValue: async (param)                      => _call("get_parameter_value", param),
-   setParameterValue: async (param, value)               => _call("set_parameter_value", param, value),
-   addParameterValueListener: async (param, listener)    => _call("add_parameter_value_listener", param, listener),
-   removeParameterValueListener: async (param, listener) => _call("remove_parameter_value_listener", param, listener),
-   getTrackByName: async (name)                          => _call("get_track_by_name", name),
-   toggleTrackMute: async (track)                        => _call("toggle_track_mute", track),
-   toggleTrackMuteByName: async (name)                   => _call("toggle_track_mute_by_name", name),
-   getTrackPluginByName: async (track, name)             => _call("get_track_plugin_by_name", track, name),
-   getPluginParameterByName: async (plugin, name)        => _call("get_plugin_parameter_by_name", plugin, name),
-   togglePluginEnabled: async (plugin)                   => _call("toggle_plugin_enabled", plugin),
+   name: async ()                                         => _call("name"),
+   getFaderLabels: async ()                               => _call("get_fader_labels"),
+   getTracks: async ()                                    => _call("get_tracks"),
+   getTrackType: async (track)                            => _call("get_track_type", track),
+   getTrackName: async (track)                            => _call("get_track_name", track),
+   isTrackMute: async (track)                             => _call("is_track_mute", track),
+   setTrackMute: async (track, mute)                      => _call("set_track_mute", track, mute),
+   addTrackMuteListener: async (track, fn)                => _call("add_track_mute_listener", track, fn),
+   removeTrackMuteListener: async (track, fn)             => _call("remove_track_mute_listener", track, fn),
+   getTrackVolume: async (track)                          => _call("get_track_volume", track),
+   setTrackVolume: async (track, volume)                  => _call("set_track_volume", track, volume),
+   addTrackVolumeListener: async (track, fn)              => _call("add_track_volume_listener", track, fn),
+   removeTrackVolumeListener: async (track, fn)           => _call("remove_track_volume_listener", track, fn),
+   getTrackPan: async (track)                             => _call("get_track_pan", track),
+   setTrackPan: async (track, pan)                        => _call("set_track_pan", track, pan),
+   addTrackPanListener: async (track, fn)                 => _call("add_track_pan_listener", track, fn),
+   removeTrackPanListener: async (track, fn)              => _call("remove_track_pan_listener", track, fn),
+   getTrackPlugins: async (track)                         => _call("get_track_plugins", track),
+   getTrackPlugin: async (track, name)                    => _call("get_track_plugin", track, name),
+   getPluginName: async (plugin)                          => _call("get_plugin_name", plugin),
+   isPluginEnabled: async (plugin)                        => _call("is_plugin_enabled", plugin),
+   setPluginEnabled: async (plugin, enabled)              => _call("set_plugin_enabled", plugin, enabled),
+   addPluginEnabledListener: async (plugin, fn)           => _call("add_plugin_enabled_listener", plugin, fn),
+   removePluginEnabledListener: async (plugin, fn)        => _call("remove_plugin_enabled_listener", plugin, fn),
+   getPluginParameters: async (plugin)                    => _call("get_plugin_parameters", plugin),
+   getPluginParameter: async (plugin, name)               => _call("get_plugin_parameter", plugin, name),
+   getParameterName: async (param)                        => _call("get_parameter_name", param),
+   getParameterRange: async (param)                       => _call("get_parameter_range", param),
+   getParameterValue: async (param)                       => _call("get_parameter_value", param),
+   setParameterValue: async (param, value)                => _call("set_parameter_value", param, value),
+   addParameterValueListener: async (param, fn)           => _call("add_parameter_value_listener", param, fn),
+   removeParameterValueListener: async (param, fn)        => _call("remove_parameter_value_listener", param, fn),
+   getParameterDisplayValue: async (param)                => _call("get_parameter_display_value", param),
+   addParameterDisplayValueListener: async (param, fn)    => _call("add_parameter_display_value_listener", param, fn),
+   removeParameterDisplayValueListener: async (param, fn) => _call("remove_parameter_display_value_listener", param, fn),
+   getTrackByName: async (name)                           => _call("get_track_by_name", name),
+   toggleTrackMute: async (track)                         => _call("toggle_track_mute", track),
+   toggleTrackMuteByName: async (name)                    => _call("toggle_track_mute_by_name", name),
+   getTrackPluginByName: async (track, name)              => _call("get_track_plugin_by_name", track, name),
+   getPluginParameterByName: async (plugin, name)         => _call("get_plugin_parameter_by_name", plugin, name),
+   togglePluginEnabled: async (plugin)                    => _call("toggle_plugin_enabled", plugin),
 });
 
 let _debug_msg = false;
@@ -208,22 +211,19 @@ function _handle(message) {
             listener(result);
          }
       }
-      return;
+      // do not return, resolve add_listener or remove_listener if needed
    }
 
-   if (! (seq in _promise_cb)) {
-      _warn(`⬿ ${seq}`, result ? result : '<ack>');
-      return;
-   }
+   if (seq in _promise_cb) {
+      const [resolve, reject] = _pop_promise_cb(seq);
 
-   const [resolve, reject] = _pop_promise_cb(seq);
+      _debug(`← ${seq}`, typeof result !== 'undefined' ? result : '<ack>');
 
-   _debug(`← ${seq}`, typeof result !== 'undefined' ? result : '<ack>');
-
-   if (typeof result === "string" && result.startsWith("error:")) {
-      reject(new HostError(result.slice(6)));
-   } else {
-      resolve(result);
+      if (typeof result === "string" && result.startsWith("error:")) {
+         reject(new HostError(result.slice(6)));
+      } else {
+         resolve(result);
+      }
    }
 }
 

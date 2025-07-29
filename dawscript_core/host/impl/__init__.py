@@ -56,4 +56,7 @@ def get_parameter_value(param: ParameterHandle) -> float
 def set_parameter_value(param: ParameterHandle, value: float)
 def add_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
 def remove_parameter_value_listener(param: ParameterHandle, listener: Callable[[float],None])
+def get_parameter_display_value(param: ParameterHandle) -> str
+def add_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None])
+def remove_parameter_display_value_listener(param: ParameterHandle, listener: Callable[[str],None])
 """

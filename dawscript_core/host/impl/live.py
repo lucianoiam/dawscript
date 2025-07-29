@@ -234,6 +234,29 @@ def remove_parameter_value_listener(
     _control_surface.remove_listener(param, "value", listener)
 
 
+def get_parameter_display_value(param: ParameterHandle) -> str:
+    return param.str_for_value(param.value)
+
+
+def add_parameter_display_value_listener(
+    param: ParameterHandle, listener: Callable[[str], None]
+):
+    _control_surface.add_listener(
+        param,
+        "dpy_value",
+        listener,
+        get_parameter_display_value,
+        param.add_value_listener,
+        param.remove_value_listener,
+    )
+
+
+def remove_parameter_display_value_listener(
+    param: ParameterHandle, listener: Callable[[str], None]
+):
+    _control_surface.remove_listener(param, "dpy_value", listener)
+
+
 def _get_document():
     return Live.Application.get_application().get_document()
 

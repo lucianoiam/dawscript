@@ -29,6 +29,7 @@ try:
         RPR_SetTrackUIVolume,
         RPR_SetTrackUIPan,
         RPR_TrackFX_GetByName,
+        RPR_TrackFX_GetFormattedParamValue,
         RPR_TrackFX_GetFXName,
         RPR_TrackFX_GetCount,
         RPR_TrackFX_GetEnabled,
@@ -37,7 +38,6 @@ try:
         RPR_TrackFX_GetParamName,
         RPR_TrackFX_GetParam,
         RPR_TrackFX_GetParamNormalized,
-        RPR_TrackFX_SetParam,
         RPR_TrackFX_SetParamNormalized,
         RPR_GetProjectPath,
         RPR_ShowConsoleMsg,
@@ -253,6 +253,22 @@ def remove_parameter_value_listener(
     param: ParameterHandle, listener: Callable[[float], None]
 ):
     _remove_listener(param, "value", listener)
+
+
+def get_parameter_display_value(param: ParameterHandle) -> str:
+    return RPR_TrackFX_GetFormattedParamValue(*param, "", 32)[4]
+
+
+def add_parameter_display_value_listener(
+    param: ParameterHandle, listener: Callable[[str], None]
+):
+    _add_listener(param, "dpy_value", listener, get_parameter_display_value)
+
+
+def remove_parameter_display_value_listener(
+    param: ParameterHandle, listener: Callable[[str], None]
+):
+    _remove_listener(param, "dpy_value", listener)
 
 
 def _tick():

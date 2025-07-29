@@ -1,3 +1,0 @@
-- get_parameter_range() broken on Live, test with plugin AUGraphicEQ:
-  live   : [    0,  1.0]
-  reaper : [-20.0, 20.0]
