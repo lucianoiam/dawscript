@@ -58,8 +58,8 @@ function demo_code() {
          const tracks = await host.getTracks();
          if (tracks.length > 0) {
             const track = tracks[tracks.length - 1];
+            const name = await host.getTrackName(track);
             const vol = await host.getTrackVolume(track);
-            log('Volume of last track: ' + vol);
             const slider = document.createElement('input');
             document.getElementById('controls').appendChild(slider);
             slider.style.width = '200px';
@@ -71,12 +71,13 @@ function demo_code() {
             slider.addEventListener('input', async () => {
                const vol = parseFloat(slider.value);
                host.setTrackVolume(track, vol);
-               log('Volume of last track set to: ' + vol);
+               log('Volume of track ' + name + ' set to: ' + vol);
             });
             host.addTrackVolumeListener(track, (vol) => {
                slider.value = vol;
-               log('Volume of last track changed: ' + vol);
+               log('Volume of track ' + name + ' changed: ' + vol);
             });
+            log('Volume of track ' + name + ': ' + vol);
          } else {
             log('No tracks found');
          }
