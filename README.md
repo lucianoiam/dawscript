@@ -1,13 +1,13 @@
 dawscript
 =========
 This project provides an abstraction layer for a small subset of the scripting
-APIs found in some popular DAWs (Digital Audio Workstations).
+APIs found in some DAWs (Digital Audio Workstations).
 
 Goals
 -----
 - Control mixer and plugin parameters
 - Create networked user interfaces
-- Run the same unmodified code across multiple DAWs
+- Run the same unmodified code across different DAWs
 
 Current Features
 ----------------
@@ -28,7 +28,7 @@ Quick Start
 -----------
 Copy or symlink one of the controller.py files in the `examples` directory to
 the project's root directory (where README.md resides). The script entry point
-is defined in dawscript.py . How to install the script depends on the DAW,
+is defined in dawscript.py. How to install the script depends on the DAW,
 detailed instructions coming soon.
 
 Examples
@@ -122,9 +122,14 @@ host.addTrackVolumeListener(track, (vol) => {
 connect();
 ```
 
-The web UI is advertised using DNS-SD (Bonjour) under the name «dawscript»,
+The web client is advertised using DNS-SD (Bonjour) under the name «dawscript»,
 for easy access using discovery apps like these on [iOS](https://apps.apple.com/app/abc-bonjour/id1172137819)
 or [Android](https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser).
+
+Current Limitations
+-------------------
+- MIDI output is not implemented
+- MIDI events are only available to the locally running Python script
 
 How to Install
 --------------
@@ -144,8 +149,12 @@ process, for example started from a terminal.
 
 Related Tools
 -------------
-Check out [Consul](https://github.com/lucianoiam/consul), my CLAP/VST plugin
-for MIDI remote control.
+- [LAN Mixer](https://github.com/lucianoiam/lanmixer), dawscript-based mixer and
+plugin control over the network. Early stage project.
+- [Consul](https://github.com/lucianoiam/consul), CLAP/VST plugin for MIDI remote
+control.
+- [Guinda](https://github.com/lucianoiam/guinda), a single file library of Web
+Components for audio applications.
 
 Useful Links
 ------------
@@ -166,4 +175,3 @@ Other \
 https://jackclient-python.readthedocs.io/en/0.5.5/ \
 https://mido.readthedocs.io/en/stable/ \
 https://www.standardsapplied.com/nonlinear-curve-fitting-calculator.html
-

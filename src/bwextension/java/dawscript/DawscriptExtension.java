@@ -74,18 +74,6 @@ public class DawscriptExtension extends ControllerExtension
       return System.identityHashCode(handle);
    }
 
-   // TODO: The Bitwig Java API appears to be asynchronous, so rapid, repeated
-   // changes to the same parameter may not be reflected. The delay value below
-   // works in most cases but should not be hardcoded. Consider tying it to a
-   // dynamic value, such as the audio buffer size or some UI update interval.
-   public static void callEngineAndWait(Runnable r)
-   {
-      try {
-         r.run();
-         Thread.sleep(25);
-      } catch (Exception e) {}
-   }
-
    public DawscriptExtension(final ControllerExtensionDefinition definition, final ControllerHost host)
    {
       super(definition, host);
@@ -269,6 +257,18 @@ public class DawscriptExtension extends ControllerExtension
       return parameterRanges.containsKey(param)
          ? parameterRanges.get(param)
          : new double[] { 0.0, 1.0 };
+   }
+
+   // TODO: The Bitwig Java API appears to be asynchronous, so rapid, repeated
+   // changes to the same parameter may not be reflected. The delay value below
+   // works in most cases but should not be hardcoded. Consider tying it to a
+   // dynamic value, such as the audio buffer size or some UI update interval.
+   public static void callEngineAndWait(Runnable r)
+   {
+      try {
+         r.run();
+         Thread.sleep(25);
+      } catch (Exception e) {}
    }
 
    private void probeParameterRange(Parameter param)
