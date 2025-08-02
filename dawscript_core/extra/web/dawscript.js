@@ -109,7 +109,7 @@ function connect(callback = (_status) => true) {
       _socket.onclose = (event) => {
          _warn("disconnected", event.code, event.reason);
 
-         if (! _skip_reconn && ! callback(false)) {
+         if (! _skip_reconn && callback(false)) {
             setTimeout(create_socket, 1000 * RECONNECT_WAIT_SEC);
          }
       };
